@@ -3,8 +3,60 @@
 
 #include "PODserializer.h"
 
+#include <cstring>
 #include <vector>
 #include <unordered_map>
+
+constexpr bool isBigEndian()
+{
+    return false;
+}
+
+template<class T>
+T swapBytes(T val)
+{
+    if constexpr (sizeof(T) == 1)
+    {
+        return val;
+    }
+
+    T result;
+
+    const auto* vBytes = reinterpret_cast<const uint8_t*>(&val);
+    auto* rBytes = reinterpret_cast<uint8_t*>(&result);
+
+    for (size_t i = 0; i != sizeof(T); ++i)
+    {
+        constexpr size_t end = sizeof(T) - 1;
+        rBytes[i] = vBytes[end - i];
+    }
+
+    return result;
+}
+
+template<class T>
+std::vector<uint8_t> createDataField(T* val, size_t count)
+{
+    size_t size = count * sizeof(T);
+
+    std::vector<uint8_t> data(size);
+
+    if constexpr (isBigEndian())
+    {
+        auto* pData = reinterpret_cast<T*>(data.data());
+
+        for (size_t i = 0; i != count; ++i)
+        {
+            pData[i] = swapBytes(val[i]);
+        }
+    }
+    else
+    {
+        memcpy(data.data(), val, size);
+    }
+
+    return data;
+}
 
 struct Chunk
 {
@@ -14,15 +66,15 @@ struct Chunk
 
 struct Serializer
 {
-    std::unordered_map<std::string, Chunk> m_chunks;
+    std::unordered_map<std::string, Chunk> chunks;
 };
 
 void psSetUInt8(Serializer* s, const char* key, uint8_t data)
 {
-    s->data[key] =
+    s->chunks[key] =
         {
             .type = ValueType::UInt8,
-            .data = { data },
+            .data = createDataField(&data, 1),
         };
 }
 
@@ -32,7 +84,11 @@ void psSetUInt8Array(
     const uint8_t* data,
     uint32_t count)
 {
-
+    s->chunks[key] =
+        {
+            .type = ValueType::UInt8Array,
+            .data = createDataField(&data, count),
+        };
 }
 
 void psSetUInt16(

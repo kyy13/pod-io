@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.7)
 project(PODserializer)
 
-option(BUILD_TESTS "build tests?" ON)
+#option(BUILD_TESTS "build tests?" ON)
 
 # library
 add_library(
@@ -51,7 +51,7 @@ target_link_libraries(
     -static-libstdc++
 )
 
-IF(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-ENDIF()
+#IF(BUILD_TESTS)
+#    enable_testing()
+#    add_subdirectory(tests)
+#ENDIF()

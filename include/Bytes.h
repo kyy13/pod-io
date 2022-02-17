@@ -19,13 +19,23 @@ inline bool isBigEndian()
     return c[0] == 1u;
 }
 
+// Fits a byteCount into the smallest 64 * N
+// returns N
+uint32_t pad64(uint32_t byteCount)
+{
+    uint32_t rem = byteCount & 0x0000003F;
+    byteCount >>= 6;
+    if (rem != 0) ++byteCount;
+    return byteCount;
+}
+
 template<class T>
 T byteSwap(T value)
 {
     T result;
 
-    uint8_t* src = reinterpret_cast<uint8_t*>(&value);
-    uint8_t* dst = reinterpret_cast<uint8_t*(&result);
+    auto* src = reinterpret_cast<uint8_t*>(&value);
+    auto* dst = reinterpret_cast<uint8_t*(&result);
 
     for (size_t i = 0; i != sizeof(T); ++i)
     {

@@ -15,7 +15,7 @@ extern "C"
     enum PsResult : uint32_t
     {
         PS_SUCCESS,
-        PS_BLOCK_NOT_FOUND,
+        PS_UNASSIGNED_BLOCK,
         PS_TYPE_MISMATCH,
         PS_UNABLE_TO_OPEN,
         PS_FILE_CORRUPT,
@@ -24,6 +24,7 @@ extern "C"
 
     enum PsType : uint32_t
     {
+        PS_CHAR8,
         PS_UINT8,
         PS_UINT16,
         PS_UINT32,
@@ -68,10 +69,6 @@ extern "C"
         PsSerializer* s,
         const char* key);
 
-    PsBlock* psGetBlockByIndex(
-        PsSerializer* s,
-        uint32_t index);
-
     void psSetValues(
         PsBlock* b,
         const void* values,
@@ -82,10 +79,6 @@ extern "C"
         const PsBlock* b,
         uint32_t& valueCount);
 
-    PsResult psTryCountKeyChars(
-        const PsBlock* b,
-        uint32_t& charCount);
-
     PsResult psTryGetType(
         const PsBlock* b,
         PsType& valueType);
@@ -94,10 +87,6 @@ extern "C"
         const PsBlock* b,
         void* dst,
         PsType type);
-
-    PsResult psTryCopyKey(
-        const PsBlock* b,
-        void* dst);
 };
 
 #endif

@@ -14,6 +14,9 @@ add_library(
     ${PROJECT_NAME}
     SHARED
     src/PODserializer.cpp
+    src/PsLoadFile.cpp
+    src/PsSaveFile.cpp
+    src/PsTypes.cpp
 )
 
 # includes

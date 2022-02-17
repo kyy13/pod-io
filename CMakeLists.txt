@@ -4,6 +4,9 @@
 cmake_minimum_required(VERSION 3.7)
 project(PODserializer)
 
+find_package ( ZLIB REQUIRED )
+include_directories ( ${ZLIB_INCLUDE_DIR} )
+
 #option(BUILD_TESTS "build tests?" ON)
 
 # library
@@ -18,6 +21,7 @@ target_include_directories(
     ${PROJECT_NAME}
     PUBLIC
     include
+    ${ZLIB_INCLUDE_DIR}
 )
 
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -47,6 +51,7 @@ set_target_properties(
 # link libraries
 target_link_libraries(
     ${PROJECT_NAME}
+    ${ZLIB_LIBRARY}
     -static-libgcc
     -static-libstdc++
 )

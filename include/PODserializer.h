@@ -4,300 +4,100 @@
 #ifndef POD_SERIALIZER_H
 #define POD_SERIALIZER_H
 
-#include <string>
 #include <cstdint>
 
 extern "C"
 {
-    struct Serializer;
+    struct PsBlock;
 
-    enum class ValueType
+    struct PsSerializer;
+
+    enum PsResult : uint32_t
     {
-        UInt8,
-        UInt8Array,
-        UInt16,
-        UInt16Array,
-        UInt32,
-        UInt32Array,
-        UInt64,
-        UInt64Array,
-        Int8,
-        Int8Array,
-        Int16,
-        Int16Array,
-        Int32,
-        Int32Array,
-        Int64,
-        Int64Array,
-        Float,
-        FloatArray,
-        Double,
-        DoubleArray,
+        PS_SUCCESS,
+        PS_BLOCK_NOT_FOUND,
+        PS_TYPE_MISMATCH,
+        PS_UNABLE_TO_OPEN,
+        PS_FILE_CORRUPT,
+        PS_FILE_NOT_FOUND,
     };
 
-    // Setters
+    enum PsType : uint32_t
+    {
+        PS_UINT8,
+        PS_UINT16,
+        PS_UINT32,
+        PS_UINT64,
+        PS_INT8,
+        PS_INT16,
+        PS_INT32,
+        PS_INT64,
+        PS_FLOAT32,
+        PS_FLOAT64,
+    };
 
-    void psSetUInt8(
-        Serializer* s,
-        const char* key,
-        uint8_t data);
+    enum PsEndian : uint32_t
+    {
+        PS_LITTLE_ENDIAN,
+        PS_BIG_ENDIAN,
+        PS_NATIVE_ENDIAN,
+    };
 
-    void psSetUInt8Array(
-        Serializer* s,
-        const char* key,
-        const uint8_t* data,
-        uint32_t count);
+    enum PsChecksum : uint32_t
+    {
+        PS_NO_CHECKSUM,
+        PS_CRC,
+    };
 
-    void psSetUInt16(
-        Serializer* s,
-        const char* key,
-        uint16_t data);
+    PsSerializer* psCreateSerializer();
 
-    void psSetUInt16Array(
-        Serializer* s,
-        const char* key,
-        const uint16_t* data,
-        uint32_t count);
+    void psDeleteSerializer(
+        PsSerializer* s);
 
-    void psSetUInt32(
-        Serializer* s,
-        const char* key,
-        uint32_t data);
+    PsResult psLoadFile(
+        PsSerializer* s,
+        const char* fileName);
 
-    void psSetUInt32Array(
-        Serializer* s,
-        const char* key,
-        const uint32_t* data,
-        uint32_t count);
+    PsResult psSaveFile(
+        PsSerializer* s,
+        const char* fileName,
+        PsChecksum,
+        PsEndian);
 
-    void psSetUInt64(
-        Serializer* s,
-        const char* key,
-        uint64_t data);
+    PsBlock* psGetBlockByKey(
+        PsSerializer* s,
+        const char* key);
 
-    void psSetUInt64Array(
-        Serializer* s,
-        const char* key,
-        const uint64_t* data,
-        uint32_t count);
+    PsBlock* psGetBlockByIndex(
+        PsSerializer* s,
+        uint32_t index);
 
-    void psSetInt8(
-        Serializer* s,
-        const char* key,
-        int8_t data);
+    void psSetValues(
+        PsBlock* b,
+        const void* values,
+        PsType valueType,
+        uint32_t valueCount);
 
-    void psSetInt8Array(
-        Serializer* s,
-        const char* key,
-        const int8_t* data,
-        uint32_t count);
+    PsResult psTryCountValues(
+        const PsBlock* b,
+        uint32_t& valueCount);
 
-    void psSetInt16(
-        Serializer* s,
-        const char* key,
-        int16_t data);
+    PsResult psTryCountKeyChars(
+        const PsBlock* b,
+        uint32_t& charCount);
 
-    void psSetInt16Array(
-        Serializer* s,
-        const char* key,
-        const int16_t* data,
-        uint32_t count);
+    PsResult psTryGetType(
+        const PsBlock* b,
+        PsType& valueType);
 
-    void psSetInt32(
-        Serializer* s,
-        const char* key,
-        int32_t data);
+    PsResult psTryCopyValues(
+        const PsBlock* b,
+        void* dst,
+        PsType type);
 
-    void psSetInt32Array(
-        Serializer* s,
-        const char* key,
-        const int32_t* data,
-        uint32_t count);
-
-    void psSetInt64(
-        Serializer* s,
-        const char* key,
-        int64_t data);
-
-    void psSetInt64Array(
-        Serializer* s,
-        const char* key,
-        const int64_t* data,
-        uint32_t count);
-
-    void psSetFloat(
-        Serializer* s,
-        const char* key,
-        float data);
-
-    void psSetFloatArray(
-        Serializer* s,
-        const char* key,
-        const float* data,
-        uint32_t count);
-
-    void psSetDouble(
-        Serializer* s,
-        const char* key,
-        float data);
-
-    void psSetDoubleArray(
-        Serializer* s,
-        const char* key,
-        const float* data,
-        uint32_t count);
-
-    // Getters
-
-    bool psTryGetUInt8(
-        Serializer* s,
-        const char* key,
-        uint8_t& data);
-
-    bool psTryCountUInt8Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyUInt8Array(
-        Serializer* s,
-        const char* key,
-        const uint8_t* data);
-
-    bool psTryGetUInt16(
-        Serializer* s,
-        const char* key,
-        uint16_t& data);
-
-    bool psTryCountUInt16Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyUInt16Array(
-        Serializer* s,
-        const char* key,
-        const uint16_t* data);
-
-    bool psTryGetUInt32(
-        Serializer* s,
-        const char* key,
-        uint32_t& data);
-
-    bool psTryCountUInt32Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyUInt32Array(
-        Serializer* s,
-        const char* key,
-        const uint32_t* data);
-
-    bool psTryGetUInt64(
-        Serializer* s,
-        const char* key,
-        uint32_t& data);
-
-    bool psTryCountUInt64Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyUInt64Array(
-        Serializer* s,
-        const char* key,
-        const uint32_t* data);
-
-    bool psTryGetInt8(
-        Serializer* s,
-        const char* key,
-        int8_t& data);
-
-    bool psTryCountInt8Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyInt8Array(
-        Serializer* s,
-        const char* key,
-        const int8_t* data);
-
-    bool psTryGetInt16(
-        Serializer* s,
-        const char* key,
-        int16_t& data);
-
-    bool psTryCountInt16Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyInt16Array(
-        Serializer* s,
-        const char* key,
-        const int16_t* data);
-
-    bool psTryGetInt32(
-        Serializer* s,
-        const char* key,
-        int32_t& data);
-
-    bool psTryCountInt32Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyInt32Array(
-        Serializer* s,
-        const char* key,
-        const int32_t* data);
-
-    bool psTryGetInt64(
-        Serializer* s,
-        const char* key,
-        int32_t& data);
-
-    bool psTryCountInt64Array(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyInt64Array(
-        Serializer* s,
-        const char* key,
-        const int32_t* data);
-
-    bool psTryGetFloat(
-        Serializer* s,
-        const char* key,
-        float& data);
-
-    bool psTryCountFloatArray(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyFloatArray(
-        Serializer* s,
-        const char* key,
-        const float* data);
-
-    bool psTryGetDouble(
-        Serializer* s,
-        const char* key,
-        double& data);
-
-    bool psTryCountDoubleArray(
-        Serializer* s,
-        const char* key,
-        uint32_t& count);
-
-    bool psTryCopyDoubleArray(
-        Serializer* s,
-        const char* key,
-        const double* data);
+    PsResult psTryCopyKey(
+        const PsBlock* b,
+        void* dst);
 };
 
 #endif

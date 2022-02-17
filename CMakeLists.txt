@@ -7,7 +7,7 @@ project(PODserializer)
 find_package ( ZLIB REQUIRED )
 include_directories ( ${ZLIB_INCLUDE_DIR} )
 
-#option(BUILD_TESTS "build tests?" ON)
+option(BUILD_TESTS "build tests?" ON)
 
 # library
 add_library(
@@ -17,6 +17,7 @@ add_library(
     src/PsLoadFile.cpp
     src/PsSaveFile.cpp
     src/PsTypes.cpp
+    src/Bytes.cpp
 )
 
 # includes
@@ -59,7 +60,7 @@ target_link_libraries(
     -static-libstdc++
 )
 
-#IF(BUILD_TESTS)
-#    enable_testing()
-#    add_subdirectory(tests)
-#ENDIF()
+IF(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+ENDIF()

@@ -5,6 +5,7 @@
 #define PS_BYTES_H
 
 #include <cstdint>
+#include <cstring>
 
 inline bool isBigEndian()
 {
@@ -19,15 +20,9 @@ inline bool isBigEndian()
     return c[0] == 1u;
 }
 
-// Fits a byteCount into the smallest 64 * N
+// Fits a byteCount into the smallest 8 * N
 // returns N
-uint32_t pad64(uint32_t byteCount)
-{
-    uint32_t rem = byteCount & 0x0000003F;
-    byteCount >>= 6;
-    if (rem != 0) ++byteCount;
-    return byteCount;
-}
+uint32_t pad64(uint32_t byteCount);
 
 template<class T>
 T byteSwap(T value)
@@ -35,7 +30,7 @@ T byteSwap(T value)
     T result;
 
     auto* src = reinterpret_cast<uint8_t*>(&value);
-    auto* dst = reinterpret_cast<uint8_t*(&result);
+    auto* dst = reinterpret_cast<uint8_t*>(&result);
 
     for (size_t i = 0; i != sizeof(T); ++i)
     {
@@ -44,6 +39,24 @@ T byteSwap(T value)
     }
 
     return result;
+}
+
+template<class T, bool swapBytes>
+void copyToAligned64(uint64_t* dst, const T* src, uint32_t count)
+{
+    if constexpr ((!swapBytes) || (sizeof(T) == 1))
+    {
+        memcpy(dst, src, count * sizeof(T));
+    }
+    else
+    {
+        auto* ptr = reinterpret_cast<T*>(dst);
+
+        for (uint32_t i = 0; i != count; ++i)
+        {
+            ptr[i] = byteSwap<T>(src[i]);
+        }
+    }
 }
 
 #endif

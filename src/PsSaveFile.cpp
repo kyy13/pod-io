@@ -7,8 +7,10 @@
 
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
-std::vector<uint64_t> writeBody(PsSerializer* serializer, bool requiresByteSwap)
+template<bool swapBytes>
+std::vector<uint64_t> writeBody(PsSerializer* serializer)
 {
     // 8 byte-aligned header
     //    [4] type
@@ -50,7 +52,7 @@ std::vector<uint64_t> writeBody(PsSerializer* serializer, bool requiresByteSwap)
         const auto& key = pair.first;
         const auto& block = pair.second;
 
-        uint32_t type = static_cast<uint32_t>(block.type);
+        PsType type = block.type;
         uint32_t count = block.count;
         const auto& values = block.values;
 
@@ -65,7 +67,7 @@ std::vector<uint64_t> writeBody(PsSerializer* serializer, bool requiresByteSwap)
         uint64_t* p64 = &body[blockStart64];
         uint32_t* p32 = reinterpret_cast<uint32_t*>(p64);
 
-        if (requiresByteSwap)
+        if constexpr (swapBytes)
         {
             p32[0] = byteSwap<uint32_t>(type);
             p32[1] = byteSwap<uint32_t>(count);
@@ -77,10 +79,46 @@ std::vector<uint64_t> writeBody(PsSerializer* serializer, bool requiresByteSwap)
         }
 
         // set block name
-        memcpy(&p32[2], key.data(), key.size());
+        uint8_t* p8 = reinterpret_cast<uint8_t*>(&p32[2]);
+        memcpy(p8, key.data(), key.size());
+        p8[key.size()] = 0;
 
         // set block data
-        memcpy(&p64[blockHeaderSize64], values.data(), blockDataSize64 * 8);
+        switch(psGetTypeSize(type))
+        {
+            case 1:
+            {
+                copyToAligned64<uint8_t, swapBytes>(
+                    &p64[blockHeaderSize64],
+                    reinterpret_cast<const uint8_t*>(values.data()),
+                    count);
+                break;
+            }
+            case 2:
+            {
+                copyToAligned64<uint16_t, swapBytes>(
+                    &p64[blockHeaderSize64],
+                    reinterpret_cast<const uint16_t*>(values.data()),
+                    count);
+                break;
+            }
+            case 4:
+            {
+                copyToAligned64<uint32_t, swapBytes>(
+                    &p64[blockHeaderSize64],
+                    reinterpret_cast<const uint32_t*>(values.data()),
+                    count);
+                break;
+            case 8:
+                copyToAligned64<uint64_t, swapBytes>(
+                    &p64[blockHeaderSize64],
+                    values.data(),
+                    count);
+                break;
+            default:
+                return {};
+            }
+        }
 
         // next block
         blockStart64 += blockHeaderSize64 + blockDataSize64;
@@ -93,19 +131,9 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
 {
     // Determine if bytes need to be swapped
 
-    bool requiresByteSwap = false;
-
-    if (endian == PS_LITTLE_ENDIAN && isBigEndian())
-    {
-        requiresByteSwap = true;
-    }
-
-    if (endian == PS_BIG_ENDIAN && !isBigEndian())
-    {
-        requiresByteSwap = true;
-    }
-
-
+    bool requiresByteSwap =
+        (endian == PS_LITTLE_ENDIAN && isBigEndian()) ||
+        (endian == PS_BIG_ENDIAN && !isBigEndian());
 
     // Open File
 
@@ -115,6 +143,21 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
     {
         return PS_FILE_NOT_FOUND;
     }
+
+    std::vector<uint64_t> body;
+
+    if (requiresByteSwap)
+    {
+        body = writeBody<true>(serializer);
+    }
+    else
+    {
+        body = writeBody<false>(serializer);
+    }
+
+    file.write(
+        reinterpret_cast<const char*>(body.data()),
+        static_cast<std::streamsize>(body.size() * sizeof(uint64_t)));
 
 //    uint8_t header[16] = {};
 //

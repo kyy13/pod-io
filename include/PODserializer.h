@@ -24,17 +24,17 @@ extern "C"
 
     enum PsType : uint32_t
     {
-        PS_CHAR8,
-        PS_UINT8,
-        PS_UINT16,
-        PS_UINT32,
-        PS_UINT64,
-        PS_INT8,
-        PS_INT16,
-        PS_INT32,
-        PS_INT64,
-        PS_FLOAT32,
-        PS_FLOAT64,
+        PS_CHAR8   = 0x02000001u,
+        PS_UINT8   = 0x00000001u,
+        PS_UINT16  = 0x00000002u,
+        PS_UINT32  = 0x00000004u,
+        PS_UINT64  = 0x00000008u,
+        PS_INT8    = 0x00010001u,
+        PS_INT16   = 0x00010002u,
+        PS_INT32   = 0x00010004u,
+        PS_INT64   = 0x00010008u,
+        PS_FLOAT32 = 0x01010004u,
+        PS_FLOAT64 = 0x01010008u,
     };
 
     enum PsEndian : uint32_t

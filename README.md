@@ -1,2 +1,2 @@
 # PODserializer
-c++ (and c# interface) POD serializer with optional CRC
+c++ (and c# interface) endian-independent binary POD serializer with optional compression and CRC

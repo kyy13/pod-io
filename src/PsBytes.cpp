@@ -126,3 +126,14 @@ size_t PsBytes::nextMultipleOf(size_t val, size_t multiple)
 
     return val + multiple - remainder;
 }
+
+uint8_t* PsBytes::data()
+{
+    return m_data;
+}
+
+[[nodiscard]]
+size_t PsBytes::size() const
+{
+    return m_size;
+}

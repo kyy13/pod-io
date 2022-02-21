@@ -4,9 +4,9 @@
 #ifndef PS_DEFLATE_H
 #define PS_DEFLATE_H
 
-#include <cstdint>
 #include <vector>
+#include <cstdint>
 
-std::vector<uint64_t> deflate8(std::vector<uint64_t>& in, uint32_t& byteCount);
+std::vector<uint8_t> deflate(uint8_t* in, size_t size);
 
 #endif

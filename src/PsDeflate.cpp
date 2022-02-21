@@ -7,12 +7,11 @@
 
 #include <stdexcept>
 
-std::vector<uint64_t> deflate8(std::vector<uint64_t>& in, uint32_t& byteCount)
+std::vector<uint8_t> deflate(uint8_t* in, size_t size)
 {
     constexpr size_t TEMP_BUFFER_SIZE = 128 * 1024;
 
-    std::vector<uint64_t> out;
-    byteCount = 0;
+    std::vector<uint8_t> out;
 
     z_stream zs =
         {
@@ -28,8 +27,8 @@ std::vector<uint64_t> deflate8(std::vector<uint64_t>& in, uint32_t& byteCount)
 
     uint8_t buf[TEMP_BUFFER_SIZE];
 
-    zs.avail_in = in.size() * sizeof(uint64_t);
-    zs.next_in = reinterpret_cast<uint8_t*>(in.data());
+    zs.avail_in = size;
+    zs.next_in = in;
     zs.avail_out = TEMP_BUFFER_SIZE;
     zs.next_out = buf;
 
@@ -42,9 +41,9 @@ std::vector<uint64_t> deflate8(std::vector<uint64_t>& in, uint32_t& byteCount)
 
         if (zs.avail_out == 0)
         {
-            out.resize(pad64(byteCount + TEMP_BUFFER_SIZE));
-            memcpy(reinterpret_cast<uint8_t*>(out.data()) + byteCount, buf, TEMP_BUFFER_SIZE);
-            byteCount += TEMP_BUFFER_SIZE;
+            size_t n = out.size();
+            out.resize(n + TEMP_BUFFER_SIZE);
+            memcpy(out.data() + n, buf, TEMP_BUFFER_SIZE);
         }
     }
 
@@ -53,9 +52,9 @@ std::vector<uint64_t> deflate8(std::vector<uint64_t>& in, uint32_t& byteCount)
     {
         if (zs.avail_out == 0)
         {
-            out.resize(pad64(byteCount + TEMP_BUFFER_SIZE));
-            memcpy(reinterpret_cast<uint8_t*>(out.data()) + byteCount, buf, TEMP_BUFFER_SIZE);
-            byteCount += TEMP_BUFFER_SIZE;
+            size_t n = out.size();
+            out.resize(n + TEMP_BUFFER_SIZE);
+            memcpy(out.data() + n, buf, TEMP_BUFFER_SIZE);
 
             zs.avail_out = TEMP_BUFFER_SIZE;
             zs.next_out = buf;
@@ -68,10 +67,10 @@ std::vector<uint64_t> deflate8(std::vector<uint64_t>& in, uint32_t& byteCount)
         throw std::runtime_error("could not finish deflate");
     }
 
-    uint32_t dSize = TEMP_BUFFER_SIZE - zs.avail_out;
-    out.resize(pad64(byteCount + dSize));
-    memcpy(reinterpret_cast<uint8_t*>(out.data()) + byteCount, buf, dSize);
-    byteCount += dSize;
+    size_t dSize = TEMP_BUFFER_SIZE - zs.avail_out;
+    size_t n = out.size();
+    out.resize(n + dSize);
+    memcpy(out.data() + n, buf, dSize);
 
     deflateEnd(&zs);
 

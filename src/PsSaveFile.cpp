@@ -5,10 +5,10 @@
 #include "PsBytes.h"
 #include "PsTypes.h"
 #include "PsDeflate.h"
+#include "PsSystem.h"
 
 #include <cstring>
 #include <fstream>
-#include <iostream>
 
 template<bool swap_bytes>
 PsBytes writeBody(PsSerializer* serializer)
@@ -49,9 +49,6 @@ PsBytes writeBody(PsSerializer* serializer)
         const auto& key = pair.first;
         const auto& block = pair.second;
 
-        size_t headerSize = PsBytes::nextMultipleOf(9 + key.size(), 8);
-        size_t dataSize = PsBytes::nextMultipleOf(block.bytes(), 8);
-
         // 8 byte-aligned header
         //    [4] type
         //    [4] value count
@@ -86,14 +83,17 @@ PsBytes writeBody(PsSerializer* serializer)
             case PS_UINT16:
             case PS_INT16:
                 data.set<uint16_t, swap_bytes>(i, block.bytes(), reinterpret_cast<const uint16_t*>(block.data()));
+                break;
             case PS_UINT32:
             case PS_INT32:
             case PS_FLOAT32:
                 data.set<uint32_t, swap_bytes>(i, block.bytes(), reinterpret_cast<const uint32_t*>(block.data()));
+                break;
             case PS_UINT64:
             case PS_INT64:
             case PS_FLOAT64:
                 data.set<uint64_t, swap_bytes>(i, block.bytes(), reinterpret_cast<const uint64_t*>(block.data()));
+                break;
         }
 
         i += block.bytes();
@@ -102,18 +102,101 @@ PsBytes writeBody(PsSerializer* serializer)
         prev = i;
         i = PsBytes::nextMultipleOf(i, 8);
         data.pad(prev, i - prev);
-
-        return data;
     }
+
+    return data;
+}
+
+template<bool swap_bytes>
+PsBytes write(PsSerializer* serializer, PsEndian endian, PsChecksum checksum)
+{
+    PsBytes header(16);
+    size_t i = 0;
+
+    // "PODS"
+
+    header.set<uint8_t, swap_bytes>(i, 1, 0x50u);
+    ++i;
+    header.set<uint8_t, swap_bytes>(i, 1, 0x4Fu);
+    ++i;
+    header.set<uint8_t, swap_bytes>(i, 1, 0x44u);
+    ++i;
+    header.set<uint8_t, swap_bytes>(i, 1, 0x53u);
+    ++i;
+
+    // Endian
+
+    if (endian == PS_NATIVE_ENDIAN)
+    {
+        endian = is_big_endian() ? PS_BIG_ENDIAN : PS_LITTLE_ENDIAN;
+    }
+
+    if (endian == PS_BIG_ENDIAN)
+    {
+        header.set<uint8_t, swap_bytes>(i, 1, 0x42u);
+        ++i;
+        header.set<uint8_t, swap_bytes>(i, 1, 0x45u);
+        ++i;
+    }
+    else if (endian == PS_LITTLE_ENDIAN)
+    {
+        header.set<uint8_t, swap_bytes>(i, 1, 0x4Cu);
+        ++i;
+        header.set<uint8_t, swap_bytes>(i, 1, 0x45u);
+        ++i;
+    }
+
+    // Checksum
+
+    if (checksum == PS_CRC)
+    {
+        header.set<uint8_t, swap_bytes>(i, 1, 0x43u);
+        ++i;
+        header.set<uint8_t, swap_bytes>(i, 1, 0x52u);
+        ++i;
+    }
+    else if (checksum == PS_NO_CHECKSUM)
+    {
+        header.set<uint8_t, swap_bytes>(i, 1, 0x4Eu);
+        ++i;
+        header.set<uint8_t, swap_bytes>(i, 1, 0x4Fu);
+        ++i;
+    }
+
+
+    std::vector<uint8_t> compressed;
+
+    {
+        // Write data blocks
+        auto data = writeBody<swap_bytes>(serializer);
+
+        // Compress data blocks
+        compressed = deflate(data.data(), data.size());
+
+        // Write data size
+        header.set<uint32_t, swap_bytes>(i, 4, data.size());
+        i += 4;
+    }
+
+    // Write compressed size
+    header.set<uint32_t, swap_bytes>(i, 4, compressed.size());
+    i += 4;
+
+    // Write compressed data
+    size_t compressedSize = PsBytes::nextMultipleOf(compressed.size(), 8);
+
+    header.resize(i + compressedSize);
+
+    header.set<uint8_t, swap_bytes>(i, compressed.size(), compressed.data());
+    i += compressed.size();
+
+    header.pad(i, header.size() - i);
+
+    return header;
 }
 
 PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum checksum, PsEndian endian)
 {
-    // Determine if bytes need to be swapped
-
-    bool requiresByteSwap =
-        (endian == PS_LITTLE_ENDIAN && isBigEndian()) ||
-        (endian == PS_BIG_ENDIAN && !isBigEndian());
 
     // Open File
 
@@ -124,96 +207,24 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
         return PS_FILE_NOT_FOUND;
     }
 
-    uint64_t header[2] = {};
-    uint8_t* header8 = reinterpret_cast<uint8_t*>(header);
+    bool requiresByteSwap =
+        (endian == PS_LITTLE_ENDIAN && is_big_endian()) ||
+        (endian == PS_BIG_ENDIAN && is_little_endian());
 
-    // Set label
-
-    header8[0] = 0x50;
-    header8[1] = 0x4F;
-    header8[2] = 0x44;
-    header8[3] = 0x53;
-
-    // Set endianness
-
-    if (endian == PS_NATIVE_ENDIAN)
-    {
-        endian = isBigEndian()
-            ? PS_BIG_ENDIAN
-            : PS_LITTLE_ENDIAN;
-    }
-
-    if (endian == PS_BIG_ENDIAN)
-    {
-        header8[4] = 0x42;
-        header8[5] = 0x45;
-    }
-    else if (endian == PS_LITTLE_ENDIAN)
-    {
-        header8[4] = 0x4C;
-        header8[5] = 0x45;
-    }
-
-    // Set checksum
-
-    if (checksum == PS_CRC)
-    {
-        header8[6] = 0x43;
-        header8[7] = 0x52;
-    }
-    else if (checksum == PS_NO_CHECKSUM)
-    {
-        header8[6] = 0x4E;
-        header8[7] = 0x4F;
-    }
-
-    std::vector<uint64_t> body;
-    std::vector<uint64_t> compressed;
-    uint32_t* header32 = reinterpret_cast<uint32_t*>(&header[1]);
+    PsBytes data;
 
     if (requiresByteSwap)
     {
-        // Write body
-        body = writeBody<true>(serializer);
-
-        // Write uncompressed size
-        header32[0] = byteSwap<uint32_t>(body.size() * 8);
-
-        // Compress body
-        uint32_t byteCount;
-        compressed = deflate8(body, byteCount);
-
-        // Write compressed size
-        header32[1] = byteSwap<uint32_t>(byteCount);
+        data = write<true>(serializer, endian, checksum);
     }
     else
     {
-        // Write body
-        body = writeBody<false>(serializer);
-
-        // Write uncompressed size
-        header32[0] = body.size() * 8;
-
-        // Compress / write compressed size
-        compressed = deflate8(body, header32[1]);
+        data = write<false>(serializer, endian, checksum);
     }
 
-    // Don't need body anymore
-
-    body.clear();
-    body.shrink_to_fit();
-
-    // Write Header
-
     file.write(
-        reinterpret_cast<const char*>(header),
-        static_cast<std::streamsize>(16));
-
-    // Write Compressed Body
-
-    file.write(
-        reinterpret_cast<const char*>(compressed.data()),
-        static_cast<std::streamsize>(compressed.size() * sizeof(uint64_t)));
+        reinterpret_cast<const char*>(data.data()),
+        static_cast<std::streamsize>(data.size()));
 
     return PS_SUCCESS;
 }

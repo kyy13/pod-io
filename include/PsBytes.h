@@ -33,7 +33,7 @@ public:
         assert(sizeof(T) == numBytes);
 
         // check valid byte alignment
-        assert((firstByte % numBytes) == 0);
+        assert((firstByte % sizeof(T)) == 0);
 
         // check that there is enough space
         assert((firstByte + numBytes) <= m_size);
@@ -58,7 +58,7 @@ public:
         assert((numBytes % sizeof(T)) == 0);
 
         // check valid byte alignment
-        assert((firstByte % numBytes) == 0);
+        assert((firstByte % sizeof(T)) == 0);
 
         // check that there is enough space
         assert((firstByte + numBytes) <= m_size);
@@ -77,7 +77,7 @@ public:
             {
                 for (; r != end; ++r)
                 {
-                    *r = swapBytes(x);
+                    *r = swapBytes(*x);
                     ++x;
                 }
             }
@@ -85,7 +85,7 @@ public:
             {
                 for (; r != end; ++r)
                 {
-                    *r = x;
+                    *r = *x;
                     ++x;
                 }
             }
@@ -157,6 +157,12 @@ public:
             }
         }
     }
+
+    [[nodiscard]]
+    uint8_t* data();
+
+    [[nodiscard]]
+    size_t size() const;
 
     void resize(size_t n);
 

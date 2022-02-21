@@ -2,7 +2,7 @@
 // Kyle J Burgess
 
 #include "PsDeflate.h"
-#include "Bytes.h"
+#include "PsBytes.h"
 #include "zlib.h"
 
 #include <stdexcept>

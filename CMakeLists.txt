@@ -18,7 +18,7 @@ add_library(
     src/PsSaveFile.cpp
     src/PsTypes.cpp
     src/PsDeflate.cpp
-    src/Bytes.cpp
+    src/PsBytes.cpp
 )
 
 # includes
@@ -26,6 +26,7 @@ target_include_directories(
     ${PROJECT_NAME}
     PUBLIC
     include
+    ext/k13/include
     ${ZLIB_INCLUDE_DIR}
 )
 

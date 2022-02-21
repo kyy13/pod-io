@@ -2,7 +2,7 @@
 // Kyle J Burgess
 
 #include "PODserializer.h"
-#include "Bytes.h"
+#include "PsBytes.h"
 #include "PsTypes.h"
 #include "PsDeflate.h"
 
@@ -10,8 +10,8 @@
 #include <fstream>
 #include <iostream>
 
-template<bool swapBytes>
-std::vector<uint64_t> writeBody(PsSerializer* serializer)
+template<bool swap_bytes>
+PsBytes writeBody(PsSerializer* serializer)
 {
     // 8 byte-aligned header
     //    [4] type
@@ -23,109 +23,88 @@ std::vector<uint64_t> writeBody(PsSerializer* serializer)
     //    [?] data
     //    [.] 0 padding to reach next alignment
 
+    // Pre-compute Size
+
     const auto& map = serializer->map;
 
-    uint32_t blockHeaderSize64 = 0; // block header in 64s
-    uint32_t blockDataSize64 = 0; // block data in 64s
+    size_t size;
 
-    // Compute total body size
     for (const auto& pair : map)
     {
         const auto& key = pair.first;
         const auto& block = pair.second;
 
-        // cumulative block header size (64s)
-        // 4 type, 4 count, 1 null terminator for key aligned to 64
-        blockHeaderSize64 += pad64(9 + key.size());
-
-        // cumulative block data size aligned to 64 (64s)
-        blockDataSize64 += block.values.size();
+        size =
+            PsBytes::nextMultipleOf(9 + key.size(), 8) +
+            PsBytes::nextMultipleOf(block.bytes(), 8);
     }
 
-    // Create body container
-    std::vector<uint64_t> body(blockHeaderSize64 + blockDataSize64, 0);
+    PsBytes data(size);
 
-    uint32_t blockStart64 = 0; // block start in 64s
+    // Write pairs
 
-    // Write pairs to body
+    size_t i = 0;
     for (const auto& pair : map)
     {
         const auto& key = pair.first;
         const auto& block = pair.second;
 
-        PsType type = block.type;
-        uint32_t count = block.count;
-        const auto& values = block.values;
+        size_t headerSize = PsBytes::nextMultipleOf(9 + key.size(), 8);
+        size_t dataSize = PsBytes::nextMultipleOf(block.bytes(), 8);
 
-        // block header size (64s)
-        // 4 type, 4 count, 1 null terminator for key
-        blockHeaderSize64 = pad64(9 + key.size());
+        // 8 byte-aligned header
+        //    [4] type
+        //    [4] value count
+        //    [?] null terminated name string
+        //    [.] 0 padding to reach next alignment
 
-        // block data size (64s)
-        blockDataSize64 = values.size();
+        data.set<uint32_t, swap_bytes>(i, 4, static_cast<uint32_t>(block.type()));
+        i += 4;
+        data.set<uint32_t, swap_bytes>(i, 4, static_cast<uint32_t>(block.count()));
+        i += 4;
+        data.set<uint8_t , swap_bytes>(i, key.size(), reinterpret_cast<const uint8_t*>(key.data()));
+        i += key.size();
+        data.set<uint8_t , swap_bytes>(i, 1, static_cast<uint8_t>(0));
+        ++i;
 
-        // set block type and size
-        uint64_t* p64 = &body[blockStart64];
-        uint32_t* p32 = reinterpret_cast<uint32_t*>(p64);
+        // Pad until next alignment
+        size_t prev = i;
+        i = PsBytes::nextMultipleOf(i, 8);
+        data.pad(prev, i - prev);
 
-        if constexpr (swapBytes)
+        // 8 byte-aligned data
+        //    [?] data
+        //    [.] 0 padding to reach next alignment
+
+        switch(block.type())
         {
-            p32[0] = byteSwap<uint32_t>(type);
-            p32[1] = byteSwap<uint32_t>(count);
-        }
-        else
-        {
-            p32[0] = type;
-            p32[1] = count;
-        }
-
-        // set block name
-        uint8_t* p8 = reinterpret_cast<uint8_t*>(&p32[2]);
-        memcpy(p8, key.data(), key.size());
-        p8[key.size()] = 0;
-
-        // set block data
-        switch(psGetTypeSize(type))
-        {
-            case 1:
-            {
-                copyToAligned64<uint8_t, swapBytes>(
-                    &p64[blockHeaderSize64],
-                    reinterpret_cast<const uint8_t*>(values.data()),
-                    count);
+            case PS_CHAR8:
+            case PS_UINT8:
+            case PS_INT8:
+                data.set<uint8_t , swap_bytes>(i, block.bytes(), block.data());
                 break;
-            }
-            case 2:
-            {
-                copyToAligned64<uint16_t, swapBytes>(
-                    &p64[blockHeaderSize64],
-                    reinterpret_cast<const uint16_t*>(values.data()),
-                    count);
-                break;
-            }
-            case 4:
-            {
-                copyToAligned64<uint32_t, swapBytes>(
-                    &p64[blockHeaderSize64],
-                    reinterpret_cast<const uint32_t*>(values.data()),
-                    count);
-                break;
-            case 8:
-                copyToAligned64<uint64_t, swapBytes>(
-                    &p64[blockHeaderSize64],
-                    values.data(),
-                    count);
-                break;
-            default:
-                return {};
-            }
+            case PS_UINT16:
+            case PS_INT16:
+                data.set<uint16_t, swap_bytes>(i, block.bytes(), reinterpret_cast<const uint16_t*>(block.data()));
+            case PS_UINT32:
+            case PS_INT32:
+            case PS_FLOAT32:
+                data.set<uint32_t, swap_bytes>(i, block.bytes(), reinterpret_cast<const uint32_t*>(block.data()));
+            case PS_UINT64:
+            case PS_INT64:
+            case PS_FLOAT64:
+                data.set<uint64_t, swap_bytes>(i, block.bytes(), reinterpret_cast<const uint64_t*>(block.data()));
         }
 
-        // next block
-        blockStart64 += blockHeaderSize64 + blockDataSize64;
+        i += block.bytes();
+
+        // Pad until next alignment
+        prev = i;
+        i = PsBytes::nextMultipleOf(i, 8);
+        data.pad(prev, i - prev);
+
+        return data;
     }
-
-    return body;
 }
 
 PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum checksum, PsEndian endian)

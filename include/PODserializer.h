@@ -8,7 +8,7 @@
 
 extern "C"
 {
-    struct PsBlock;
+    class PsBlock;
 
     struct PsSerializer;
 

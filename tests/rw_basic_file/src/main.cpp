@@ -7,7 +7,7 @@ int main()
 {
     PsSerializer* serializer = psCreateSerializer();
 
-    auto testA = psGetBlockByKey(serializer, "TestB");
+    auto testA = psGetBlock(serializer, "TestB");
 
     uint32_t values[5] =
         {

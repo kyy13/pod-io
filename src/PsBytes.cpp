@@ -3,114 +3,49 @@
 
 #include "PsBytes.h"
 
-PsBytes::PsBytes() : m_data(nullptr), m_size(0), m_capacity(0)
-{}
-
-PsBytes::PsBytes(size_t size) : m_data(nullptr), m_size(size), m_capacity(size)
+bool is_little_endian()
 {
-    if (size > 0u)
+    union
     {
-        m_data = new uint8_t[size];
-    }
+        uint32_t i;
+        uint8_t c[4];
+    };
+
+    i = 0x01020304u;
+
+    return c[0] == 4;
 }
 
-PsBytes::PsBytes(const PsBytes& o) : m_data(nullptr), m_size(o.m_size), m_capacity(o.m_size)
+bool is_big_endian()
 {
-    if (m_size > 0)
+    union
     {
-        m_data = new uint8_t[m_capacity];
-        memcpy(m_data, o.m_data, m_size);
-    }
+        uint32_t i;
+        uint8_t c[4];
+    };
+
+    i = 0x01020304u;
+
+    return c[0] == 1;
 }
 
-PsBytes::PsBytes(PsBytes&& o) noexcept : m_data(o.m_data), m_size(o.m_size), m_capacity(o.m_capacity)
+size_t size_of_type(PsType type)
 {
-    o.m_data = nullptr;
-    o.m_size = 0;
-    o.m_capacity = 0;
+    return type & 0xffffu;
 }
 
-PsBytes& PsBytes::operator=(const PsBytes& o)
-{
-    if (this == &o)
-    {
-        return *this;
-    }
-
-    m_data = nullptr;
-    m_size = o.m_size;
-    m_capacity = o.m_size;
-
-    if (m_size > 0)
-    {
-        m_data = new uint8_t[m_capacity];
-        memcpy(m_data, o.m_data, m_size);
-    }
-
-    return *this;
-}
-
-PsBytes& PsBytes::operator=(PsBytes&& o) noexcept
-{
-    if (this != &o)
-    {
-        delete[] m_data;
-
-        m_data = o.m_data;
-        m_size = o.m_size;
-        m_capacity = o.m_capacity;
-
-        o.m_data = nullptr;
-        o.m_size = 0;
-        o.m_capacity = 0;
-    }
-
-    return *this;
-}
-
-PsBytes::~PsBytes()
-{
-    delete[] m_data;
-}
-
-void PsBytes::resize(size_t n)
-{
-    size_t r = m_capacity;
-
-    if (n > r)
-    {
-        while (r < n)
-        {
-            r = (r < 4)
-                ? (r + 1)
-                : (r + (r >> 1u));
-        }
-
-        auto* data = new uint8_t[r];
-        if (m_size > 0)
-        {
-            memcpy(data, m_data, m_size);
-            delete[] m_data;
-        }
-        m_data = data;
-        m_capacity = r;
-    }
-
-    m_size = n;
-}
-
-void PsBytes::pad(size_t firstByte, size_t numBytes)
+void pad_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes)
 {
     // check that there is enough space
-    assert((firstByte + numBytes) <= m_size);
+    assert((firstByte + numBytes) <= v.size());
 
     if (numBytes != 0)
     {
-        memset(&m_data[firstByte], 0, numBytes);
+        memset(&v[firstByte], 0, numBytes);
     }
 }
 
-size_t PsBytes::nextMultipleOf(size_t val, size_t multiple)
+size_t next_multiple_of(size_t val, size_t multiple)
 {
     if (multiple == 0)
     {
@@ -125,15 +60,4 @@ size_t PsBytes::nextMultipleOf(size_t val, size_t multiple)
     }
 
     return val + multiple - remainder;
-}
-
-uint8_t* PsBytes::data()
-{
-    return m_data;
-}
-
-[[nodiscard]]
-size_t PsBytes::size() const
-{
-    return m_size;
 }

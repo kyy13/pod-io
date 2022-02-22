@@ -8,7 +8,7 @@
 
 extern "C"
 {
-    class PsBlock;
+    struct PsBlock;
 
     struct PsSerializer;
 
@@ -65,7 +65,7 @@ extern "C"
         PsChecksum,
         PsEndian);
 
-    PsBlock* psGetBlockByKey(
+    PsBlock* psGetBlock(
         PsSerializer* s,
         const char* key);
 

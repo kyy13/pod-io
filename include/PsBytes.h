@@ -4,194 +4,170 @@
 #ifndef PS_BYTES_H
 #define PS_BYTES_H
 
+#include "PsTypes.h"
+
 #include <cstdint>
 #include <cassert>
 #include <cstring>
+#include <vector>
 
-class PsBytes
+bool is_big_endian();
+
+bool is_little_endian();
+
+template<class T>
+T get_reverse_bytes(T value)
 {
-public:
+    T result;
 
-    PsBytes();
+    auto* src = reinterpret_cast<uint8_t*>(&value);
+    auto* dst = reinterpret_cast<uint8_t*>(&result);
 
-    PsBytes(size_t size);
-
-    PsBytes(const PsBytes& o);
-
-    PsBytes(PsBytes&& o) noexcept;
-
-    PsBytes& operator=(const PsBytes& o);
-
-    PsBytes& operator=(PsBytes&& o) noexcept;
-
-    ~PsBytes();
-
-    template<class T, bool swap_bytes>
-    void set(size_t firstByte, size_t numBytes, T x)
+    for (size_t i = 0; i != sizeof(T); ++i)
     {
-        // check that T is valid for n
-        assert(sizeof(T) == numBytes);
+        constexpr size_t end = sizeof(T) - 1;
+        dst[i] = src[end - i];
+    }
 
-        // check valid byte alignment
-        assert((firstByte % sizeof(T)) == 0);
+    return result;
+}
 
-        // check that there is enough space
-        assert((firstByte + numBytes) <= m_size);
+template<class T, bool reverse_bytes>
+void set_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T x)
+{
+    // check that T is valid for n
+    assert(sizeof(T) == numBytes);
 
-        // set
-        T* r = reinterpret_cast<T*>(&m_data[firstByte]);
+    // check valid byte alignment
+    assert((firstByte % sizeof(T)) == 0);
 
-        if constexpr (sizeof(T) == 1 || !swap_bytes)
+    // check that there is enough space
+    assert((firstByte + numBytes) <= v.size());
+
+    // set
+    T* r = reinterpret_cast<T*>(&v[firstByte]);
+
+    if constexpr (sizeof(T) == 1 || !reverse_bytes)
+    {
+        *r = x;
+    }
+    else
+    {
+        *r = get_reverse_bytes(x);
+    }
+}
+
+template<class T, bool reverse_bytes>
+void set_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, const T* x)
+{
+    // check that T is valid for n
+    assert((numBytes % sizeof(T)) == 0);
+
+    // check valid byte alignment
+    assert((firstByte % sizeof(T)) == 0);
+
+    // check that there is enough space
+    assert((firstByte + numBytes) <= v.size());
+
+    // set
+    if constexpr (sizeof(T) == 1)
+    {
+        memcpy(&v[firstByte], x, numBytes);
+    }
+    else
+    {
+        T* r = reinterpret_cast<T*>(&v[firstByte]);
+        T* end = reinterpret_cast<T*>(&v[firstByte + numBytes]);
+
+        if constexpr (reverse_bytes)
         {
-            *r = x;
+            for (; r != end; ++r)
+            {
+                *r = get_reverse_bytes(*x);
+                ++x;
+            }
         }
         else
         {
-            *r = swapBytes(x);
+            for (; r != end; ++r)
+            {
+                *r = *x;
+                ++x;
+            }
         }
     }
+}
 
-    template<class T, bool swap_bytes>
-    void set(size_t firstByte, size_t numBytes, const T* x)
+template<class T, bool reverse_bytes>
+void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T& x)
+{
+    // check that T is valid for n
+    assert(sizeof(T) == numBytes);
+
+    // check valid byte alignment
+    assert((firstByte % numBytes) == 0);
+
+    // check that there is enough space
+    assert((firstByte + numBytes) <= v.size());
+
+    // get
+    const T* r = reinterpret_cast<const T*>(&v[firstByte]);
+
+    if constexpr (sizeof(T) == 1 || !reverse_bytes)
     {
-        // check that T is valid for n
-        assert((numBytes % sizeof(T)) == 0);
+        x = *r;
+    }
+    else
+    {
+        x = get_reverse_bytes(*r);
+    }
+}
 
-        // check valid byte alignment
-        assert((firstByte % sizeof(T)) == 0);
+template<class T, bool swap_bytes>
+void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T* x)
+{
+    // check that T is valid for n
+    assert((numBytes % sizeof(T)) == 0);
 
-        // check that there is enough space
-        assert((firstByte + numBytes) <= m_size);
+    // check valid byte alignment
+    assert((firstByte % numBytes) == 0);
 
-        // set
-        if constexpr (sizeof(T) == 1)
+    // check that there is enough space
+    assert((firstByte + numBytes) <= v.size());
+
+    // get
+    if constexpr (sizeof(T) == 1)
+    {
+        memcpy(x, &v[firstByte], numBytes);
+    }
+    else
+    {
+        const T* r = reinterpret_cast<const T*>(&v[firstByte]);
+        const T* end = reinterpret_cast<const T*>(&v[firstByte + numBytes]);
+
+        if constexpr (swap_bytes)
         {
-            memcpy(&m_data[firstByte], x, numBytes);
+            for (; r != end; ++r)
+            {
+                x = reverse_bytes(*r);
+                ++x;
+            }
         }
         else
         {
-            T* r = reinterpret_cast<T*>(&m_data[firstByte]);
-            T* end = reinterpret_cast<T*>(&m_data[firstByte + numBytes]);
-
-            if constexpr (swap_bytes)
+            for (; r != end; ++r)
             {
-                for (; r != end; ++r)
-                {
-                    *r = swapBytes(*x);
-                    ++x;
-                }
-            }
-            else
-            {
-                for (; r != end; ++r)
-                {
-                    *r = *x;
-                    ++x;
-                }
+                x = *r;
+                ++x;
             }
         }
     }
+}
 
-    template<class T, bool swap_bytes>
-    void get(size_t firstByte, size_t numBytes, T& x)
-    {
-        // check that T is valid for n
-        assert(sizeof(T) == numBytes);
+size_t size_of_type(PsType type);
 
-        // check valid byte alignment
-        assert((firstByte % numBytes) == 0);
+void pad_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes);
 
-        // check that there is enough space
-        assert((firstByte + numBytes) <= m_size);
-
-        // get
-        const T* r = reinterpret_cast<const T*>(&m_data[firstByte]);
-
-        if constexpr (sizeof(T) == 1 || !swap_bytes)
-        {
-            x = *r;
-        }
-        else
-        {
-            x = swapBytes(*r);
-        }
-    }
-
-    template<class T, bool swap_bytes>
-    void get(size_t firstByte, size_t numBytes, T* x)
-    {
-        // check that T is valid for n
-        assert((numBytes % sizeof(T)) == 0);
-
-        // check valid byte alignment
-        assert((firstByte % numBytes) == 0);
-
-        // check that there is enough space
-        assert((firstByte + numBytes) <= m_size);
-
-        // get
-        if constexpr (sizeof(T) == 1)
-        {
-            memcpy(x, &m_data[firstByte], numBytes);
-        }
-        else
-        {
-            const T* r = reinterpret_cast<const T*>(&m_data[firstByte]);
-            const T* end = reinterpret_cast<const T*>(&m_data[firstByte + numBytes]);
-
-            if constexpr (swap_bytes)
-            {
-                for (; r != end; ++r)
-                {
-                    x = swapBytes(*r);
-                    ++x;
-                }
-            }
-            else
-            {
-                for (; r != end; ++r)
-                {
-                    x = *r;
-                    ++x;
-                }
-            }
-        }
-    }
-
-    [[nodiscard]]
-    uint8_t* data();
-
-    [[nodiscard]]
-    size_t size() const;
-
-    void resize(size_t n);
-
-    void pad(size_t firstByte, size_t numBytes);
-
-    static size_t nextMultipleOf(size_t val, size_t multiple);
-
-protected:
-    uint8_t* m_data;
-    size_t m_size;
-    size_t m_capacity;
-
-    template<class T>
-    T swapBytes(T value)
-    {
-        T result;
-
-        auto* src = reinterpret_cast<uint8_t*>(&value);
-        auto* dst = reinterpret_cast<uint8_t*>(&result);
-
-        for (size_t i = 0; i != sizeof(T); ++i)
-        {
-            constexpr size_t end = sizeof(T) - 1;
-            dst[i] = src[end - i];
-        }
-
-        return result;
-    }
-};
-
+size_t next_multiple_of(size_t val, size_t multiple);
 
 #endif

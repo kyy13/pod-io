@@ -123,6 +123,23 @@ std::vector<uint8_t> write(PsSerializer* serializer, PsEndian endian, PsChecksum
     set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x53u);
     ++i;
 
+    // Checksum
+
+    if (checksum == PS_CRC)
+    {
+        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x43u);
+        ++i;
+        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x52u);
+        ++i;
+    }
+    else if (checksum == PS_NO_CHECKSUM)
+    {
+        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x4Eu);
+        ++i;
+        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x4Fu);
+        ++i;
+    }
+
     // Endian
 
     if (endian == PS_NATIVE_ENDIAN)
@@ -145,24 +162,6 @@ std::vector<uint8_t> write(PsSerializer* serializer, PsEndian endian, PsChecksum
         ++i;
     }
 
-    // Checksum
-
-    if (checksum == PS_CRC)
-    {
-        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x43u);
-        ++i;
-        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x52u);
-        ++i;
-    }
-    else if (checksum == PS_NO_CHECKSUM)
-    {
-        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x4Eu);
-        ++i;
-        set_bytes<uint8_t, reverse_bytes>(header, i, 1, 0x4Fu);
-        ++i;
-    }
-
-
     std::vector<uint8_t> compressed;
 
     {
@@ -170,7 +169,7 @@ std::vector<uint8_t> write(PsSerializer* serializer, PsEndian endian, PsChecksum
         auto data = writeBody<reverse_bytes>(serializer);
 
         // Compress data blocks
-        compressed = deflate(data.data(), data.size());
+        psDeflate(data.data(), data.size(), compressed);
 
         // Write data size
         set_bytes<uint32_t, reverse_bytes>(header, i, 4, data.size());

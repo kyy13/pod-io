@@ -7,11 +7,9 @@
 
 #include <stdexcept>
 
-std::vector<uint8_t> deflate(uint8_t* in, size_t size)
+PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
 {
-    constexpr size_t TEMP_BUFFER_SIZE = 128 * 1024;
-
-    std::vector<uint8_t> out;
+    constexpr size_t BUFFER_SIZE = 128 * 1024;
 
     z_stream zs =
         {
@@ -25,13 +23,15 @@ std::vector<uint8_t> deflate(uint8_t* in, size_t size)
         throw std::runtime_error("could not deflate_init");
     }
 
-    uint8_t buf[TEMP_BUFFER_SIZE];
+    size_t out_size = 0;
+    out.resize(BUFFER_SIZE);
 
-    zs.avail_in = size;
+    zs.avail_in = in_size;
     zs.next_in = in;
-    zs.avail_out = TEMP_BUFFER_SIZE;
-    zs.next_out = buf;
+    zs.avail_out = BUFFER_SIZE;
+    zs.next_out = out.data();
 
+    // Process all input, resizing the output buffer as necessary
     while (zs.avail_in != 0)
     {
         if (deflate(&zs, Z_NO_FLUSH) != Z_OK)
@@ -41,24 +41,27 @@ std::vector<uint8_t> deflate(uint8_t* in, size_t size)
 
         if (zs.avail_out == 0)
         {
-            size_t n = out.size();
-            out.resize(n + TEMP_BUFFER_SIZE);
-            memcpy(out.data() + n, buf, TEMP_BUFFER_SIZE);
+            out_size = out.size();
+
+            out.resize(out_size + BUFFER_SIZE);
+            zs.avail_out = BUFFER_SIZE;
+            zs.next_out = out.data() + out_size;
         }
     }
 
+    // Process remaining (after processing input) until Z_STREAM_END
     int res = Z_OK;
     while (res == Z_OK)
     {
         if (zs.avail_out == 0)
         {
-            size_t n = out.size();
-            out.resize(n + TEMP_BUFFER_SIZE);
-            memcpy(out.data() + n, buf, TEMP_BUFFER_SIZE);
+            out_size = out.size();
 
-            zs.avail_out = TEMP_BUFFER_SIZE;
-            zs.next_out = buf;
+            out.resize(out_size + BUFFER_SIZE);
+            zs.avail_out = BUFFER_SIZE;
+            zs.next_out = out.data() + out_size;
         }
+
         res = deflate(&zs, Z_FINISH);
     }
 
@@ -67,17 +70,36 @@ std::vector<uint8_t> deflate(uint8_t* in, size_t size)
         throw std::runtime_error("could not finish deflate");
     }
 
-    size_t dSize = TEMP_BUFFER_SIZE - zs.avail_out;
-    size_t n = out.size();
-    out.resize(n + dSize);
-    memcpy(out.data() + n, buf, dSize);
+    // The amount of output deflate() produced on the last call
+    // (the call that returned Z_STREAM_END
+    size_t ds = BUFFER_SIZE - zs.avail_out;
+
+    // The final size of the output vector
+    out.resize(out_size + ds);
+
+//    zs.avail_out = ds;
+//    zs.next_out = out.data() + out_size;
 
     deflateEnd(&zs);
 
-    return out;
+    return PS_SUCCESS;
 }
 
-std::vector<uint8_t> inflate(uint8_t* in, size_t size)
+PsResult psInflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
 {
+    z_stream zs =
+        {
+            .next_in = Z_NULL,
+            .avail_in = 0,
+            .zalloc = Z_NULL,
+            .zfree = Z_NULL,
+            .opaque = Z_NULL,
+        };
 
+    if (inflateInit(&zs) != Z_OK)
+    {
+        throw std::runtime_error("could not inflate_init");
+    }
+
+    
 }

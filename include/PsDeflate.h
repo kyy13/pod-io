@@ -4,11 +4,13 @@
 #ifndef PS_DEFLATE_H
 #define PS_DEFLATE_H
 
+#include "PODserializer.h"
+
 #include <vector>
 #include <cstdint>
 
-std::vector<uint8_t> deflate(uint8_t* in, size_t size);
+PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out);
 
-std::vector<uint8_t> inflate(uint8_t* in, size_t size);
+PsResult psInflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out);
 
 #endif

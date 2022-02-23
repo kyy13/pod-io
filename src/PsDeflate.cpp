@@ -5,6 +5,7 @@
 #include "PsBytes.h"
 
 #include <stdexcept>
+#include <iostream>
 
 PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
 {
@@ -81,7 +82,7 @@ PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
     return PS_SUCCESS;
 }
 
-bool inflate_init(inflate_stream& is)
+bool inflate_init(inflate_stream& is, FILE* file, size_t size)
 {
     is.zs =
         {
@@ -92,7 +93,8 @@ bool inflate_init(inflate_stream& is)
             .opaque = Z_NULL,
         };
 
-    is.file = nullptr;
+    is.file = file;
+    is.avail = size;
 
     return inflateInit(&is.zs) == Z_OK;
 }
@@ -105,31 +107,40 @@ void inflate_end(inflate_stream& is)
 inflate_result inflate_next(inflate_stream& is, uint8_t* out, size_t out_size)
 {
     int r;
-    z_stream& zs = is.zs;
+    auto& zs = is.zs;
 
     zs.avail_out = out_size;
     zs.next_out = out;
 
-    do
+    while (zs.avail_out != 0)
     {
-
-        zs.avail_in = fread(is.buffer, 1, sizeof(is.buffer), is.file);
-
-        if (zs.avail_in != sizeof(is.buffer))
+        if (zs.avail_in == 0)
         {
-            return inflate_error;
-        }
+            size_t avail = (is.avail < sizeof(is.buffer))
+                ? is.avail
+                : sizeof(is.buffer);
 
-        zs.next_in = is.buffer;
+            zs.avail_in = fread(is.buffer, 1, avail, is.file);
+            is.avail -= avail;
+
+            if (zs.avail_in != avail)
+            {
+                return inflate_error;
+            }
+
+            zs.next_in = is.buffer;
+        }
 
         r = inflate(&zs, Z_NO_FLUSH);
 
         if (r != Z_OK && r != Z_STREAM_END)
         {
+            std::cout
+                << "avail_in=" << zs.avail_in
+                << ", avail_out=" << zs.avail_out << "\n";
             return inflate_error;
         }
-
-    } while (zs.avail_out == 0);
+    }
 
     if (r == Z_OK)
     {

@@ -8,13 +8,20 @@
 
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 template<bool reverse_bytes>
 PsResult readBytes(PsSerializer* serializer, FILE* file)
 {
     int r;
-    std::vector<uint8_t> buffer(8);
     auto& map = serializer->map;
+
+    std::vector<uint8_t> buffer(8);
+
+    if (fread(buffer.data(), 1, 8, file) != 8)
+    {
+        return PS_FILE_CORRUPT;
+    }
 
     // Read size and compressed size
     uint32_t size, compressedSize;
@@ -26,7 +33,7 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
     // Start inflating
 
     inflate_stream is;
-    if (!inflate_init(is))
+    if (!inflate_init(is, file, compressedSize))
     {
         return PS_ZLIB_ERROR;
     }
@@ -65,6 +72,9 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
         r = inflate_next(is, buffer.data(), buffer.size());
         processedSize += buffer.size();
 
+        std::cout << "bs=" << buffer.size() << "\n";
+        std::cout << "r=" << r << "\n";
+
         if (r == inflate_stream_end)
         {
             break;
@@ -79,7 +89,9 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
         // Set key
 
         std::string key;
-        key.assign(reinterpret_cast<char*>(buffer.data()), buffer.size());
+        key.assign(reinterpret_cast<char*>(buffer.data()), strSize);
+
+        std::cout << key << "\n";
 
         // Setup block
 

@@ -7,7 +7,9 @@
 
 int main()
 {
-    PsSerializer* serializer = psCreateSerializer();
+    // Write File
+
+    auto serializer = psCreateSerializer();
 
     auto testA = psGetBlock(serializer, "TestB");
 
@@ -24,13 +26,25 @@ int main()
 
     auto r = psSaveFile(serializer, "testFileA.bin", PS_CHECKSUM_NONE, PS_ENDIAN_NATIVE);
 
+    psDeleteSerializer(serializer);
+
     if (r != PS_SUCCESS)
     {
-        std::cout << r << "\n";
         return -1;
     }
 
+    // Read File
+
+    serializer = psCreateSerializer();
+
+    r = psLoadFile(serializer, "testFileA.bin");
+
     psDeleteSerializer(serializer);
+
+    if (r != PS_SUCCESS)
+    {
+        return -1;
+    }
 
     return 0;
 }

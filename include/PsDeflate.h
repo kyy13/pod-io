@@ -20,6 +20,7 @@ struct inflate_stream
     z_stream zs;
     uint8_t buffer[8 * 1024];
     FILE* file;
+    size_t avail;
 };
 
 enum inflate_result
@@ -29,7 +30,7 @@ enum inflate_result
     inflate_error,
 };
 
-bool inflate_init(inflate_stream& is);
+bool inflate_init(inflate_stream& is, FILE* file, size_t size);
 
 void inflate_end(inflate_stream& is);
 

@@ -3,7 +3,6 @@
 
 #include "PsDeflate.h"
 #include "PsBytes.h"
-#include "zlib.h"
 
 #include <stdexcept>
 
@@ -77,17 +76,14 @@ PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
     // The final size of the output vector
     out.resize(out_size + ds);
 
-//    zs.avail_out = ds;
-//    zs.next_out = out.data() + out_size;
-
     deflateEnd(&zs);
 
     return PS_SUCCESS;
 }
 
-PsResult psInflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
+bool inflate_init(inflate_stream& is)
 {
-    z_stream zs =
+    is.zs =
         {
             .next_in = Z_NULL,
             .avail_in = 0,
@@ -96,10 +92,49 @@ PsResult psInflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
             .opaque = Z_NULL,
         };
 
-    if (inflateInit(&zs) != Z_OK)
+    is.file = nullptr;
+
+    return inflateInit(&is.zs) == Z_OK;
+}
+
+void inflate_end(inflate_stream& is)
+{
+    inflateEnd(&is.zs);
+}
+
+inflate_result inflate_next(inflate_stream& is, uint8_t* out, size_t out_size)
+{
+    int r;
+    z_stream& zs = is.zs;
+
+    zs.avail_out = out_size;
+    zs.next_out = out;
+
+    do
     {
-        throw std::runtime_error("could not inflate_init");
+
+        zs.avail_in = fread(is.buffer, 1, sizeof(is.buffer), is.file);
+
+        if (zs.avail_in != sizeof(is.buffer))
+        {
+            return inflate_error;
+        }
+
+        zs.next_in = is.buffer;
+
+        r = inflate(&zs, Z_NO_FLUSH);
+
+        if (r != Z_OK && r != Z_STREAM_END)
+        {
+            return inflate_error;
+        }
+
+    } while (zs.avail_out == 0);
+
+    if (r == Z_OK)
+    {
+        return inflate_ok;
     }
 
-    
+    return inflate_stream_end;
 }

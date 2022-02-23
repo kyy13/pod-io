@@ -3,6 +3,8 @@
 
 #include "PODserializer.h"
 
+#include <iostream>
+
 int main()
 {
     PsSerializer* serializer = psCreateSerializer();
@@ -20,7 +22,13 @@ int main()
 
     psSetValues(testA, values, PS_UINT32, 5);
 
-    psSaveFile(serializer, "testFileA.bin", PS_NO_CHECKSUM, PS_NATIVE_ENDIAN);
+    auto r = psSaveFile(serializer, "testFileA.bin", PS_CHECKSUM_NONE, PS_ENDIAN_NATIVE);
+
+    if (r != PS_SUCCESS)
+    {
+        std::cout << r << "\n";
+        return -1;
+    }
 
     psDeleteSerializer(serializer);
 

@@ -149,7 +149,7 @@ void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes,
         {
             for (; r != end; ++r)
             {
-                x = reverse_bytes(*r);
+                *x = reverse_bytes(*r);
                 ++x;
             }
         }
@@ -157,7 +157,7 @@ void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes,
         {
             for (; r != end; ++r)
             {
-                x = *r;
+                *x = *r;
                 ++x;
             }
         }

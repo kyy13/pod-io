@@ -20,6 +20,9 @@ extern "C"
         PS_UNABLE_TO_OPEN,
         PS_FILE_CORRUPT,
         PS_FILE_NOT_FOUND,
+        PS_UNSUPPORTED_ENDIANNESS,
+        PS_UNSUPPORTED_CHECKSUM,
+        PS_ZLIB_ERROR,
     };
 
     enum PsType : uint32_t
@@ -39,15 +42,16 @@ extern "C"
 
     enum PsEndian : uint32_t
     {
-        PS_LITTLE_ENDIAN,
-        PS_BIG_ENDIAN,
-        PS_NATIVE_ENDIAN,
+        PS_ENDIAN_LITTLE,
+        PS_ENDIAN_BIG,
+        PS_ENDIAN_NATIVE,
     };
 
     enum PsChecksum : uint32_t
     {
-        PS_NO_CHECKSUM,
-        PS_CRC,
+        PS_CHECKSUM_NONE,
+        PS_CHECKSUM_ADLER32,
+        PS_CHECKSUM_CRC32,
     };
 
     PsSerializer* psCreateSerializer();

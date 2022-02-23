@@ -4,137 +4,245 @@
 #include "PODserializer.h"
 #include "PsBytes.h"
 #include "PsTypes.h"
+#include "PsDeflate.h"
 
 #include <cstring>
 #include <fstream>
 
 template<bool reverse_bytes>
-void read(PsSerializer* serializer, std::ifstream& ifs)
+PsResult readBytes(PsSerializer* serializer, FILE* file)
 {
-    std::vector<uint8_t> data(8);
+    int r;
+    std::vector<uint8_t> buffer(8);
+    auto& map = serializer->map;
 
-    ifs.read(reinterpret_cast<char*>(data.data()), 8);
-
+    // Read size and compressed size
     uint32_t size, compressedSize;
+    uint32_t processedSize = 0;
 
-    get_bytes<uint32_t, reverse_bytes>(data, 0, 4, size);
-    get_bytes<uint32_t, reverse_bytes>(data, 4, 8, compressedSize);
+    get_bytes<uint32_t, reverse_bytes>(buffer, 0, 4, size);
+    get_bytes<uint32_t, reverse_bytes>(buffer, 4, 4, compressedSize);
 
-    // read compressed
-    std::vector<uint8_t> compressed(next_multiple_of(compressedSize, 8));
-    ifs.read(reinterpret_cast<char*>(compressed.data()), static_cast<std::streamsize>(compressed.size()));
+    // Start inflating
 
+    inflate_stream is;
+    if (!inflate_init(is))
+    {
+        return PS_ZLIB_ERROR;
+    }
 
+    // Get Value Groups
+    while (size != 0u)
+    {
+        // Inflate sizes
 
-    data.resize(size);
+        buffer.resize(12);
+        r = inflate_next(is, buffer.data(), 12);
+        processedSize += 12;
 
+        if (r == inflate_stream_end)
+        {
+            break;
+        }
 
+        if (r != inflate_ok)
+        {
+            inflate_end(is);
+            return PS_FILE_CORRUPT;
+        }
 
+        // Set sizes
 
+        uint32_t strSize, rawType, valueCount;
+
+        get_bytes<uint32_t, reverse_bytes>(buffer, 0, 4, strSize);
+        get_bytes<uint32_t, reverse_bytes>(buffer, 4, 4, rawType);
+        get_bytes<uint32_t, reverse_bytes>(buffer, 8, 4, valueCount);
+
+        // Inflate key
+
+        buffer.resize(next_multiple_of(12 + strSize, 8) - 12);
+        r = inflate_next(is, buffer.data(), buffer.size());
+        processedSize += buffer.size();
+
+        if (r == inflate_stream_end)
+        {
+            break;
+        }
+
+        if (r != inflate_ok)
+        {
+            inflate_end(is);
+            return PS_FILE_CORRUPT;
+        }
+
+        // Set key
+
+        std::string key;
+        key.assign(reinterpret_cast<char*>(buffer.data()), buffer.size());
+
+        // Setup block
+
+        auto& block = map[key];
+        block.count = valueCount;
+
+        switch (rawType)
+        {
+            case PS_CHAR8:
+                block.type = PS_CHAR8;
+                break;
+            case PS_UINT8:
+                block.type = PS_UINT8;
+                break;
+            case PS_UINT16:
+                block.type = PS_UINT16;
+                break;
+            case PS_UINT32:
+                block.type = PS_UINT32;
+                break;
+            case PS_UINT64:
+                block.type = PS_UINT64;
+                break;
+            case PS_INT8:
+                block.type = PS_INT8;
+                break;
+            case PS_INT16:
+                block.type = PS_INT16;
+                break;
+            case PS_INT32:
+                block.type = PS_INT32;
+                break;
+            case PS_INT64:
+                block.type = PS_INT64;
+                break;
+            case PS_FLOAT32:
+                block.type = PS_FLOAT32;
+                break;
+            case PS_FLOAT64:
+                block.type = PS_FLOAT64;
+                break;
+            default:
+                return PS_FILE_CORRUPT;
+        }
+
+        // Inflate values
+
+        block.data.resize(next_multiple_of(block.count * size_of_type(block.type), 8));
+        r = inflate_next(is, block.data.data(), block.data.size());
+        processedSize += block.data.size();
+
+        if (r == inflate_stream_end)
+        {
+            break;
+        }
+
+        if (r != inflate_ok)
+        {
+            inflate_end(is);
+            return PS_FILE_CORRUPT;
+        }
+    }
+
+    inflate_end(is);
+
+    if (r != inflate_stream_end)
+    {
+        return PS_FILE_CORRUPT;
+    }
+
+    if (processedSize != size)
+    {
+        return PS_FILE_CORRUPT;
+    }
+
+    return PS_SUCCESS;
 }
 
 PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 {
-    std::ifstream file(fileName, std::ios::binary);
+    FILE* file = fopen(fileName, "rb");
 
-    if (!file.is_open())
+    if (file == nullptr)
     {
+        fclose(file);
         return PS_FILE_NOT_FOUND;
     }
 
-    // Read header stamp and endianness
+    // Read header
 
-    uint8_t header[8] = {};
+    uint8_t header[8];
 
-    file.read(reinterpret_cast<char*>(header), 8);
-
-    if (header[0] != 0x50 || header[1] != 0x4F || header[2] != 0x44 || header[3] != 0x53)
+    if (fread(header, 1, 8, file) != 8)
     {
+        fclose(file);
         return PS_FILE_CORRUPT;
     }
+
+    // PS
+
+    if (header[0] != 0x50u || header[1] != 0x53)
+    {
+        fclose(file);
+        return PS_FILE_CORRUPT;
+    }
+
+    // Endianness
 
     PsEndian endian;
 
-    if (header[4] == 0x42 && header[5] == 0x45)
+    if (header[2] == 0x4Cu && header[3] == 0x45u)
     {
-        endian = PS_BIG_ENDIAN;
+        endian = PS_ENDIAN_LITTLE;
     }
-    else if (header[4] == 0x4C && header[5] == 0x45)
+    else if (header[2] == 0x42u && header[3] == 0x45u)
     {
-        endian = PS_LITTLE_ENDIAN;
+        endian = PS_ENDIAN_BIG;
     }
     else
     {
+        fclose(file);
         return PS_FILE_CORRUPT;
     }
 
-    // Determine if bytes need to be swapped
-
-    bool requiresByteSwap = false;
-
-    if (endian == PS_LITTLE_ENDIAN && is_big_endian())
-    {
-        requiresByteSwap = true;
-    }
-
-    if (endian == PS_BIG_ENDIAN && is_little_endian())
-    {
-        requiresByteSwap = true;
-    }
-
-    // Read header checksum and data sizes
+    // Checksum
 
     PsChecksum checksum;
 
-    if (header[6] == 0x43 && header[7] == 0x52)
+    if (header[4] == 0x43u && header[5] == 0x52u && header[6] == 0x33u && header[7] == 0x32u)
     {
-        checksum = PS_CRC;
+        checksum = PS_CHECKSUM_CRC32;
     }
-    else if (header[6] == 0x4E && header[7] == 0x4F)
+    else if (header[4] == 0x41u && header[5] == 0x44u && header[6] == 0x33u && header[7] == 0x32u)
     {
-        checksum = PS_NO_CHECKSUM;
+        checksum = PS_CHECKSUM_ADLER32;
+    }
+    else if (header[4] == 0x4Eu && header[5] == 0x4Fu && header[6] == 0x4Eu && header[7] == 0x45u)
+    {
+        checksum = PS_CHECKSUM_NONE;
     }
     else
     {
+        fclose(file);
         return PS_FILE_CORRUPT;
     }
 
+    // Read bytes
+
+    bool requiresByteSwap =
+        (endian == PS_ENDIAN_LITTLE && is_big_endian()) ||
+        (endian == PS_ENDIAN_BIG && is_little_endian());
+
+    PsResult result;
+
     if (requiresByteSwap)
     {
-        read<true>(serializer, file);
+        result = readBytes<true>(serializer, file);
     }
     else
     {
-        read<false>(serializer, file);
+        result = readBytes<false>(serializer, file);
     }
 
-//
-//    uint32_t bodySize = *reinterpret_cast<uint32_t*>(&header[8]);
-//
-//    if (requiresByteSwap) { bodySize = byteSwap(bodySize); }
-//
-//    uint32_t compressedBodySize = *reinterpret_cast<uint32_t*>(&header[12]);
-//
-//    if (requiresByteSwap) { compressedBodySize = byteSwap(compressedBodySize); }
-//
-//    // Read Body
-//
-//    std::vector<uint8_t> compressedBody(compressedBodySize);
-//
-//    file.read(reinterpret_cast<char*>(compressedBody.data()), compressedBodySize);
-//
-//    // Check crc if necessary
-//
-//    if (checksum == PS_CRC)
-//    {
-//        uint32_t crc;
-//
-//        file.read(reinterpret_cast<char*>(&crc), 4);
-//
-//
-//
-//
-//    }
-
-    return PS_SUCCESS;
+    fclose(file);
+    return result;
 }

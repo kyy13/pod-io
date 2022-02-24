@@ -5,7 +5,6 @@
 #include "PsBytes.h"
 
 #include <stdexcept>
-#include <iostream>
 
 PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
 {
@@ -135,9 +134,6 @@ inflate_result inflate_next(inflate_stream& is, uint8_t* out, size_t out_size)
 
         if (r != Z_OK && r != Z_STREAM_END)
         {
-            std::cout
-                << "avail_in=" << zs.avail_in
-                << ", avail_out=" << zs.avail_out << "\n";
             return inflate_error;
         }
     }

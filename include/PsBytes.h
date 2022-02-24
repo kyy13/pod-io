@@ -123,7 +123,7 @@ void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes,
     }
 }
 
-template<class T, bool swap_bytes>
+template<class T, bool reverse_bytes>
 void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T* x)
 {
     // check that T is valid for n
@@ -145,11 +145,11 @@ void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes,
         const T* r = reinterpret_cast<const T*>(&v[firstByte]);
         const T* end = reinterpret_cast<const T*>(&v[firstByte + numBytes]);
 
-        if constexpr (swap_bytes)
+        if constexpr (reverse_bytes)
         {
             for (; r != end; ++r)
             {
-                *x = reverse_bytes(*r);
+                *x = get_reverse_bytes(*r);
                 ++x;
             }
         }

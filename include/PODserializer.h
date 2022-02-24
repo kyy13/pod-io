@@ -17,6 +17,7 @@ extern "C"
         PS_SUCCESS,
         PS_UNASSIGNED_BLOCK,
         PS_TYPE_MISMATCH,
+        PS_OUT_OF_RANGE,
         PS_UNABLE_TO_OPEN,
         PS_FILE_CORRUPT,
         PS_FILE_NOT_FOUND,
@@ -76,8 +77,8 @@ extern "C"
     void psSetValues(
         PsBlock* b,
         const void* values,
-        PsType valueType,
-        uint32_t valueCount);
+        uint32_t valueCount,
+        PsType valueType);
 
     PsResult psTryCountValues(
         const PsBlock* b,
@@ -90,6 +91,7 @@ extern "C"
     PsResult psTryCopyValues(
         const PsBlock* b,
         void* dst,
+        uint32_t valueCount,
         PsType type);
 };
 

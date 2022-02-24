@@ -3,45 +3,304 @@
 
 #include "PODserializer.h"
 
+#include <vector>
+#include <cstring>
 #include <iostream>
 
-int main()
+template<PsEndian endian, PsChecksum checksum>
+bool test()
 {
-    // Write File
+    uint8_t c8[20];
+    uint8_t u8[6];
+    uint16_t u16[7];
+    uint32_t u32[8];
+    uint64_t u64[9];
+    int8_t i8[6];
+    int16_t i16[7];
+    int32_t i32[8];
+    int64_t i64[9];
+    float f32[11];
+    double f64[12];
 
     auto serializer = psCreateSerializer();
 
-    auto testA = psGetBlock(serializer, "TestB");
+    psSetValues(psGetBlock(serializer, "test string"), c8, 20, PS_CHAR8);
 
-    uint32_t values[5] =
-        {
-            1,
-            2,
-            3,
-            4,
-            5,
-        };
+    psSetValues(psGetBlock(serializer, "UKeyA"), u8, 6, PS_UINT8);
+    psSetValues(psGetBlock(serializer, "UKeyB"), u16, 7, PS_UINT16);
+    psSetValues(psGetBlock(serializer, "UKeyC"), u32, 8, PS_UINT32);
+    psSetValues(psGetBlock(serializer, "UKeyD"), u64, 9, PS_UINT64);
 
-    psSetValues(testA, values, PS_UINT32, 5);
+    psSetValues(psGetBlock(serializer, "KeyE"), i8, 6, PS_INT8);
+    psSetValues(psGetBlock(serializer, "KeyF"), i16, 7, PS_INT16);
+    psSetValues(psGetBlock(serializer, "KeyG"), i32, 8, PS_INT32);
+    psSetValues(psGetBlock(serializer, "KeyH"), i64, 9, PS_INT64);
 
-    auto r = psSaveFile(serializer, "testFileA.bin", PS_CHECKSUM_NONE, PS_ENDIAN_NATIVE);
+    psSetValues(psGetBlock(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
+    psSetValues(psGetBlock(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
+
+    if (psSaveFile(serializer, "rw_basic_file.test.bin", checksum, endian) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    psDeleteSerializer(serializer);
+    uint32_t count;
+
+    std::vector<uint8_t> n_c8;
+    std::vector<uint8_t> n_u8;
+    std::vector<uint16_t> n_u16;
+    std::vector<uint32_t> n_u32;
+    std::vector<uint64_t> n_u64;
+    std::vector<int8_t> n_i8;
+    std::vector<int16_t> n_i16;
+    std::vector<int32_t> n_i32;
+    std::vector<int64_t> n_i64;
+    std::vector<float> n_f32;
+    std::vector<double> n_f64;
+
+    serializer = psCreateSerializer();
+
+    if (psLoadFile(serializer, "rw_basic_file.test.bin") != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    auto block = psGetBlock(serializer, "test string");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_c8.resize(count);
+    if (psTryCopyValues(block, n_c8.data(), count, PS_CHAR8) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "UKeyA");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_u8.resize(count);
+    if (psTryCopyValues(block, n_u8.data(), count, PS_UINT8) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "UKeyB");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_u16.resize(count);
+    if (psTryCopyValues(block, n_u16.data(), count, PS_UINT16) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "UKeyC");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_u32.resize(count);
+    if (psTryCopyValues(block, n_u32.data(), count, PS_UINT32) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "UKeyD");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_u64.resize(count);
+    if (psTryCopyValues(block, n_u64.data(), count, PS_UINT64) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "KeyE");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_i8.resize(count);
+    if (psTryCopyValues(block, n_i8.data(), count, PS_INT8) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "KeyF");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_i16.resize(count);
+    if (psTryCopyValues(block, n_i16.data(), count, PS_INT16) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "KeyG");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_i32.resize(count);
+    if (psTryCopyValues(block, n_i32.data(), count, PS_INT32) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "KeyH");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_i64.resize(count);
+    if (psTryCopyValues(block, n_i64.data(), count, PS_INT64) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "FloatKeyI");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_f32.resize(count);
+    if (psTryCopyValues(block, n_f32.data(), count, PS_FLOAT32) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    block = psGetBlock(serializer, "DoubleKeyJ");
+    if (psTryCountValues(block, count) != PS_SUCCESS)
+    {
+        return false;
+    }
+
+    n_f64.resize(count);
+    if (psTryCopyValues(block, n_f64.data(), count, PS_FLOAT64) != PS_SUCCESS)
+    {
+        return false;
+    }
 
     psDeleteSerializer(serializer);
 
-    if (r != PS_SUCCESS)
+    if (memcmp(c8, n_c8.data(), 20 * sizeof(uint8_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(u8, n_u8.data(), 6 * sizeof(uint8_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(u16, n_u16.data(), 7 * sizeof(uint16_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(u32, n_u32.data(), 8 * sizeof(uint32_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(u64, n_u64.data(), 9 * sizeof(uint64_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(i8, n_i8.data(), 6 * sizeof(int8_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(i16, n_i16.data(), 7 * sizeof(int16_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(i32, n_i32.data(), 8 * sizeof(int32_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(i64, n_i64.data(), 9 * sizeof(int64_t)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(f32, n_f32.data(), 11 * sizeof(float)) != 0)
+    {
+        return false;
+    }
+
+    if (memcmp(f64, n_f64.data(), 12 * sizeof(double)) != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+int main()
+{
+    if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_NONE>())
     {
         return -1;
     }
 
-    // Read File
+    if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_NONE>())
+    {
+        return -1;
+    }
 
-    serializer = psCreateSerializer();
+    if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_NONE>())
+    {
+        return -1;
+    }
 
-    r = psLoadFile(serializer, "testFileA.bin");
+    if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_CRC32>())
+    {
+        return -1;
+    }
 
-    psDeleteSerializer(serializer);
+    if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_CRC32>())
+    {
+        return -1;
+    }
 
-    if (r != PS_SUCCESS)
+    if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_CRC32>())
+    {
+        return -1;
+    }
+
+    if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_ADLER32>())
+    {
+        return -1;
+    }
+
+    if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_ADLER32>())
+    {
+        return -1;
+    }
+
+    if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_ADLER32>())
     {
         return -1;
     }

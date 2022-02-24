@@ -27,14 +27,14 @@ std::vector<uint8_t> writeBody(PsSerializer* serializer)
 
     const auto& map = serializer->map;
 
-    size_t size;
+    size_t size = 0;
 
     for (const auto& pair : map)
     {
         const auto& key = pair.first;
         const auto& block = pair.second;
 
-        size =
+        size +=
             next_multiple_of(12 + key.size(), 8) +
             next_multiple_of(block.data.size(), 8);
     }

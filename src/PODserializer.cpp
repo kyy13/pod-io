@@ -22,7 +22,7 @@ PsBlock* psGetBlock(PsSerializer* s, const char* key)
     return &b;
 }
 
-void psSetValues(PsBlock* b, const void* values, PsType type, uint32_t count)
+void psSetValues(PsBlock* b, const void* values, uint32_t count, PsType type)
 {
     size_t size = count * size_of_type(type);
 
@@ -57,7 +57,7 @@ PsResult psTryGetType(const PsBlock* b, PsType& valueType)
     return PS_SUCCESS;
 }
 
-PsResult psTryCopyValues(const PsBlock* b, void* dst, PsType type)
+PsResult psTryCopyValues(const PsBlock* b, void* dst, uint32_t count, PsType type)
 {
     if (b->count == 0)
     {
@@ -69,7 +69,13 @@ PsResult psTryCopyValues(const PsBlock* b, void* dst, PsType type)
         return PS_TYPE_MISMATCH;
     }
 
-    memcpy(dst, b->data.data(), b->data.size());
+    size_t size = count * size_of_type(type);
+    if (size > b->data.size())
+    {
+        return PS_OUT_OF_RANGE;
+    }
+
+    memcpy(dst, b->data.data(), size);
 
     return PS_SUCCESS;
 }

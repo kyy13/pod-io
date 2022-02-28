@@ -18,6 +18,8 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
 
     std::vector<uint8_t> buffer(8);
 
+    // Read header
+
     if (fread(buffer.data(), 1, 8, file) != 8)
     {
         return PS_FILE_CORRUPT;
@@ -68,7 +70,14 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
 
         // Inflate key
 
-        buffer.resize(next_multiple_of(12 + strSize, 8) - 12);
+        uint32_t paddedStrSize = next_multiple_of(12 + strSize, 8) - 12;
+
+        if (paddedStrSize < strSize)
+        {
+            return PS_FILE_CORRUPT;
+        }
+
+        buffer.resize(paddedStrSize);
         r = inflate_next(is, buffer.data(), buffer.size());
         processedSize += buffer.size();
 
@@ -133,8 +142,15 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
         }
 
         // Inflate values
+        uint32_t blockSize = block.count * size_of_type(block.type);
+        uint32_t paddedBlockSize = next_multiple_of(blockSize, 8);
 
-        block.data.resize(next_multiple_of(block.count * size_of_type(block.type), 8));
+        if (paddedBlockSize < blockSize)
+        {
+            return PS_FILE_CORRUPT;
+        }
+
+        block.data.resize(paddedBlockSize);
 
         if constexpr (reverse_bytes)
         {

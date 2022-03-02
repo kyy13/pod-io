@@ -70,20 +70,14 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
 
         // Inflate key
 
-        uint32_t paddedStrSize = next_multiple_of(12 + strSize, 8) - 12;
-
-        if (paddedStrSize < strSize)
-        {
-            return PS_FILE_CORRUPT;
-        }
-
-        buffer.resize(paddedStrSize);
+        buffer.resize(strSize);
         r = inflate_next(is, buffer.data(), buffer.size());
         processedSize += buffer.size();
 
         if (r == inflate_stream_end)
         {
-            break;
+            inflate_end(is);
+            return PS_FILE_CORRUPT;
         }
 
         if (r != inflate_ok)
@@ -96,6 +90,29 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
 
         std::string key;
         key.assign(reinterpret_cast<char*>(buffer.data()), strSize);
+
+        // Remove padding
+
+        uint32_t paddedStrSize = next_multiple_of(12 + strSize, 8) - 12;
+
+        if (paddedStrSize != strSize)
+        {
+            buffer.resize(paddedStrSize - strSize);
+            r = inflate_next(is, buffer.data(), buffer.size());
+            processedSize += buffer.size();
+
+            if (r == inflate_stream_end)
+            {
+                inflate_end(is);
+                return PS_FILE_CORRUPT;
+            }
+
+            if (r != inflate_ok)
+            {
+                inflate_end(is);
+                return PS_FILE_CORRUPT;
+            }
+        }
 
         // Setup block
 
@@ -143,14 +160,8 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
 
         // Inflate values
         uint32_t blockSize = block.count * size_of_type(block.type);
-        uint32_t paddedBlockSize = next_multiple_of(blockSize, 8);
 
-        if (paddedBlockSize < blockSize)
-        {
-            return PS_FILE_CORRUPT;
-        }
-
-        block.data.resize(paddedBlockSize);
+        block.data.resize(blockSize);
 
         if constexpr (reverse_bytes)
         {
@@ -190,6 +201,28 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
                 default:
                     return PS_FILE_CORRUPT;
             }
+        }
+
+        if (r == inflate_stream_end)
+        {
+            break;
+        }
+
+        if (r != inflate_ok)
+        {
+            inflate_end(is);
+            return PS_FILE_CORRUPT;
+        }
+
+        // Remove padding
+
+        uint32_t paddedBlockSize = next_multiple_of(blockSize, 8);
+
+        if (paddedBlockSize != blockSize)
+        {
+            buffer.resize(paddedBlockSize - blockSize);
+            r = inflate_next(is, buffer.data(), buffer.size());
+            processedSize += buffer.size();
         }
 
         if (r == inflate_stream_end)

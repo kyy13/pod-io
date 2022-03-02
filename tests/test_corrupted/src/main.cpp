@@ -42,7 +42,7 @@ std::vector<char> create()
         return {};
     }
 
-    return std::vector<char>(std::istreambuf_iterator<char>(ifs), {});
+    return {std::istreambuf_iterator<char>(ifs), {}};
 }
 
 bool write(std::vector<char>& buffer)

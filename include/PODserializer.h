@@ -74,7 +74,7 @@ extern "C"
         PsSerializer* s,
         const char* key);
 
-    void psSetValues(
+    PsResult psSetValues(
         PsBlock* b,
         const void* values,
         uint32_t valueCount,

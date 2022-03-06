@@ -25,6 +25,7 @@ target_include_directories(
     ${PROJECT_NAME}
     PUBLIC
     include
+    ext/k13/include
     ${ZLIB_INCLUDE_DIR}
 )
 

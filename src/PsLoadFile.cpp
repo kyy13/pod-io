@@ -29,12 +29,12 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
     uint32_t size, compressedSize;
     uint32_t processedSize = 0;
 
-    get_bytes<uint32_t, reverse_bytes>(buffer, 0, 4, size);
-    get_bytes<uint32_t, reverse_bytes>(buffer, 4, 4, compressedSize);
+    get_bytes<uint32_t, reverse_bytes>(size, buffer, 0, 4);
+    get_bytes<uint32_t, reverse_bytes>(compressedSize, buffer, 4, 4);
 
     // Start inflating
 
-    inflate_stream is;
+    inflate_stream is {};
     if (!inflate_init(is, file, compressedSize))
     {
         return PS_ZLIB_ERROR;
@@ -64,9 +64,9 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
 
         uint32_t strSize, rawType, valueCount;
 
-        get_bytes<uint32_t, reverse_bytes>(buffer, 0, 4, strSize);
-        get_bytes<uint32_t, reverse_bytes>(buffer, 4, 4, rawType);
-        get_bytes<uint32_t, reverse_bytes>(buffer, 8, 4, valueCount);
+        get_bytes<uint32_t, reverse_bytes>(strSize, buffer, 0, 4);
+        get_bytes<uint32_t, reverse_bytes>(rawType, buffer, 4, 4);
+        get_bytes<uint32_t, reverse_bytes>(valueCount, buffer, 8, 4);
 
         // Inflate key
 
@@ -182,21 +182,21 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
                 case PS_CHAR8:
                 case PS_UINT8:
                 case PS_INT8:
-                    get_bytes<uint8_t , reverse_bytes>(buffer, 0, buffer.size(), block.data.data());
+                    get_bytes<uint8_t , reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
                     break;
                 case PS_UINT16:
                 case PS_INT16:
-                    get_bytes<uint16_t, reverse_bytes>(buffer, 0, buffer.size(), reinterpret_cast<uint16_t*>(block.data.data()));
+                    get_bytes<uint16_t, reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
                     break;
                 case PS_UINT32:
                 case PS_INT32:
                 case PS_FLOAT32:
-                    get_bytes<uint32_t, reverse_bytes>(buffer, 0, buffer.size(), reinterpret_cast<uint32_t*>(block.data.data()));
+                    get_bytes<uint32_t, reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
                     break;
                 case PS_UINT64:
                 case PS_INT64:
                 case PS_FLOAT64:
-                    get_bytes<uint64_t, reverse_bytes>(buffer, 0, buffer.size(), reinterpret_cast<uint64_t*>(block.data.data()));
+                    get_bytes<uint64_t, reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
                     break;
                 default:
                     return PS_FILE_CORRUPT;

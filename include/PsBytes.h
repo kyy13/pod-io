@@ -5,6 +5,7 @@
 #define PS_BYTES_H
 
 #include "PsTypes.h"
+#include "bytes.h"
 
 #include <cstdint>
 #include <cassert>
@@ -15,25 +16,8 @@ bool is_big_endian();
 
 bool is_little_endian();
 
-template<class T>
-T get_reverse_bytes(T value)
-{
-    T result;
-
-    auto* src = reinterpret_cast<uint8_t*>(&value);
-    auto* dst = reinterpret_cast<uint8_t*>(&result);
-
-    for (size_t i = 0; i != sizeof(T); ++i)
-    {
-        constexpr size_t end = sizeof(T) - 1;
-        dst[i] = src[end - i];
-    }
-
-    return result;
-}
-
 template<class T, bool reverse_bytes>
-void set_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T x)
+void set_bytes(std::vector<uint8_t>& dst, T src, size_t firstByte, size_t numBytes)
 {
     // check that T is valid for n
     assert(sizeof(T) == numBytes);
@@ -41,24 +25,23 @@ void set_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T x)
     // check valid byte alignment
     assert((firstByte % sizeof(T)) == 0);
 
-    // check that there is enough space
-    assert((firstByte + numBytes) <= v.size());
+    // check destination size
+    assert(dst.size() >= firstByte + numBytes);
 
-    // set
-    T* r = reinterpret_cast<T*>(&v[firstByte]);
+    T* r = reinterpret_cast<T*>(dst.data() + firstByte);
 
     if constexpr (sizeof(T) == 1 || !reverse_bytes)
     {
-        *r = x;
+        *r = src;
     }
     else
     {
-        *r = get_reverse_bytes(x);
+        *r = k13::byteswap<T>(src);
     }
 }
 
 template<class T, bool reverse_bytes>
-void set_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, const T* x)
+void set_bytes(std::vector<uint8_t>& dst, const void* src, size_t firstByte, size_t numBytes)
 {
     // check that T is valid for n
     assert((numBytes % sizeof(T)) == 0);
@@ -66,40 +49,24 @@ void set_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, const
     // check valid byte alignment
     assert((firstByte % sizeof(T)) == 0);
 
-    // check that there is enough space
-    assert((firstByte + numBytes) <= v.size());
+    // check destination size
+    assert(dst.size() >= firstByte + numBytes);
 
-    // set
-    if constexpr (sizeof(T) == 1)
+    if constexpr (sizeof(T) == 1 || !reverse_bytes)
     {
-        memcpy(&v[firstByte], x, numBytes);
+        memcpy(dst.data() + firstByte, src, numBytes);
     }
     else
     {
-        T* r = reinterpret_cast<T*>(&v[firstByte]);
-        T* end = reinterpret_cast<T*>(&v[firstByte + numBytes]);
-
-        if constexpr (reverse_bytes)
-        {
-            for (; r != end; ++r)
-            {
-                *r = get_reverse_bytes(*x);
-                ++x;
-            }
-        }
-        else
-        {
-            for (; r != end; ++r)
-            {
-                *r = *x;
-                ++x;
-            }
-        }
+        k13::byteswap<T>(
+            reinterpret_cast<T*>(dst.data() + firstByte),
+            reinterpret_cast<const T*>(src),
+            numBytes / sizeof(T));
     }
 }
 
 template<class T, bool reverse_bytes>
-void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T& x)
+void get_bytes(T& dst, std::vector<uint8_t>& src, size_t firstByte, size_t numBytes)
 {
     // check that T is valid for n
     assert(sizeof(T) == numBytes);
@@ -107,24 +74,24 @@ void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes,
     // check valid byte alignment
     assert((firstByte % numBytes) == 0);
 
-    // check that there is enough space
-    assert((firstByte + numBytes) <= v.size());
+    // check src size
+    assert(src.size() >= firstByte + numBytes);
 
     // get
-    const T* r = reinterpret_cast<const T*>(&v[firstByte]);
+    const T* r = reinterpret_cast<const T*>(src.data() + firstByte);
 
     if constexpr (sizeof(T) == 1 || !reverse_bytes)
     {
-        x = *r;
+        dst = *r;
     }
     else
     {
-        x = get_reverse_bytes(*r);
+        dst = k13::byteswap<T>(*r);
     }
 }
 
 template<class T, bool reverse_bytes>
-void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes, T* x)
+void get_bytes(void* dst, const std::vector<uint8_t>& src, size_t firstByte, size_t numBytes)
 {
     // check that T is valid for n
     assert((numBytes % sizeof(T)) == 0);
@@ -132,35 +99,20 @@ void get_bytes(const std::vector<uint8_t>& v, size_t firstByte, size_t numBytes,
     // check valid byte alignment
     assert((firstByte % numBytes) == 0);
 
-    // check that there is enough space
-    assert((firstByte + numBytes) <= v.size());
+    // check src size
+    assert(src.size() >= firstByte + numBytes);
 
     // get
-    if constexpr (sizeof(T) == 1)
+    if constexpr (sizeof(T) == 1 || !reverse_bytes)
     {
-        memcpy(x, &v[firstByte], numBytes);
+        memcpy(dst, src.data() + firstByte, numBytes);
     }
     else
     {
-        const T* r = reinterpret_cast<const T*>(&v[firstByte]);
-        const T* end = reinterpret_cast<const T*>(&v[firstByte + numBytes]);
-
-        if constexpr (reverse_bytes)
-        {
-            for (; r != end; ++r)
-            {
-                *x = get_reverse_bytes(*r);
-                ++x;
-            }
-        }
-        else
-        {
-            for (; r != end; ++r)
-            {
-                *x = *r;
-                ++x;
-            }
-        }
+        k13::byteswap<T>(
+            reinterpret_cast<T*>(dst),
+            reinterpret_cast<const T*>(src.data() + firstByte),
+            numBytes / sizeof(T));
     }
 }
 

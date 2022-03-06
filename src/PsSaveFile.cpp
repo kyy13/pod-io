@@ -56,13 +56,13 @@ std::vector<uint8_t> writeBody(PsSerializer* serializer)
         //    [?] key
         //    [.] 0 padding to reach next alignment
 
-        set_bytes<uint32_t, reverse_bytes>(data, i, 4, static_cast<uint32_t>(key.size()));
+        set_bytes<uint32_t, reverse_bytes>(data, static_cast<uint32_t>(key.size()), i, 4);
         i += 4;
-        set_bytes<uint32_t, reverse_bytes>(data, i, 4, static_cast<uint32_t>(block.type));
+        set_bytes<uint32_t, reverse_bytes>(data, static_cast<uint32_t>(block.type), i, 4);
         i += 4;
-        set_bytes<uint32_t, reverse_bytes>(data, i, 4, static_cast<uint32_t>(block.count));
+        set_bytes<uint32_t, reverse_bytes>(data, static_cast<uint32_t>(block.count), i, 4);
         i += 4;
-        set_bytes<uint8_t , reverse_bytes>(data, i, key.size(), reinterpret_cast<const uint8_t*>(key.data()));
+        set_bytes<uint8_t , reverse_bytes>(data, key.data(), i, key.size());
         i += key.size();
 
         // Pad until next alignment
@@ -79,21 +79,21 @@ std::vector<uint8_t> writeBody(PsSerializer* serializer)
             case PS_CHAR8:
             case PS_UINT8:
             case PS_INT8:
-                set_bytes<uint8_t , reverse_bytes>(data, i, block.data.size(), block.data.data());
+                set_bytes<uint8_t , reverse_bytes>(data, block.data.data(), i, block.data.size());
                 break;
             case PS_UINT16:
             case PS_INT16:
-                set_bytes<uint16_t, reverse_bytes>(data, i, block.data.size(), reinterpret_cast<const uint16_t*>(block.data.data()));
+                set_bytes<uint16_t, reverse_bytes>(data, block.data.data(), i, block.data.size());
                 break;
             case PS_UINT32:
             case PS_INT32:
             case PS_FLOAT32:
-                set_bytes<uint32_t, reverse_bytes>(data, i, block.data.size(), reinterpret_cast<const uint32_t*>(block.data.data()));
+                set_bytes<uint32_t, reverse_bytes>(data, block.data.data(), i, block.data.size());
                 break;
             case PS_UINT64:
             case PS_INT64:
             case PS_FLOAT64:
-                set_bytes<uint64_t, reverse_bytes>(data, i, block.data.size(), reinterpret_cast<const uint64_t*>(block.data.data()));
+                set_bytes<uint64_t, reverse_bytes>(data, block.data.data(), i, block.data.size());
                 break;
         }
 
@@ -112,45 +112,34 @@ template<bool reverse_bytes>
 PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checksum, std::vector<uint8_t>& out)
 {
     out.resize(16);
-    size_t i = 0;
 
     // "PS"
 
-    set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x50u);
-    ++i;
-    set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x53u);
-    ++i;
+    out[0] = 0x50u;
+    out[1] = 0x53u;
 
     // Endian
 
     switch(endian)
     {
         case PS_ENDIAN_LITTLE:
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x4Cu);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x45u);
-            ++i;
+            out[2] = 0x4Cu;
+            out[3] = 0x45u;
             break;
         case PS_ENDIAN_BIG:
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x42u);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x45u);
-            ++i;
+            out[2] = 0x42u;
+            out[3] = 0x45u;
             break;
         case PS_ENDIAN_NATIVE:
             if (is_little_endian())
             {
-                set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x4Cu);
-                ++i;
-                set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x45u);
-                ++i;
+                out[2] = 0x4Cu;
+                out[3] = 0x45u;
             }
             else if (is_big_endian())
             {
-                set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x42u);
-                ++i;
-                set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x45u);
-                ++i;
+                out[2] = 0x42u;
+                out[3] = 0x45u;
             }
             else
             {
@@ -166,38 +155,28 @@ PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checks
     switch(checksum)
     {
         case PS_CHECKSUM_NONE:
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x4Eu);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x4Fu);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x4Eu);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x45u);
-            ++i;
+            out[4] = 0x4Eu;
+            out[5] = 0x4Fu;
+            out[6] = 0x4Eu;
+            out[7] = 0x45u;
             break;
         case PS_CHECKSUM_ADLER32:
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x41u);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x44u);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x33u);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x32u);
-            ++i;
+            out[4] = 0x41u;
+            out[5] = 0x44u;
+            out[6] = 0x33u;
+            out[7] = 0x32u;
             break;
         case PS_CHECKSUM_CRC32:
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x43u);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x52u);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x33u);
-            ++i;
-            set_bytes<uint8_t, reverse_bytes>(out, i, 1, 0x32u);
-            ++i;
+            out[4] = 0x43u;
+            out[5] = 0x52u;
+            out[6] = 0x33u;
+            out[7] = 0x32u;
             break;
         default:
             return PS_UNSUPPORTED_ENDIANNESS;
     }
+
+    size_t i = 8;
 
     std::vector<uint8_t> compressed;
 
@@ -209,12 +188,12 @@ PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checks
         psDeflate(data.data(), data.size(), compressed);
 
         // Write data size
-        set_bytes<uint32_t, reverse_bytes>(out, i, 4, data.size());
+        set_bytes<uint32_t, reverse_bytes>(out, data.size(), i, 4);
         i += 4;
     }
 
     // Write compressed size
-    set_bytes<uint32_t, reverse_bytes>(out, i, 4, compressed.size());
+    set_bytes<uint32_t, reverse_bytes>(out, compressed.size(), i, 4);
     i += 4;
 
     // Write compressed data
@@ -222,7 +201,7 @@ PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checks
 
     out.resize(i + compressedSize);
 
-    set_bytes<uint8_t, reverse_bytes>(out, i, compressed.size(), compressed.data());
+    set_bytes<uint8_t, reverse_bytes>(out, compressed.data(), i, compressed.size());
     i += compressed.size();
 
     pad_bytes(out, i, out.size() - i);

@@ -185,7 +185,10 @@ PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checks
         auto data = writeBody<reverse_bytes>(serializer);
 
         // Compress data blocks
-        psDeflate(data.data(), data.size(), compressed);
+        if (psDeflate(data.data(), data.size(), compressed, checksum) != PS_SUCCESS)
+        {
+            return PS_ZLIB_ERROR;
+        }
 
         // Write data size
         set_bytes<uint32_t, reverse_bytes>(out, data.size(), i, 4);

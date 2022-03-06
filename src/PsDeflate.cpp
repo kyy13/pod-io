@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 
-PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
+PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out, PsChecksum checksum)
 {
     constexpr size_t BUFFER_SIZE = 128 * 1024;
 
@@ -17,9 +17,28 @@ PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
             .opaque = Z_NULL
         };
 
-    if (deflateInit(&zs, Z_BEST_COMPRESSION) != Z_OK)
+    constexpr int windowBits = 15;
+
+    switch(checksum)
     {
-        throw std::runtime_error("could not deflate_init");
+        case PS_CHECKSUM_NONE:
+            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, -windowBits, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+            {
+                return PS_ZLIB_ERROR;
+            }
+            break;
+        case PS_CHECKSUM_ADLER32:
+            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+            {
+                return PS_ZLIB_ERROR;
+            }
+            break;
+        case PS_CHECKSUM_CRC32:
+            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+            {
+                return PS_ZLIB_ERROR;
+            }
+            break;
     }
 
     size_t out_size = 0;
@@ -35,7 +54,7 @@ PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
     {
         if (deflate(&zs, Z_NO_FLUSH) != Z_OK)
         {
-            throw std::runtime_error("could not deflate");
+            return PS_ZLIB_ERROR;
         }
 
         if (zs.avail_out == 0)
@@ -66,7 +85,7 @@ PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
 
     if (res != Z_STREAM_END)
     {
-        throw std::runtime_error("could not finish deflate");
+        return PS_ZLIB_ERROR;
     }
 
     // The amount of output deflate() produced on the last call
@@ -81,8 +100,10 @@ PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out)
     return PS_SUCCESS;
 }
 
-bool inflate_init(inflate_stream& is, FILE* file, size_t size)
+bool inflate_init(inflate_stream& is, FILE* file, size_t size, PsChecksum checksum)
 {
+    constexpr int windowBits = 15;
+
     is.zs =
         {
             .next_in = Z_NULL,
@@ -95,7 +116,29 @@ bool inflate_init(inflate_stream& is, FILE* file, size_t size)
     is.file = file;
     is.avail = size;
 
-    return inflateInit(&is.zs) == Z_OK;
+    switch(checksum)
+    {
+        case PS_CHECKSUM_NONE:
+            if (inflateInit2(&is.zs, -windowBits) != Z_OK)
+            {
+                return false;
+            }
+            break;
+        case PS_CHECKSUM_ADLER32:
+            if (inflateInit2(&is.zs, windowBits) != Z_OK)
+            {
+                return false;
+            }
+            break;
+        case PS_CHECKSUM_CRC32:
+            if (inflateInit2(&is.zs, windowBits + 16) != Z_OK)
+            {
+                return false;
+            }
+            break;
+    }
+
+    return true;
 }
 
 void inflate_end(inflate_stream& is)
@@ -130,7 +173,15 @@ inflate_result inflate_next(inflate_stream& is, uint8_t* out, size_t out_size)
             zs.next_in = is.buffer;
         }
 
+        auto prev_in = zs.avail_in;
+        auto prev_out = zs.avail_out;
+
         r = inflate(&zs, Z_NO_FLUSH);
+
+        if (zs.avail_in == prev_in && zs.avail_out == prev_out)
+        {
+            return inflate_error;
+        }
 
         if (r != Z_OK && r != Z_STREAM_END)
         {

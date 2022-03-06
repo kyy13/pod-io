@@ -8,10 +8,9 @@
 
 #include <cstring>
 #include <fstream>
-#include <iostream>
 
 template<bool reverse_bytes>
-PsResult readBytes(PsSerializer* serializer, FILE* file)
+PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
 {
     int r;
     auto& map = serializer->map;
@@ -35,7 +34,7 @@ PsResult readBytes(PsSerializer* serializer, FILE* file)
     // Start inflating
 
     inflate_stream is {};
-    if (!inflate_init(is, file, compressedSize))
+    if (!inflate_init(is, file, compressedSize, checksum))
     {
         return PS_ZLIB_ERROR;
     }
@@ -330,11 +329,11 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     if (requiresByteSwap)
     {
-        result = readBytes<true>(serializer, file);
+        result = readBytes<true>(serializer, file, checksum);
     }
     else
     {
-        result = readBytes<false>(serializer, file);
+        result = readBytes<false>(serializer, file, checksum);
     }
 
     fclose(file);

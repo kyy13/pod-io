@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <functional>
 
-PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out);
+PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out, PsChecksum checksum);
 
 struct inflate_stream
 {
@@ -30,7 +30,7 @@ enum inflate_result
     inflate_error,
 };
 
-bool inflate_init(inflate_stream& is, FILE* file, size_t size);
+bool inflate_init(inflate_stream& is, FILE* file, size_t size, PsChecksum checksum);
 
 void inflate_end(inflate_stream& is);
 

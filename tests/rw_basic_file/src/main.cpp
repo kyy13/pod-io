@@ -41,6 +41,7 @@ bool test()
 
     if (psSaveFile(serializer, "rw_basic_file.test.bin", checksum, endian) != PS_SUCCESS)
     {
+        std::cout << "0\n";
         return false;
     }
 
@@ -63,138 +64,161 @@ bool test()
 
     if (psLoadFile(serializer, "rw_basic_file.test.bin") != PS_SUCCESS)
     {
+        std::cout << "1\n";
         return false;
     }
 
     auto block = psGetBlock(serializer, "test string");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "2\n";
         return false;
     }
 
     n_c8.resize(count);
     if (psTryCopyValues(block, n_c8.data(), count, PS_CHAR8) != PS_SUCCESS)
     {
+        std::cout << "3\n";
         return false;
     }
 
     block = psGetBlock(serializer, "UKeyA");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "4\n";
         return false;
     }
 
     n_u8.resize(count);
     if (psTryCopyValues(block, n_u8.data(), count, PS_UINT8) != PS_SUCCESS)
     {
+        std::cout << "5\n";
         return false;
     }
 
     block = psGetBlock(serializer, "UKeyB");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "6\n";
         return false;
     }
 
     n_u16.resize(count);
     if (psTryCopyValues(block, n_u16.data(), count, PS_UINT16) != PS_SUCCESS)
     {
+        std::cout << "7\n";
         return false;
     }
 
     block = psGetBlock(serializer, "UKeyC");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "8\n";
         return false;
     }
 
     n_u32.resize(count);
     if (psTryCopyValues(block, n_u32.data(), count, PS_UINT32) != PS_SUCCESS)
     {
+        std::cout << "8\n";
         return false;
     }
 
     block = psGetBlock(serializer, "UKeyD");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "9\n";
         return false;
     }
 
     n_u64.resize(count);
     if (psTryCopyValues(block, n_u64.data(), count, PS_UINT64) != PS_SUCCESS)
     {
+        std::cout << "10\n";
         return false;
     }
 
     block = psGetBlock(serializer, "KeyE");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "11\n";
         return false;
     }
 
     n_i8.resize(count);
     if (psTryCopyValues(block, n_i8.data(), count, PS_INT8) != PS_SUCCESS)
     {
+        std::cout << "12\n";
         return false;
     }
 
     block = psGetBlock(serializer, "KeyF");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "13\n";
         return false;
     }
 
     n_i16.resize(count);
     if (psTryCopyValues(block, n_i16.data(), count, PS_INT16) != PS_SUCCESS)
     {
+        std::cout << "14\n";
         return false;
     }
 
     block = psGetBlock(serializer, "KeyG");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "15\n";
         return false;
     }
 
     n_i32.resize(count);
     if (psTryCopyValues(block, n_i32.data(), count, PS_INT32) != PS_SUCCESS)
     {
+        std::cout << "16\n";
         return false;
     }
 
     block = psGetBlock(serializer, "KeyH");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "17\n";
         return false;
     }
 
     n_i64.resize(count);
     if (psTryCopyValues(block, n_i64.data(), count, PS_INT64) != PS_SUCCESS)
     {
+        std::cout << "18\n";
         return false;
     }
 
     block = psGetBlock(serializer, "FloatKeyI");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "19\n";
         return false;
     }
 
     n_f32.resize(count);
     if (psTryCopyValues(block, n_f32.data(), count, PS_FLOAT32) != PS_SUCCESS)
     {
+        std::cout << "20\n";
         return false;
     }
 
     block = psGetBlock(serializer, "DoubleKeyJ");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
+        std::cout << "21\n";
         return false;
     }
 
     n_f64.resize(count);
     if (psTryCopyValues(block, n_f64.data(), count, PS_FLOAT64) != PS_SUCCESS)
     {
+        std::cout << "22\n";
         return false;
     }
 
@@ -202,56 +226,67 @@ bool test()
 
     if (memcmp(c8, n_c8.data(), 20 * sizeof(uint8_t)) != 0)
     {
+        std::cout << "23\n";
         return false;
     }
 
     if (memcmp(u8, n_u8.data(), 6 * sizeof(uint8_t)) != 0)
     {
+        std::cout << "24\n";
         return false;
     }
 
     if (memcmp(u16, n_u16.data(), 7 * sizeof(uint16_t)) != 0)
     {
+        std::cout << "25\n";
         return false;
     }
 
     if (memcmp(u32, n_u32.data(), 8 * sizeof(uint32_t)) != 0)
     {
+        std::cout << "26\n";
         return false;
     }
 
     if (memcmp(u64, n_u64.data(), 9 * sizeof(uint64_t)) != 0)
     {
+        std::cout << "27\n";
         return false;
     }
 
     if (memcmp(i8, n_i8.data(), 6 * sizeof(int8_t)) != 0)
     {
+        std::cout << "28\n";
         return false;
     }
 
     if (memcmp(i16, n_i16.data(), 7 * sizeof(int16_t)) != 0)
     {
+        std::cout << "29\n";
         return false;
     }
 
     if (memcmp(i32, n_i32.data(), 8 * sizeof(int32_t)) != 0)
     {
+        std::cout << "30\n";
         return false;
     }
 
     if (memcmp(i64, n_i64.data(), 9 * sizeof(int64_t)) != 0)
     {
+        std::cout << "31\n";
         return false;
     }
 
     if (memcmp(f32, n_f32.data(), 11 * sizeof(float)) != 0)
     {
+        std::cout << "32\n";
         return false;
     }
 
     if (memcmp(f64, n_f64.data(), 12 * sizeof(double)) != 0)
     {
+        std::cout << "33\n";
         return false;
     }
 
@@ -262,46 +297,55 @@ int main()
 {
     if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_NONE>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_NONE>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_NONE>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_CRC32>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_CRC32>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_CRC32>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_ADLER32>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_ADLER32>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_ADLER32>())
     {
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 

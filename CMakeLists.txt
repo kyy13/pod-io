@@ -18,6 +18,7 @@ add_library(
     src/PsSaveFile.cpp
     src/PsDeflate.cpp
     src/PsBytes.cpp
+    src/PsFile.cpp
 )
 
 # includes

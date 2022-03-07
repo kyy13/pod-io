@@ -10,7 +10,7 @@
 #include <fstream>
 
 template<bool reverse_bytes>
-PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
+PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
 {
     int r;
     auto& map = serializer->map;
@@ -19,7 +19,7 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
 
     // Read header
 
-    if (fread(buffer.data(), 1, 8, file) != 8)
+    if (file.read(buffer.data(), 8) != 8)
     {
         return PS_FILE_CORRUPT;
     }
@@ -33,8 +33,8 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
 
     // Start inflating
 
-    inflate_stream is {};
-    if (!inflate_init(is, file, compressedSize, checksum))
+    compress_stream is {};
+    if (inflate_init(is, &file, compressedSize, checksum) != COMPRESS_SUCCESS)
     {
         return PS_ZLIB_ERROR;
     }
@@ -48,12 +48,12 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
         r = inflate_next(is, buffer.data(), 12);
         processedSize += 12;
 
-        if (r == inflate_stream_end)
+        if (r == COMPRESS_STREAM_END)
         {
             break;
         }
 
-        if (r != inflate_ok)
+        if (r != COMPRESS_SUCCESS)
         {
             inflate_end(is);
             return PS_FILE_CORRUPT;
@@ -73,13 +73,13 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
         r = inflate_next(is, buffer.data(), buffer.size());
         processedSize += buffer.size();
 
-        if (r == inflate_stream_end)
+        if (r == COMPRESS_STREAM_END)
         {
             inflate_end(is);
             return PS_FILE_CORRUPT;
         }
 
-        if (r != inflate_ok)
+        if (r != COMPRESS_SUCCESS)
         {
             inflate_end(is);
             return PS_FILE_CORRUPT;
@@ -100,13 +100,13 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
             r = inflate_next(is, buffer.data(), buffer.size());
             processedSize += buffer.size();
 
-            if (r == inflate_stream_end)
+            if (r == COMPRESS_STREAM_END)
             {
                 inflate_end(is);
                 return PS_FILE_CORRUPT;
             }
 
-            if (r != inflate_ok)
+            if (r != COMPRESS_SUCCESS)
             {
                 inflate_end(is);
                 return PS_FILE_CORRUPT;
@@ -202,12 +202,12 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
             }
         }
 
-        if (r == inflate_stream_end)
+        if (r == COMPRESS_STREAM_END)
         {
             break;
         }
 
-        if (r != inflate_ok)
+        if (r != COMPRESS_SUCCESS)
         {
             inflate_end(is);
             return PS_FILE_CORRUPT;
@@ -224,21 +224,24 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
             processedSize += buffer.size();
         }
 
-        if (r == inflate_stream_end)
+        if (r == COMPRESS_STREAM_END)
         {
             break;
         }
 
-        if (r != inflate_ok)
+        if (r != COMPRESS_SUCCESS)
         {
             inflate_end(is);
             return PS_FILE_CORRUPT;
         }
     }
 
-    inflate_end(is);
+    if (inflate_end(is) != COMPRESS_SUCCESS)
+    {
+        return PS_FILE_CORRUPT;
+    }
 
-    if (r != inflate_stream_end)
+    if (r != COMPRESS_STREAM_END)
     {
         return PS_FILE_CORRUPT;
     }
@@ -253,11 +256,10 @@ PsResult readBytes(PsSerializer* serializer, FILE* file, PsChecksum checksum)
 
 PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 {
-    FILE* file = fopen(fileName, "rb");
+    File file(fileName, FM_READ);
 
-    if (file == nullptr)
+    if (!file.is_open())
     {
-        fclose(file);
         return PS_FILE_NOT_FOUND;
     }
 
@@ -265,9 +267,8 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     uint8_t header[8];
 
-    if (fread(header, 1, 8, file) != 8)
+    if (file.read(header, 8) != 8)
     {
-        fclose(file);
         return PS_FILE_CORRUPT;
     }
 
@@ -275,7 +276,6 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     if (header[0] != 0x50u || header[1] != 0x53)
     {
-        fclose(file);
         return PS_FILE_CORRUPT;
     }
 
@@ -293,7 +293,6 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
     }
     else
     {
-        fclose(file);
         return PS_FILE_CORRUPT;
     }
 
@@ -315,7 +314,6 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
     }
     else
     {
-        fclose(file);
         return PS_FILE_CORRUPT;
     }
 
@@ -336,6 +334,5 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
         result = readBytes<false>(serializer, file, checksum);
     }
 
-    fclose(file);
     return result;
 }

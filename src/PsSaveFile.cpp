@@ -7,7 +7,7 @@
 #include "PsDeflate.h"
 
 #include <cstring>
-#include <fstream>
+#include "PsFile.h"
 
 template<bool reverse_bytes>
 std::vector<uint8_t> writeBody(PsSerializer* serializer)
@@ -216,12 +216,15 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
 {
     // Open File
 
-    std::ofstream file(fileName, std::ios::binary);
+    File file(fileName, FM_WRITE);
 
     if (!file.is_open())
     {
         return PS_FILE_NOT_FOUND;
     }
+
+//    compress_stream cs {};
+//    deflate_init(cs, &file, checksum);
 
     bool requiresByteSwap =
         (endian == PS_ENDIAN_LITTLE && is_big_endian()) ||
@@ -244,9 +247,7 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
         return result;
     }
 
-    file.write(
-        reinterpret_cast<const char*>(data.data()),
-        static_cast<std::streamsize>(data.size()));
+    file.write(data.data(), data.size());
 
     return PS_SUCCESS;
 }

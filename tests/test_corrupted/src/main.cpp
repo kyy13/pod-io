@@ -24,7 +24,6 @@ std::vector<char> create()
     psSetValues(psGetBlock(serializer, "val1"), val1, 4, PS_UINT32);
     psSetValues(psGetBlock(serializer, "val2"), val2, 8, PS_INT64);
 
-    std::cout << "saving file...\n";
     if (psSaveFile(serializer, filename, checksum, endian) != PS_SUCCESS)
     {
         std::cout << "failed to psSaveFile()" << std::endl;
@@ -92,7 +91,6 @@ bool test()
         uint8_t oldval = *reinterpret_cast<uint8_t*>(&buf[i]);
         uint8_t newval;
 
-        std::cout << "setting bytes..\n";
         do
         {
             newval = static_cast<uint8_t>(rand() % 256);
@@ -113,7 +111,6 @@ bool test()
 
         PsResult result;
 
-        std::cout << "loading file...\n";
         try
         {
             result = psLoadFile(serializer, filename);

@@ -8,6 +8,11 @@ by Kyle J Burgess<br>
 
 ## Features
 
+<details>
+<summary>
+show/hide
+</summary>
+
 #### Data Types
 * Store any number of arrays of POD types indexed by keys of 8-bit ASCII characters
     * 8-bit ASCII characters
@@ -32,7 +37,16 @@ by Kyle J Burgess<br>
 #### Compression Level
 * Choose betweening varying levels of compression based on `zlib`'s DEFLATE comoression levels.
 
+</details>
+
 ## File Format
+
+<details>
+<summary>
+show/hide
+</summary>
+
+<br>
 All character types are stored in ASCII where the smallest byte corresponds to the left-most character.
 
 #### HEADER
@@ -61,3 +75,4 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 | `8...11` | *data type*<br>32-bit unsigned integer stored in the endian order specified by *endianness*<br>`0x02000001` 8-bit ASCII character<br>`0x00000001` 8-bit unsigned integer<br>`0x00000002` 16-bit unsigned integer<br>`0x00000004` 32-bit unsigned integer<br>`0x00000008` 64-bit unsigned integer<br>`0x00010001` 8-bit twos-complement signed integer<br>`0x00010002` 16-bit twos-complement signed integer<br>`0x00010004` 32-bit twos-complement signed integer<br>`0x00010008` 64-bit twos-complement signed integer<br>`0x01010004` 32-bit IEEE floating point number<br>`0x01010008` 64-bit IEEE floating point number |
 | `12...X` | *key*<br>encoded as *key size* number of 8-bit ASCII characters.
 | `X+1...Y` | *data*<br>encoded as *data size* number of values stored contiguously in an array where each value is stored in the endian order specified by *endianness*.
+</details>

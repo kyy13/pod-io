@@ -34,7 +34,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
     // Start inflating
 
     compress_stream is {};
-    if (inflate_init(is, &file, compressedSize, checksum) != COMPRESS_SUCCESS)
+    if (inflate_init(is, &file, checksum) != COMPRESS_SUCCESS)
     {
         return PS_ZLIB_ERROR;
     }

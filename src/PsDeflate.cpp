@@ -207,7 +207,7 @@ compress_result deflate_next(compress_stream& is, uint8_t* in, size_t in_size)
     return COMPRESS_SUCCESS;
 }
 
-compress_result inflate_init(compress_stream& is, File* file, size_t size, PsChecksum checksum)
+compress_result inflate_init(compress_stream& is, File* file, PsChecksum checksum)
 {
     constexpr int windowBits = 15;
 
@@ -221,7 +221,6 @@ compress_result inflate_init(compress_stream& is, File* file, size_t size, PsChe
         };
 
     is.file = file;
-    is.avail = size;
 
     switch(checksum)
     {
@@ -248,9 +247,9 @@ compress_result inflate_init(compress_stream& is, File* file, size_t size, PsChe
     return COMPRESS_SUCCESS;
 }
 
-compress_result inflate_end(compress_stream& is)
+compress_result inflate_end(compress_stream& cs)
 {
-    if (inflateEnd(&is.zs) != Z_OK)
+    if (inflateEnd(&cs.zs) != Z_OK)
     {
         return COMPRESS_ERROR;
     }
@@ -270,18 +269,7 @@ compress_result inflate_next(compress_stream& is, uint8_t* out, size_t out_size)
     {
         if (zs.avail_in == 0)
         {
-            size_t avail = (is.avail < sizeof(is.buffer))
-                ? is.avail
-                : sizeof(is.buffer);
-
-            zs.avail_in = is.file->read(is.buffer, avail);
-            is.avail -= avail;
-
-            if (zs.avail_in != avail)
-            {
-                return COMPRESS_ERROR;
-            }
-
+            zs.avail_in = is.file->read(is.buffer, sizeof(is.buffer));
             zs.next_in = is.buffer;
         }
 
@@ -295,16 +283,22 @@ compress_result inflate_next(compress_stream& is, uint8_t* out, size_t out_size)
             return COMPRESS_ERROR;
         }
 
-        if (r != Z_OK && r != Z_STREAM_END)
+        if (r == Z_STREAM_END)
+        {
+            return COMPRESS_STREAM_END;
+        }
+
+        if (r != Z_OK)
         {
             return COMPRESS_ERROR;
         }
     }
 
-    if (r == Z_OK)
-    {
-        return COMPRESS_SUCCESS;
-    }
+    return COMPRESS_SUCCESS;
+}
 
-    return COMPRESS_STREAM_END;
+void* inflate_read_back(compress_stream& cs, size_t& size)
+{
+    size = cs.zs.avail_in;
+    return cs.buffer;
 }

@@ -5,6 +5,7 @@
 #include "PsBytes.h"
 #include "PsTypes.h"
 #include "PsDeflate.h"
+#include "PsLookup.h"
 
 #include <cstring>
 #include <fstream>
@@ -15,21 +16,20 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
     int r;
     auto& map = serializer->map;
 
-    std::vector<uint8_t> buffer(8);
-
-    // Read header
-
-    if (file.read(buffer.data(), 8) != 8)
-    {
-        return PS_FILE_CORRUPT;
-    }
-
-    // Read size and compressed size
-    uint32_t size, compressedSize;
-    uint32_t processedSize = 0;
-
-    get_bytes<uint32_t, reverse_bytes>(size, buffer, 0, 4);
-    get_bytes<uint32_t, reverse_bytes>(compressedSize, buffer, 4, 4);
+//    std::vector<uint8_t> buffer(4);
+//
+//    // Read header
+//
+//    if (file.read(buffer.data(), 4) != 4)
+//    {
+//        return PS_FILE_CORRUPT;
+//    }
+//
+//    // Read size and compressed size
+//    uint32_t size;
+//    uint32_t processedSize = 0;
+//
+//    get_bytes<uint32_t, reverse_bytes>(size, buffer, 0, 4);
 
     // Start inflating
 
@@ -39,14 +39,16 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         return PS_ZLIB_ERROR;
     }
 
+    std::vector<uint8_t> buffer;
+
     // Get Value Groups
-    while (size != 0u)
+    while (true)
     {
         // Inflate sizes
 
         buffer.resize(12);
         r = inflate_next(is, buffer.data(), 12);
-        processedSize += 12;
+//        processedSize += 12;
 
         if (r == COMPRESS_STREAM_END)
         {
@@ -71,7 +73,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
 
         buffer.resize(strSize);
         r = inflate_next(is, buffer.data(), buffer.size());
-        processedSize += buffer.size();
+//        processedSize += buffer.size();
 
         if (r == COMPRESS_STREAM_END)
         {
@@ -98,7 +100,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         {
             buffer.resize(paddedStrSize - strSize);
             r = inflate_next(is, buffer.data(), buffer.size());
-            processedSize += buffer.size();
+//            processedSize += buffer.size();
 
             if (r == COMPRESS_STREAM_END)
             {
@@ -172,7 +174,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
             r = inflate_next(is, block.data.data(), block.data.size());
         }
 
-        processedSize += block.data.size();
+//        processedSize += block.data.size();
 
         if constexpr (reverse_bytes)
         {
@@ -221,7 +223,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         {
             buffer.resize(paddedBlockSize - blockSize);
             r = inflate_next(is, buffer.data(), buffer.size());
-            processedSize += buffer.size();
+//            processedSize += buffer.size();
         }
 
         if (r == COMPRESS_STREAM_END)
@@ -241,15 +243,15 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         return PS_FILE_CORRUPT;
     }
 
-    if (r != COMPRESS_STREAM_END)
-    {
-        return PS_FILE_CORRUPT;
-    }
+//    if (r != COMPRESS_STREAM_END)
+//    {
+//        return PS_FILE_CORRUPT;
+//    }
 
-    if (processedSize != size)
-    {
-        return PS_FILE_CORRUPT;
-    }
+//    if (processedSize != size)
+//    {
+//        return PS_FILE_CORRUPT;
+//    }
 
     return PS_SUCCESS;
 }
@@ -265,16 +267,16 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     // Read header
 
-    uint8_t header[8];
+    uint8_t header[16];
 
-    if (file.read(header, 8) != 8)
+    if (file.read(header, sizeof(header)) != sizeof(header))
     {
         return PS_FILE_CORRUPT;
     }
 
-    // PS
+    // PODS
 
-    if (header[0] != 0x50u || header[1] != 0x53)
+    if (memcmp(header, cPODS, 4) != 0)
     {
         return PS_FILE_CORRUPT;
     }
@@ -283,11 +285,11 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     PsEndian endian;
 
-    if (header[2] == 0x4Cu && header[3] == 0x45u)
+    if (memcmp(header + 4, cLEND, 4) == 0)
     {
         endian = PS_ENDIAN_LITTLE;
     }
-    else if (header[2] == 0x42u && header[3] == 0x45u)
+    else if (memcmp(header + 4, cBEND, 4) == 0)
     {
         endian = PS_ENDIAN_BIG;
     }
@@ -300,15 +302,15 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     PsChecksum checksum;
 
-    if (header[4] == 0x43u && header[5] == 0x52u && header[6] == 0x33u && header[7] == 0x32u)
+    if (memcmp(header + 8, cCR32, 4) == 0)
     {
         checksum = PS_CHECKSUM_CRC32;
     }
-    else if (header[4] == 0x41u && header[5] == 0x44u && header[6] == 0x33u && header[7] == 0x32u)
+    else if (memcmp(header + 8, cAD32, 4) == 0)
     {
         checksum = PS_CHECKSUM_ADLER32;
     }
-    else if (header[4] == 0x4Eu && header[5] == 0x4Fu && header[6] == 0x4Eu && header[7] == 0x45u)
+    else if (memcmp(header + 8, cNONE, 4) == 0)
     {
         checksum = PS_CHECKSUM_NONE;
     }

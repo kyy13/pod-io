@@ -5,6 +5,7 @@
 #include "PsBytes.h"
 #include "PsTypes.h"
 #include "PsDeflate.h"
+#include "PsLookup.h"
 
 #include <cstring>
 #include "PsFile.h"
@@ -113,33 +114,28 @@ PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checks
 {
     out.resize(16);
 
-    // "PS"
+    // "PODS"
 
-    out[0] = 0x50u;
-    out[1] = 0x53u;
+    memcpy(out.data(), cPODS, 4);
 
     // Endian
 
     switch(endian)
     {
         case PS_ENDIAN_LITTLE:
-            out[2] = 0x4Cu;
-            out[3] = 0x45u;
+            memcpy(out.data() + 4, cLEND, 4);
             break;
         case PS_ENDIAN_BIG:
-            out[2] = 0x42u;
-            out[3] = 0x45u;
+            memcpy(out.data() + 4, cBEND, 4);
             break;
         case PS_ENDIAN_NATIVE:
             if (is_little_endian())
             {
-                out[2] = 0x4Cu;
-                out[3] = 0x45u;
+                memcpy(out.data() + 4, cLEND, 4);
             }
             else if (is_big_endian())
             {
-                out[2] = 0x42u;
-                out[3] = 0x45u;
+                memcpy(out.data() + 4, cBEND, 4);
             }
             else
             {
@@ -155,28 +151,22 @@ PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checks
     switch(checksum)
     {
         case PS_CHECKSUM_NONE:
-            out[4] = 0x4Eu;
-            out[5] = 0x4Fu;
-            out[6] = 0x4Eu;
-            out[7] = 0x45u;
+            memcpy(out.data() + 8, cNONE, 4);
             break;
         case PS_CHECKSUM_ADLER32:
-            out[4] = 0x41u;
-            out[5] = 0x44u;
-            out[6] = 0x33u;
-            out[7] = 0x32u;
+            memcpy(out.data() + 8, cAD32, 4);
             break;
         case PS_CHECKSUM_CRC32:
-            out[4] = 0x43u;
-            out[5] = 0x52u;
-            out[6] = 0x33u;
-            out[7] = 0x32u;
+            memcpy(out.data() + 8, cCR32, 4);
             break;
         default:
             return PS_UNSUPPORTED_ENDIANNESS;
     }
 
-    size_t i = 8;
+    // Padding
+    memset(out.data() + 12, 0, 4);
+
+    size_t i = 16;
 
     std::vector<uint8_t> compressed;
 
@@ -189,15 +179,7 @@ PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checks
         {
             return PS_ZLIB_ERROR;
         }
-
-        // Write data size
-        set_bytes<uint32_t, reverse_bytes>(out, data.size(), i, 4);
-        i += 4;
     }
-
-    // Write compressed size
-    set_bytes<uint32_t, reverse_bytes>(out, compressed.size(), i, 4);
-    i += 4;
 
     // Write compressed data
     size_t compressedSize = next_multiple_of(compressed.size(), 8);

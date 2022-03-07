@@ -52,20 +52,6 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum, u
             return PS_ZLIB_ERROR;
         }
 
-        // Pad until next alignment
-
-        size_t paddedHeaderSize = next_multiple_of(headerSize, 8);
-        if (paddedHeaderSize != headerSize)
-        {
-            buffer.resize(paddedHeaderSize - headerSize);
-            memset(buffer.data(), 0, buffer.size());
-
-            if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
-            {
-                return PS_ZLIB_ERROR;
-            }
-        }
-
         // Write data
 
         // 8 byte-aligned data
@@ -107,21 +93,6 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum, u
         else
         {
             if (deflate_next(cs, block.data.data(), block.data.size()) != COMPRESS_SUCCESS)
-            {
-                return PS_ZLIB_ERROR;
-            }
-        }
-
-        // Pad until next alignment
-
-        size_t dataSize = block.data.size();
-        size_t paddedDataSize = next_multiple_of(dataSize, 8);
-        if (paddedDataSize != dataSize)
-        {
-            buffer.resize(paddedDataSize - dataSize);
-            memset(buffer.data(), 0, buffer.size());
-
-            if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
             {
                 return PS_ZLIB_ERROR;
             }
@@ -224,6 +195,8 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
     {
         check32 = crc32(check32, header, 16);
     }
+
+    std::cout << "[save] checksum @ header: " << check32 << "\n";
 
     // Write endian-dependent blocks
 

@@ -76,28 +76,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, ui
         std::string key;
         key.assign(reinterpret_cast<char*>(buffer.data()), strSize);
 
-        // Remove padding
-
-        uint32_t paddedStrSize = next_multiple_of(12 + strSize, 8) - 12;
-
-        if (paddedStrSize != strSize)
-        {
-            buffer.resize(paddedStrSize - strSize);
-            r = inflate_next(is, buffer.data(), buffer.size());
-
-            if (r == COMPRESS_STREAM_END)
-            {
-                inflate_end(is);
-                return PS_FILE_CORRUPT;
-            }
-
-            if (r != COMPRESS_SUCCESS)
-            {
-                inflate_end(is);
-                return PS_FILE_CORRUPT;
-            }
-        }
-
         // Setup block
 
         auto& block = map[key];
@@ -183,27 +161,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, ui
                 default:
                     return PS_FILE_CORRUPT;
             }
-        }
-
-        if (r == COMPRESS_STREAM_END)
-        {
-            break;
-        }
-
-        if (r != COMPRESS_SUCCESS)
-        {
-            inflate_end(is);
-            return PS_FILE_CORRUPT;
-        }
-
-        // Remove padding
-
-        uint32_t paddedBlockSize = next_multiple_of(blockSize, 8);
-
-        if (paddedBlockSize != blockSize)
-        {
-            buffer.resize(paddedBlockSize - blockSize);
-            r = inflate_next(is, buffer.data(), buffer.size());
         }
 
         if (r == COMPRESS_STREAM_END)
@@ -350,6 +307,8 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
     {
         check32 = crc32(check32, header, 16);
     }
+
+    std::cout << "[load] checksum @ header: " << check32 << "\n";
 
     // Read bytes
 

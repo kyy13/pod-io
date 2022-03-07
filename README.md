@@ -23,7 +23,8 @@ details
 
 #### Data Validation
 * Data types and sizes are validated on the host by providing the intended size and type of data when both storing and retrieving data.
-* Corrupt files are reported on load. See **Checksum** for further data validation options.
+* Corrupt files are reported on load.
+* See **Checksum** for further data validation options.
 
 #### Endian Independence
 * Files keep track of the endianness they were saved in--allowing for optimal performance when writing and reading from a host with the same endianness.
@@ -31,7 +32,7 @@ details
 * Reading a file saved for an endianness that differs from the host will incur a small performance overhead.
 
 #### Checksum
-* Choose between no checksum, `adler32` checksum, or `crc32` checksum when saving a file.
+* Choose between no checksum, `adler32` checksum, or `crc32` checksum and a starting 32-bit checksum value when saving and/or loading a file.
 * PODstore will automatically read and validate checksums on load.
 
 #### Compression Level

@@ -100,7 +100,7 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 #### TRAILER
 | byte(s) | value(s)
 | --- | --- |
-| `None` or<br>`N+1...N+4` | If *checksum* is `NONE`, then 0 bytes.<br>If *checksum* is `AD32` or `CR32`, then 4 bytes of 32-bit unsigned integer checksum stored in the endian order specified by *endianness*. |
+| `None` or<br>`N+1...N+4` | If *checksum* is `NONE`, then the trailer checksum must be 0 bytes.<br>If *checksum* is `AD32` or `CR32`, then 4 bytes of 32-bit unsigned integer checksum stored in the endian order specified by *endianness*. The checksum is computed for the entire file except the **TRAILER** starting at a configurable value. |
 
 #### BLOCK
 | byte(s) | value(s)

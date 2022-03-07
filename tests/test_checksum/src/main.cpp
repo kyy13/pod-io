@@ -42,17 +42,20 @@ bool testFile()
 
     uint32_t c0 = 0, c1 = 0;
 
+    std::vector<uint8_t> crcbuf(4);
+    memcpy(crcbuf.data(), buffer.data() + buffer.size() - 4, 4);
+
     bool requiresByteSwap =
         (endian == PS_ENDIAN_LITTLE && is_big_endian()) ||
-            (endian == PS_ENDIAN_BIG && is_little_endian());
+        (endian == PS_ENDIAN_BIG && is_little_endian());
 
     if (requiresByteSwap)
     {
-        get_bytes<uint32_t, true>(c0, buffer, buffer.size() - 4, 4);
+        get_bytes<uint32_t, true>(c0, crcbuf, 0, 4);
     }
     else
     {
-        get_bytes<uint32_t, false>(c0, buffer, buffer.size() - 4, 4);
+        get_bytes<uint32_t, false>(c0, crcbuf, 0, 4);
     }
 
     switch(checksum)

@@ -212,5 +212,5 @@ compress_result inflate_next(compress_stream& is, uint8_t* out, size_t out_size)
 void* inflate_read_back(compress_stream& cs, size_t& size)
 {
     size = cs.zs.avail_in;
-    return cs.buffer;
+    return cs.zs.next_in;
 }

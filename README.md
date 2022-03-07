@@ -1,5 +1,6 @@
 # PODstore
-by Kyle J Burgess
+by Kyle J Burgess<br>
+(github.com/kyy13)
 
 ## Summary
 

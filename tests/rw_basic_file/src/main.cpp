@@ -39,7 +39,7 @@ bool test()
     psSetValues(psGetBlock(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
     psSetValues(psGetBlock(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
 
-    if (psSaveFile(serializer, "rw_basic_file.test.bin", checksum, endian) != PS_SUCCESS)
+    if (psSaveFile(serializer, "rw_basic_file.test.bin", checksum, 0x01020304u, endian) != PS_SUCCESS)
     {
         std::cout << "0\n";
         return false;
@@ -62,7 +62,7 @@ bool test()
 
     serializer = psCreateSerializer();
 
-    if (psLoadFile(serializer, "rw_basic_file.test.bin") != PS_SUCCESS)
+    if (psLoadFile(serializer, "rw_basic_file.test.bin", checksum, 0x01020304u) != PS_SUCCESS)
     {
         std::cout << "1\n";
         return false;

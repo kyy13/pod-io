@@ -9,7 +9,6 @@
 
 #include <cstring>
 #include <fstream>
-#include <iostream>
 
 template<bool reverse_bytes>
 PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, uint32_t check32)
@@ -224,7 +223,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, ui
 
         if (check32 != is.check32)
         {
-            std::cout << "checks: " << check32 << ", " << is.check32 << ", checksum = " << checksum << "\n";
             return PS_FILE_CORRUPT;
         }
     }
@@ -232,7 +230,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, ui
     return PS_SUCCESS;
 }
 
-PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
+PsResult psLoadFile(PsSerializer* serializer, const char* fileName, PsChecksum checksum, uint32_t checksumValue)
 {
     File file(fileName, FM_READ);
 
@@ -276,19 +274,26 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     // Checksum
 
-    PsChecksum checksum;
-
     if (memcmp(header + 8, cCR32, 4) == 0)
     {
-        checksum = PS_CHECKSUM_CRC32;
+        if (checksum != PS_CHECKSUM_CRC32)
+        {
+            return PS_FILE_CORRUPT;
+        }
     }
     else if (memcmp(header + 8, cAD32, 4) == 0)
     {
-        checksum = PS_CHECKSUM_ADLER32;
+        if (checksum != PS_CHECKSUM_ADLER32)
+        {
+            return PS_FILE_CORRUPT;
+        }
     }
     else if (memcmp(header + 8, cNONE, 4) == 0)
     {
-        checksum = PS_CHECKSUM_NONE;
+        if (checksum != PS_CHECKSUM_NONE)
+        {
+            return PS_FILE_CORRUPT;
+        }
     }
     else
     {
@@ -297,18 +302,14 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     // Calculate checksum
 
-    uint32_t check32 = 0;
-
     if (checksum == PS_CHECKSUM_ADLER32)
     {
-        check32 = adler32(check32, header, 16);
+        checksumValue = adler32(checksumValue, header, 16);
     }
     else if (checksum == PS_CHECKSUM_CRC32)
     {
-        check32 = crc32(check32, header, 16);
+        checksumValue = crc32(checksumValue, header, 16);
     }
-
-    std::cout << "[load] checksum @ header: " << check32 << "\n";
 
     // Read bytes
 
@@ -320,11 +321,11 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     if (requiresByteSwap)
     {
-        result = readBytes<true>(serializer, file, checksum, check32);
+        result = readBytes<true>(serializer, file, checksum, checksumValue);
     }
     else
     {
-        result = readBytes<false>(serializer, file, checksum, check32);
+        result = readBytes<false>(serializer, file, checksum, checksumValue);
     }
 
     return result;

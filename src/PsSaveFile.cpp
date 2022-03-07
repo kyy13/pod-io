@@ -8,7 +8,6 @@
 #include "PsLookup.h"
 
 #include <cstring>
-#include <iostream>
 
 #include "PsFile.h"
 
@@ -115,7 +114,7 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum, u
     return PS_SUCCESS;
 }
 
-PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum checksum, PsEndian endian)
+PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum checksum, uint32_t checksumValue, PsEndian endian)
 {
     // Open File
 
@@ -155,11 +154,11 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
             }
             else
             {
-                return PS_UNSUPPORTED_ENDIANNESS;
+                return PS_ARGUMENT_ERROR;
             }
             break;
         default:
-            return PS_UNSUPPORTED_ENDIANNESS;
+            return PS_ARGUMENT_ERROR;
     }
 
     // Checksum
@@ -176,7 +175,7 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
             memcpy(header + 8, cCR32, 4);
             break;
         default:
-            return PS_UNSUPPORTED_ENDIANNESS;
+            return PS_ARGUMENT_ERROR;
     }
 
     // Padding
@@ -185,18 +184,14 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
     file.write(header, 16);
 
     // Compute checksum
-    uint32_t check32 = 0;
-
     if (checksum == PS_CHECKSUM_ADLER32)
     {
-        check32 = adler32(check32, header, 16);
+        checksumValue = adler32(checksumValue, header, 16);
     }
     else if (checksum == PS_CHECKSUM_CRC32)
     {
-        check32 = crc32(check32, header, 16);
+        checksumValue = crc32(checksumValue, header, 16);
     }
-
-    std::cout << "[save] checksum @ header: " << check32 << "\n";
 
     // Write endian-dependent blocks
 
@@ -208,11 +203,11 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
 
     if (requiresByteSwap)
     {
-        result = writeBytes<true>(serializer, file, checksum, check32);
+        result = writeBytes<true>(serializer, file, checksum, checksumValue);
     }
     else
     {
-        result = writeBytes<false>(serializer, file, checksum, check32);
+        result = writeBytes<false>(serializer, file, checksum, checksumValue);
     }
 
     if (result != PS_SUCCESS)

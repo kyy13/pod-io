@@ -40,7 +40,7 @@ bool testFile()
         buffer.resize(bytesRead + 1024);
     }
 
-    uint32_t c0 = 0, c1 = 0;
+    uint32_t c0 = 0x236534AAu, c1 = 0x236534AAu;
 
     std::vector<uint8_t> crcbuf(4);
     memcpy(crcbuf.data(), buffer.data() + buffer.size() - 4, 4);
@@ -112,7 +112,7 @@ bool test()
     psSetValues(psGetBlock(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
     psSetValues(psGetBlock(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
 
-    if (psSaveFile(serializer, fileName, checksum, endian) != PS_SUCCESS)
+    if (psSaveFile(serializer, fileName, checksum, 0x236534AAu, endian) != PS_SUCCESS)
     {
         return false;
     }

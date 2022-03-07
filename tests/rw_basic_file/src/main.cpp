@@ -303,49 +303,49 @@ int main()
 
     if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_NONE>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_LITTLE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_NONE>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_BIG << ", checksum = " << PS_CHECKSUM_NONE << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_LITTLE << ", checksum = " << PS_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_BIG << ", checksum = " << PS_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_LITTLE << ", checksum = " << PS_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 
     if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_NONE << "\n";
+        std::cout << "failed, endian = " << PS_ENDIAN_BIG << ", checksum = " << PS_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 

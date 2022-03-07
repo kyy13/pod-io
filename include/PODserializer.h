@@ -43,16 +43,16 @@ extern "C"
 
     enum PsEndian : uint32_t
     {
-        PS_ENDIAN_LITTLE,
-        PS_ENDIAN_BIG,
-        PS_ENDIAN_NATIVE,
+        PS_ENDIAN_LITTLE = 0u,
+        PS_ENDIAN_BIG    = 1u,
+        PS_ENDIAN_NATIVE = 2u,
     };
 
     enum PsChecksum : uint32_t
     {
-        PS_CHECKSUM_NONE,
-        PS_CHECKSUM_ADLER32,
-        PS_CHECKSUM_CRC32,
+        PS_CHECKSUM_NONE    = 0u,
+        PS_CHECKSUM_ADLER32 = 1u,
+        PS_CHECKSUM_CRC32   = 2u,
     };
 
     PsSerializer* psCreateSerializer();

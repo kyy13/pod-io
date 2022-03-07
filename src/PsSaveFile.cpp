@@ -13,113 +13,14 @@
 #include "PsFile.h"
 
 template<bool reverse_bytes>
-std::vector<uint8_t> writeBody(PsSerializer* serializer)
-{
-    // 8 byte-aligned header
-    //    [4] key size
-    //    [4] type
-    //    [4] value count
-    //    [?] key
-    //    [.] 0 padding to reach next alignment
-
-    // 8 byte-aligned data
-    //    [?] data
-    //    [.] 0 padding to reach next alignment
-
-    // Pre-compute Size
-
-    const auto& map = serializer->map;
-
-    size_t size = 0;
-
-    for (const auto& pair : map)
-    {
-        const auto& key = pair.first;
-        const auto& block = pair.second;
-
-        size +=
-            next_multiple_of(12 + key.size(), 8) +
-            next_multiple_of(block.data.size(), 8);
-    }
-
-    std::vector<uint8_t> data(size);
-
-    // Write pairs
-
-    size_t i = 0;
-    for (const auto& pair : map)
-    {
-        const auto& key = pair.first;
-        const auto& block = pair.second;
-
-        // 8 byte-aligned header
-        //    [4] key size
-        //    [4] type
-        //    [4] value count
-        //    [?] key
-        //    [.] 0 padding to reach next alignment
-
-        set_bytes<uint32_t, reverse_bytes>(data, static_cast<uint32_t>(key.size()), i, 4);
-        i += 4;
-        set_bytes<uint32_t, reverse_bytes>(data, static_cast<uint32_t>(block.type), i, 4);
-        i += 4;
-        set_bytes<uint32_t, reverse_bytes>(data, static_cast<uint32_t>(block.count), i, 4);
-        i += 4;
-        set_bytes<uint8_t , reverse_bytes>(data, key.data(), i, key.size());
-        i += key.size();
-
-        // Pad until next alignment
-        size_t prev = i;
-        i = next_multiple_of(i, 8);
-        pad_bytes(data, prev, i - prev);
-
-        // 8 byte-aligned data
-        //    [?] data
-        //    [.] 0 padding to reach next alignment
-
-        switch(block.type)
-        {
-            case PS_CHAR8:
-            case PS_UINT8:
-            case PS_INT8:
-                set_bytes<uint8_t , reverse_bytes>(data, block.data.data(), i, block.data.size());
-                break;
-            case PS_UINT16:
-            case PS_INT16:
-                set_bytes<uint16_t, reverse_bytes>(data, block.data.data(), i, block.data.size());
-                break;
-            case PS_UINT32:
-            case PS_INT32:
-            case PS_FLOAT32:
-                set_bytes<uint32_t, reverse_bytes>(data, block.data.data(), i, block.data.size());
-                break;
-            case PS_UINT64:
-            case PS_INT64:
-            case PS_FLOAT64:
-                set_bytes<uint64_t, reverse_bytes>(data, block.data.data(), i, block.data.size());
-                break;
-        }
-
-        i += block.data.size();
-
-        // Pad until next alignment
-        prev = i;
-        i = next_multiple_of(i, 8);
-        pad_bytes(data, prev, i - prev);
-    }
-
-    return data;
-}
-
-template<bool reverse_bytes>
-PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
+PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum, uint32_t check32)
 {
     auto& map = serializer->map;
 
     std::vector<uint8_t> buffer;
 
     compress_stream cs {};
-    if (deflate_init(cs, &file, checksum) != COMPRESS_SUCCESS)
+    if (deflate_init(cs, &file, checksum, check32) != COMPRESS_SUCCESS)
     {
         return PS_ZLIB_ERROR;
     }
@@ -232,6 +133,14 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         return PS_ZLIB_ERROR;
     }
 
+    // Write checksum
+    if (checksum != PS_CHECKSUM_NONE)
+    {
+        buffer.resize(4);
+        set_bytes<uint32_t, reverse_bytes>(buffer, cs.check32, 0, 4);
+        file.write(buffer.data(), buffer.size());
+    }
+
     return PS_SUCCESS;
 }
 
@@ -304,6 +213,18 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
 
     file.write(header, 16);
 
+    // Compute checksum
+    uint32_t check32 = 0;
+
+    if (checksum == PS_CHECKSUM_ADLER32)
+    {
+        check32 = adler32(check32, header, 16);
+    }
+    else if (checksum == PS_CHECKSUM_CRC32)
+    {
+        check32 = crc32(check32, header, 16);
+    }
+
     // Write endian-dependent blocks
 
     bool requiresByteSwap =
@@ -314,11 +235,11 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
 
     if (requiresByteSwap)
     {
-        result = writeBytes<true>(serializer, file, checksum);
+        result = writeBytes<true>(serializer, file, checksum, check32);
     }
     else
     {
-        result = writeBytes<false>(serializer, file, checksum);
+        result = writeBytes<false>(serializer, file, checksum, check32);
     }
 
     if (result != PS_SUCCESS)

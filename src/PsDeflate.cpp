@@ -4,7 +4,7 @@
 #include "PsDeflate.h"
 #include "PsBytes.h"
 
-compress_result deflate_init(compress_stream& is, File* file, PsChecksum checksum)
+compress_result deflate_init(compress_stream& is, File* file, PsChecksum checksum, uint32_t check32)
 {
     auto& zs = is.zs;
 
@@ -16,29 +16,12 @@ compress_result deflate_init(compress_stream& is, File* file, PsChecksum checksu
         };
 
     is.file = file;
+    is.checksum = checksum;
+    is.check32 = check32;
 
-    constexpr int windowBits = 15;
-
-    switch(checksum)
+    if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK)
     {
-        case PS_CHECKSUM_NONE:
-            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, -windowBits, 8, Z_DEFAULT_STRATEGY) != Z_OK)
-            {
-                return COMPRESS_ERROR;
-            }
-            break;
-        case PS_CHECKSUM_ADLER32:
-            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits, 8, Z_DEFAULT_STRATEGY) != Z_OK)
-            {
-                return COMPRESS_ERROR;
-            }
-            break;
-        case PS_CHECKSUM_CRC32:
-            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK)
-            {
-                return COMPRESS_ERROR;
-            }
-            break;
+        return COMPRESS_ERROR;
     }
 
     zs.avail_out = sizeof(is.buffer);
@@ -60,6 +43,15 @@ compress_result deflate_end(compress_stream& is)
 
             zs.avail_out = sizeof(is.buffer);
             zs.next_out = is.buffer;
+
+            if (is.checksum == PS_CHECKSUM_ADLER32)
+            {
+                is.check32 = adler32(is.check32, is.buffer, sizeof(is.buffer));
+            }
+            else if (is.checksum == PS_CHECKSUM_CRC32)
+            {
+                is.check32 = crc32(is.check32, is.buffer, sizeof(is.buffer));
+            }
         }
 
         res = deflate(&zs, Z_FINISH);
@@ -75,7 +67,17 @@ compress_result deflate_end(compress_stream& is)
     size_t ds = sizeof(is.buffer) - zs.avail_out;
     if (ds != 0)
     {
-        is.file->write(is.buffer, sizeof(is.buffer) - zs.avail_out);
+        size_t size = sizeof(is.buffer) - zs.avail_out;
+        is.file->write(is.buffer, size);
+
+        if (is.checksum == PS_CHECKSUM_ADLER32)
+        {
+            is.check32 = adler32(is.check32, is.buffer, size);
+        }
+        else if (is.checksum == PS_CHECKSUM_CRC32)
+        {
+            is.check32 = crc32(is.check32, is.buffer, size);
+        }
     }
 
     if (deflateEnd(&zs) != Z_OK)
@@ -109,16 +111,23 @@ compress_result deflate_next(compress_stream& is, uint8_t* in, size_t in_size)
 
             zs.avail_out = sizeof(is.buffer);
             zs.next_out = is.buffer;
+
+            if (is.checksum == PS_CHECKSUM_ADLER32)
+            {
+                is.check32 = adler32(is.check32, is.buffer, sizeof(is.buffer));
+            }
+            else if (is.checksum == PS_CHECKSUM_CRC32)
+            {
+                is.check32 = crc32(is.check32, is.buffer, sizeof(is.buffer));
+            }
         }
     }
 
     return COMPRESS_SUCCESS;
 }
 
-compress_result inflate_init(compress_stream& is, File* file, PsChecksum checksum)
+compress_result inflate_init(compress_stream& is, File* file, PsChecksum checksum, uint32_t check32)
 {
-    constexpr int windowBits = 15;
-
     is.zs =
         {
             .next_in = Z_NULL,
@@ -129,27 +138,12 @@ compress_result inflate_init(compress_stream& is, File* file, PsChecksum checksu
         };
 
     is.file = file;
+    is.checksum = checksum;
+    is.check32 = check32;
 
-    switch(checksum)
+    if (inflateInit2(&is.zs, -15) != Z_OK)
     {
-        case PS_CHECKSUM_NONE:
-            if (inflateInit2(&is.zs, -windowBits) != Z_OK)
-            {
-                return COMPRESS_ERROR;
-            }
-            break;
-        case PS_CHECKSUM_ADLER32:
-            if (inflateInit2(&is.zs, windowBits) != Z_OK)
-            {
-                return COMPRESS_ERROR;
-            }
-            break;
-        case PS_CHECKSUM_CRC32:
-            if (inflateInit2(&is.zs, windowBits + 16) != Z_OK)
-            {
-                return COMPRESS_ERROR;
-            }
-            break;
+        return COMPRESS_ERROR;
     }
 
     return COMPRESS_SUCCESS;
@@ -181,14 +175,24 @@ compress_result inflate_next(compress_stream& is, uint8_t* out, size_t out_size)
             zs.next_in = is.buffer;
         }
 
-        auto prev_in = zs.avail_in;
-        auto prev_out = zs.avail_out;
+        auto prev_next_in = zs.next_in;
+        auto prev_avail_in = zs.avail_in;
+        auto prev_avail_out = zs.avail_out;
 
         r = inflate(&zs, Z_NO_FLUSH);
 
-        if (zs.avail_in == prev_in && zs.avail_out == prev_out)
+        if (zs.avail_in == prev_avail_in && zs.avail_out == prev_avail_out)
         {
             return COMPRESS_ERROR;
+        }
+
+        if (is.checksum == PS_CHECKSUM_ADLER32)
+        {
+            is.check32 = adler32(is.check32, prev_next_in, prev_avail_in - zs.avail_in);
+        }
+        else if (is.checksum == PS_CHECKSUM_CRC32)
+        {
+            is.check32 = crc32(is.check32, prev_next_in, prev_avail_in - zs.avail_in);
         }
 
         if (r == Z_STREAM_END)

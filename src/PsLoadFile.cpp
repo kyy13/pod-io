@@ -9,9 +9,10 @@
 
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 template<bool reverse_bytes>
-PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
+PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, uint32_t check32)
 {
     int r;
     auto& map = serializer->map;
@@ -19,7 +20,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
     // Start inflating
 
     compress_stream is {};
-    if (inflate_init(is, &file, checksum) != COMPRESS_SUCCESS)
+    if (inflate_init(is, &file, checksum, check32) != COMPRESS_SUCCESS)
     {
         return PS_ZLIB_ERROR;
     }
@@ -222,6 +223,55 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         return PS_FILE_CORRUPT;
     }
 
+    // Read checksum
+
+    size_t size;
+    if (checksum == PS_CHECKSUM_NONE)
+    {
+        inflate_read_back(is, size);
+
+        if (size != 0)
+        {
+            return PS_FILE_CORRUPT;
+        }
+    }
+    else
+    {
+        buffer.resize(4);
+
+        // get from inflate readback
+        auto ptr = inflate_read_back(is, size);
+        if (size != 0)
+        {
+            if (size > 4)
+            {
+                return PS_FILE_CORRUPT;
+            }
+
+            memcpy(buffer.data(), ptr, size);
+        }
+
+        // read the rest
+        if (size != 4)
+        {
+            size_t ds = 4 - size;
+
+            if (file.read(buffer.data() + size, ds) != ds)
+            {
+                return PS_FILE_CORRUPT;
+            }
+        }
+
+        // get checksum
+        get_bytes<uint32_t, reverse_bytes>(check32, buffer, 0, 4);
+
+        if (check32 != is.check32)
+        {
+            std::cout << "checks: " << check32 << ", " << is.check32 << ", checksum = " << checksum << "\n";
+            return PS_FILE_CORRUPT;
+        }
+    }
+
     return PS_SUCCESS;
 }
 
@@ -288,6 +338,19 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
         return PS_FILE_CORRUPT;
     }
 
+    // Calculate checksum
+
+    uint32_t check32 = 0;
+
+    if (checksum == PS_CHECKSUM_ADLER32)
+    {
+        check32 = adler32(check32, header, 16);
+    }
+    else if (checksum == PS_CHECKSUM_CRC32)
+    {
+        check32 = crc32(check32, header, 16);
+    }
+
     // Read bytes
 
     bool requiresByteSwap =
@@ -298,11 +361,11 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     if (requiresByteSwap)
     {
-        result = readBytes<true>(serializer, file, checksum);
+        result = readBytes<true>(serializer, file, checksum, check32);
     }
     else
     {
-        result = readBytes<false>(serializer, file, checksum);
+        result = readBytes<false>(serializer, file, checksum, check32);
     }
 
     return result;

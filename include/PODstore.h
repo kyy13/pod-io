@@ -8,11 +8,14 @@
 
 extern "C"
 {
-    struct PsBlock;
+    // A block of data consisting of a single type array of data indexed by a key
+    struct                   PsBlock;
 
-    struct PsSerializer;
+    // Serializer used to write/read files, and retrieve/store data
+    struct                   PsSerializer;
 
-    enum PsResult : uint32_t
+    // Result for PODstore functions
+    enum                     PsResult : uint32_t
     {
         PS_SUCCESS                = 0u,          // Success
         PS_UNASSIGNED_BLOCK       = 1u,          // Tried to read, copy, or access data from a block with no data
@@ -24,7 +27,8 @@ extern "C"
         PS_ZLIB_ERROR             = 7u,          // Error during zlib initialization
     };
 
-    enum PsType : uint32_t
+    // Types of Data
+    enum                     PsType : uint32_t
     {
         PS_CHAR8                  = 0x02000001u, // 8-bit ASCII character
         PS_UINT8                  = 0x00000001u, // 8-bit unsigned integer
@@ -39,61 +43,80 @@ extern "C"
         PS_FLOAT64                = 0x01010008u, // 64-bit IEEE floating point number
     };
 
-    enum PsEndian : uint32_t
+    // Endianness
+    enum                     PsEndian : uint32_t
     {
-        PS_ENDIAN_LITTLE = 0u,
-        PS_ENDIAN_BIG    = 1u,
-        PS_ENDIAN_NATIVE = 2u,
+        PS_ENDIAN_LITTLE          = 0u,          // Save the file in little endian format
+        PS_ENDIAN_BIG             = 1u,          // Save the file in big endian format
+        PS_ENDIAN_NATIVE          = 2u,          // Save the file in the endianness of the host
     };
 
-    enum PsChecksum : uint32_t
+    // Checksum Type
+    enum                     PsChecksum : uint32_t
     {
-        PS_CHECKSUM_NONE    = 0u,
-        PS_CHECKSUM_ADLER32 = 1u,
-        PS_CHECKSUM_CRC32   = 2u,
+        PS_CHECKSUM_NONE          = 0u,          // Read/write a file with no checksum
+        PS_CHECKSUM_ADLER32       = 1u,          // Read/write a file with an adler32 checksum
+        PS_CHECKSUM_CRC32         = 2u,          // Read/write a file with a crc32 checksum
     };
 
-    PsSerializer* psCreateSerializer();
+    // Create a serializer
+    PsSerializer*    __cdecl psCreateSerializer();
 
-    void psDeleteSerializer(
-        PsSerializer* s);
+    // Delete a serializer
+    void             __cdecl psDeleteSerializer(
+        PsSerializer*           serializer);
 
-    PsResult psLoadFile(
-        PsSerializer* s,
-        const char* fileName,
-        PsChecksum checksum,
-        uint32_t checksumValue);
+    // Load a file into a serializer
+    // If checksum is NONE, then checksumValue isn't used.
+    // If checksum is not NONE, then checksumValue must be
+    // equal to the same checksumValue used to save the file
+    PsResult         __cdecl psLoadFile(
+        PsSerializer*           serializer,
+        const char*             fileName,
+        PsChecksum              checksum,
+        uint32_t                checksumValue);
 
-    PsResult psSaveFile(
-        PsSerializer* s,
-        const char* fileName,
-        PsChecksum,
-        uint32_t checksumValue,
-        PsEndian);
+    // Save a file using data stored in the serializer
+    // If checksum is NONE, then checksumValue isn't used.
+    // If checksum is not NONE, then checksumValue must be
+    // used again to load the file.
+    PsResult         __cdecl psSaveFile(
+        PsSerializer*           serializer,
+        const char*             fileName,
+        PsChecksum              checksum,
+        uint32_t                checksumValue,
+        PsEndian                endianness);
 
-    PsBlock* psGetBlock(
-        PsSerializer* s,
-        const char* key);
+    // Get a block of data from the serializer using its key
+    // If a block doesn't exist, then it will be created
+    // returns nullptr only if the key size exceeds available memory
+    PsBlock*         __cdecl psGetBlock(
+        PsSerializer*           serializer,
+        const char*             key);
 
-    PsResult psSetValues(
-        PsBlock* b,
-        const void* values,
-        uint32_t valueCount,
-        PsType valueType);
+    // Set the values in a block
+    PsResult         __cdecl psSetValues(
+        PsBlock*                block,
+        const void*             srcValueArray,
+        uint32_t                valueCount,
+        PsType                  valueType);
 
-    PsResult psTryCountValues(
-        const PsBlock* b,
-        uint32_t& valueCount);
+    // Count the number of values in a block
+    PsResult         __cdecl psTryCountValues(
+        const PsBlock*          block,
+        uint32_t&               valueCount);
 
-    PsResult psTryGetType(
-        const PsBlock* b,
-        PsType& valueType);
+    // Get the data type of a block
+    PsResult         __cdecl psTryGetType(
+        const PsBlock*          block,
+        PsType&                 valueType);
 
-    PsResult psTryCopyValues(
-        const PsBlock* b,
-        void* dst,
-        uint32_t valueCount,
-        PsType type);
-};
+    // Copy the values from a block into a destination array
+    PsResult         __cdecl psTryCopyValues(
+        const PsBlock*          block,
+        void*                   dstValueArray,
+        uint32_t                valueCount,
+        PsType                  type);
+}
 
 #endif

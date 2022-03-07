@@ -1,6 +1,10 @@
 # PODserializer
+by Kyle J Burgess
+
+
 c++ (and c# interface) endian-independent binary POD serializer with optional compression and CRC
 
+# File Format
 > key
 ```
 [ ] identifies a number of bytes
@@ -47,4 +51,5 @@ c++ (and c# interface) endian-independent binary POD serializer with optional co
 {
   (N) data
 }
+repeat...
 ```

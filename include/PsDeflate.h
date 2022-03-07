@@ -14,8 +14,6 @@
 #include <cstdio>
 #include <functional>
 
-PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out, PsChecksum checksum);
-
 struct compress_stream
 {
     z_stream zs;               // zlib stream handle

@@ -8,6 +8,8 @@
 #include "PsLookup.h"
 
 #include <cstring>
+#include <iostream>
+
 #include "PsFile.h"
 
 template<bool reverse_bytes>
@@ -110,86 +112,125 @@ std::vector<uint8_t> writeBody(PsSerializer* serializer)
 }
 
 template<bool reverse_bytes>
-PsResult writeBytes(PsSerializer* serializer, PsEndian endian, PsChecksum checksum, std::vector<uint8_t>& out)
+PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
 {
-    out.resize(16);
+    auto& map = serializer->map;
 
-    // "PODS"
+    std::vector<uint8_t> buffer;
 
-    memcpy(out.data(), cPODS, 4);
-
-    // Endian
-
-    switch(endian)
+    compress_stream cs {};
+    if (deflate_init(cs, &file, checksum) != COMPRESS_SUCCESS)
     {
-        case PS_ENDIAN_LITTLE:
-            memcpy(out.data() + 4, cLEND, 4);
-            break;
-        case PS_ENDIAN_BIG:
-            memcpy(out.data() + 4, cBEND, 4);
-            break;
-        case PS_ENDIAN_NATIVE:
-            if (is_little_endian())
-            {
-                memcpy(out.data() + 4, cLEND, 4);
-            }
-            else if (is_big_endian())
-            {
-                memcpy(out.data() + 4, cBEND, 4);
-            }
-            else
-            {
-                return PS_UNSUPPORTED_ENDIANNESS;
-            }
-            break;
-        default:
-            return PS_UNSUPPORTED_ENDIANNESS;
+        return PS_ZLIB_ERROR;
     }
 
-    // Checksum
-
-    switch(checksum)
+    for (auto& pair : map)
     {
-        case PS_CHECKSUM_NONE:
-            memcpy(out.data() + 8, cNONE, 4);
-            break;
-        case PS_CHECKSUM_ADLER32:
-            memcpy(out.data() + 8, cAD32, 4);
-            break;
-        case PS_CHECKSUM_CRC32:
-            memcpy(out.data() + 8, cCR32, 4);
-            break;
-        default:
-            return PS_UNSUPPORTED_ENDIANNESS;
-    }
+        const auto& key = pair.first;
+        auto& block = pair.second;
 
-    // Padding
-    memset(out.data() + 12, 0, 4);
+        // Write header
 
-    size_t i = 16;
+        // 8 byte-aligned header
+        //    [4] key size
+        //    [4] type
+        //    [4] value count
+        //    [?] key
+        //    [.] 0 padding to reach next alignment
 
-    std::vector<uint8_t> compressed;
+        size_t headerSize = 12 + key.size();
+        buffer.resize(headerSize);
 
-    {
-        // Write data blocks
-        auto data = writeBody<reverse_bytes>(serializer);
+        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(key.size()), 0, 4);
+        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.type), 4, 4);
+        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.count), 8, 4);
+        set_bytes<uint8_t , reverse_bytes>(buffer, key.data(), 12, key.size());
 
-        // Compress data blocks
-        if (psDeflate(data.data(), data.size(), compressed, checksum) != PS_SUCCESS)
+        if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
         {
             return PS_ZLIB_ERROR;
         }
+
+        // Pad until next alignment
+
+        size_t paddedHeaderSize = next_multiple_of(headerSize, 8);
+        if (paddedHeaderSize != headerSize)
+        {
+            buffer.resize(paddedHeaderSize - headerSize);
+            memset(buffer.data(), 0, buffer.size());
+
+            if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
+            {
+                return PS_ZLIB_ERROR;
+            }
+        }
+
+        // Write data
+
+        // 8 byte-aligned data
+        //    [?] data
+        //    [.] 0 padding to reach next alignment
+
+        if constexpr (reverse_bytes)
+        {
+            buffer.resize(block.data.size());
+
+            switch(block.type)
+            {
+                case PS_CHAR8:
+                case PS_UINT8:
+                case PS_INT8:
+                    set_bytes<uint8_t , reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    break;
+                case PS_UINT16:
+                case PS_INT16:
+                    set_bytes<uint16_t, reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    break;
+                case PS_UINT32:
+                case PS_INT32:
+                case PS_FLOAT32:
+                    set_bytes<uint32_t, reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    break;
+                case PS_UINT64:
+                case PS_INT64:
+                case PS_FLOAT64:
+                    set_bytes<uint64_t, reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    break;
+            }
+
+            if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
+            {
+                return PS_ZLIB_ERROR;
+            }
+        }
+        else
+        {
+            if (deflate_next(cs, block.data.data(), block.data.size()) != COMPRESS_SUCCESS)
+            {
+                return PS_ZLIB_ERROR;
+            }
+        }
+
+        // Pad until next alignment
+
+        size_t dataSize = block.data.size();
+        size_t paddedDataSize = next_multiple_of(dataSize, 8);
+        if (paddedDataSize != dataSize)
+        {
+            buffer.resize(paddedDataSize - dataSize);
+            memset(buffer.data(), 0, buffer.size());
+
+            if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
+            {
+                return PS_ZLIB_ERROR;
+            }
+        }
     }
 
-    // Write compressed data
-    size_t compressedSize = next_multiple_of(compressed.size(), 8);
-
-    out.resize(i + compressedSize);
-
-    set_bytes<uint8_t, reverse_bytes>(out, compressed.data(), i, compressed.size());
-    i += compressed.size();
-
-    pad_bytes(out, i, out.size() - i);
+    if (deflate_end(cs) != COMPRESS_SUCCESS)
+    {
+        return PS_ZLIB_ERROR;
+    }
 
     return PS_SUCCESS;
 }
@@ -205,31 +246,85 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
         return PS_FILE_NOT_FOUND;
     }
 
-//    compress_stream cs {};
-//    deflate_init(cs, &file, checksum);
+    // Write header
+
+    uint8_t header[16];
+
+    // "PODS"
+
+    memcpy(header, cPODS, 4);
+
+    // Endian
+
+    switch(endian)
+    {
+        case PS_ENDIAN_LITTLE:
+            memcpy(header + 4, cLEND, 4);
+            break;
+        case PS_ENDIAN_BIG:
+            memcpy(header + 4, cBEND, 4);
+            break;
+        case PS_ENDIAN_NATIVE:
+            if (is_little_endian())
+            {
+                memcpy(header + 4, cLEND, 4);
+            }
+            else if (is_big_endian())
+            {
+                memcpy(header + 4, cBEND, 4);
+            }
+            else
+            {
+                return PS_UNSUPPORTED_ENDIANNESS;
+            }
+            break;
+        default:
+            return PS_UNSUPPORTED_ENDIANNESS;
+    }
+
+    // Checksum
+
+    switch(checksum)
+    {
+        case PS_CHECKSUM_NONE:
+            memcpy(header + 8, cNONE, 4);
+            break;
+        case PS_CHECKSUM_ADLER32:
+            memcpy(header + 8, cAD32, 4);
+            break;
+        case PS_CHECKSUM_CRC32:
+            memcpy(header + 8, cCR32, 4);
+            break;
+        default:
+            return PS_UNSUPPORTED_ENDIANNESS;
+    }
+
+    // Padding
+    memset(header + 12, 0, 4);
+
+    file.write(header, 16);
+
+    // Write endian-dependent blocks
 
     bool requiresByteSwap =
         (endian == PS_ENDIAN_LITTLE && is_big_endian()) ||
         (endian == PS_ENDIAN_BIG && is_little_endian());
 
-    std::vector<uint8_t> data;
     PsResult result;
 
     if (requiresByteSwap)
     {
-        result = writeBytes<true>(serializer, endian, checksum, data);
+        result = writeBytes<true>(serializer, file, checksum);
     }
     else
     {
-        result = writeBytes<false>(serializer, endian, checksum, data);
+        result = writeBytes<false>(serializer, file, checksum);
     }
 
     if (result != PS_SUCCESS)
     {
         return result;
     }
-
-    file.write(data.data(), data.size());
 
     return PS_SUCCESS;
 }

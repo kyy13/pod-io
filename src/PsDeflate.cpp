@@ -4,105 +4,11 @@
 #include "PsDeflate.h"
 #include "PsBytes.h"
 
-#include <stdexcept>
-
-PsResult psDeflate(uint8_t* in, size_t in_size, std::vector<uint8_t>& out, PsChecksum checksum)
-{
-    constexpr size_t BUFFER_SIZE = 128 * 1024;
-
-    z_stream zs =
-        {
-            .zalloc = Z_NULL,
-            .zfree = Z_NULL,
-            .opaque = Z_NULL
-        };
-
-    constexpr int windowBits = 15;
-
-    switch(checksum)
-    {
-        case PS_CHECKSUM_NONE:
-            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, -windowBits, 8, Z_DEFAULT_STRATEGY) != Z_OK)
-            {
-                return PS_ZLIB_ERROR;
-            }
-            break;
-        case PS_CHECKSUM_ADLER32:
-            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits, 8, Z_DEFAULT_STRATEGY) != Z_OK)
-            {
-                return PS_ZLIB_ERROR;
-            }
-            break;
-        case PS_CHECKSUM_CRC32:
-            if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK)
-            {
-                return PS_ZLIB_ERROR;
-            }
-            break;
-    }
-
-    size_t out_size = 0;
-    out.resize(BUFFER_SIZE);
-
-    zs.avail_in = in_size;
-    zs.next_in = in;
-    zs.avail_out = BUFFER_SIZE;
-    zs.next_out = out.data();
-
-    // Process all input, resizing the output buffer as necessary
-    while (zs.avail_in != 0)
-    {
-        if (deflate(&zs, Z_NO_FLUSH) != Z_OK)
-        {
-            return PS_ZLIB_ERROR;
-        }
-
-        if (zs.avail_out == 0)
-        {
-            out_size = out.size();
-
-            out.resize(out_size + BUFFER_SIZE);
-            zs.avail_out = BUFFER_SIZE;
-            zs.next_out = out.data() + out_size;
-        }
-    }
-
-    // Process remaining (after processing input) until Z_STREAM_END
-    int res = Z_OK;
-    while (res == Z_OK)
-    {
-        if (zs.avail_out == 0)
-        {
-            out_size = out.size();
-
-            out.resize(out_size + BUFFER_SIZE);
-            zs.avail_out = BUFFER_SIZE;
-            zs.next_out = out.data() + out_size;
-        }
-
-        res = deflate(&zs, Z_FINISH);
-    }
-
-    if (res != Z_STREAM_END)
-    {
-        return PS_ZLIB_ERROR;
-    }
-
-    // The amount of output deflate() produced on the last call
-    // (the call that returned Z_STREAM_END
-    size_t ds = BUFFER_SIZE - zs.avail_out;
-
-    // The final size of the output vector
-    out.resize(out_size + ds);
-
-    deflateEnd(&zs);
-
-    return PS_SUCCESS;
-}
-
 compress_result deflate_init(compress_stream& is, File* file, PsChecksum checksum)
 {
-    z_stream zs =
+    auto& zs = is.zs;
+
+    zs =
         {
             .zalloc = Z_NULL,
             .zfree = Z_NULL,
@@ -190,6 +96,8 @@ compress_result deflate_next(compress_stream& is, uint8_t* in, size_t in_size)
     // Process all input, writing to file as necessary
     while (zs.avail_in != 0)
     {
+        assert(zs.next_in != nullptr);
+
         if (deflate(&zs, Z_NO_FLUSH) != Z_OK)
         {
             return COMPRESS_ERROR;

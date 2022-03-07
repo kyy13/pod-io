@@ -16,21 +16,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
     int r;
     auto& map = serializer->map;
 
-//    std::vector<uint8_t> buffer(4);
-//
-//    // Read header
-//
-//    if (file.read(buffer.data(), 4) != 4)
-//    {
-//        return PS_FILE_CORRUPT;
-//    }
-//
-//    // Read size and compressed size
-//    uint32_t size;
-//    uint32_t processedSize = 0;
-//
-//    get_bytes<uint32_t, reverse_bytes>(size, buffer, 0, 4);
-
     // Start inflating
 
     compress_stream is {};
@@ -48,7 +33,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
 
         buffer.resize(12);
         r = inflate_next(is, buffer.data(), 12);
-//        processedSize += 12;
 
         if (r == COMPRESS_STREAM_END)
         {
@@ -73,7 +57,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
 
         buffer.resize(strSize);
         r = inflate_next(is, buffer.data(), buffer.size());
-//        processedSize += buffer.size();
 
         if (r == COMPRESS_STREAM_END)
         {
@@ -100,7 +83,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         {
             buffer.resize(paddedStrSize - strSize);
             r = inflate_next(is, buffer.data(), buffer.size());
-//            processedSize += buffer.size();
 
             if (r == COMPRESS_STREAM_END)
             {
@@ -174,8 +156,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
             r = inflate_next(is, block.data.data(), block.data.size());
         }
 
-//        processedSize += block.data.size();
-
         if constexpr (reverse_bytes)
         {
             switch(block.type)
@@ -223,7 +203,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
         {
             buffer.resize(paddedBlockSize - blockSize);
             r = inflate_next(is, buffer.data(), buffer.size());
-//            processedSize += buffer.size();
         }
 
         if (r == COMPRESS_STREAM_END)
@@ -242,16 +221,6 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum)
     {
         return PS_FILE_CORRUPT;
     }
-
-//    if (r != COMPRESS_STREAM_END)
-//    {
-//        return PS_FILE_CORRUPT;
-//    }
-
-//    if (processedSize != size)
-//    {
-//        return PS_FILE_CORRUPT;
-//    }
 
     return PS_SUCCESS;
 }

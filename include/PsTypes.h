@@ -1,10 +1,10 @@
-// PODserializer
+// PODstore
 // Kyle J Burgess
 
 #ifndef PS_TYPES_H
 #define PS_TYPES_H
 
-#include "PODserializer.h"
+#include "PODstore.h"
 
 #include <unordered_map>
 #include <vector>

@@ -1,10 +1,10 @@
-// PODserializer
+// PODstore
 // Kyle J Burgess
 
 #ifndef PS_DEFLATE_H
 #define PS_DEFLATE_H
 
-#include "PODserializer.h"
+#include "PODstore.h"
 #include "PsFile.h"
 #include "zlib.h"
 

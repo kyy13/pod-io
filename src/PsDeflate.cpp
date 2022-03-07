@@ -1,4 +1,4 @@
-// PODserializer
+// PODstore
 // Kyle J Burgess
 
 #include "PsDeflate.h"

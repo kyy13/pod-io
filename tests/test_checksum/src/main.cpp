@@ -1,7 +1,7 @@
-// PODserializer
+// PODstore
 // Kyle J Burgess
 
-#include "PODserializer.h"
+#include "PODstore.h"
 #include "PsFile.h"
 #include "PsBytes.h"
 #include "zlib.h"

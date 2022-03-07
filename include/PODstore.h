@@ -1,8 +1,8 @@
-// PODserializer
+// PODstore
 // Kyle J Burgess
 
-#ifndef POD_SERIALIZER_H
-#define POD_SERIALIZER_H
+#ifndef POD_STORE_H
+#define POD_STORE_H
 
 #include <cstdint>
 

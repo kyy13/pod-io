@@ -13,7 +13,7 @@ option(BUILD_TESTS "build tests?" ON)
 add_library(
     ${PROJECT_NAME}
     SHARED
-    src/PODserializer.cpp
+        src/PODstore.cpp
     src/PsLoadFile.cpp
     src/PsSaveFile.cpp
     src/PsDeflate.cpp

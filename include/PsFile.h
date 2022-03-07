@@ -1,4 +1,4 @@
-// PODserializer
+// PODstore
 // Kyle J Burgess
 
 #ifndef PS_FILE_H

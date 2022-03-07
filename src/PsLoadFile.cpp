@@ -51,8 +51,8 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, ui
         uint32_t strSize, rawType, valueCount;
 
         get_bytes<uint32_t, reverse_bytes>(strSize, buffer, 0, 4);
-        get_bytes<uint32_t, reverse_bytes>(rawType, buffer, 4, 4);
-        get_bytes<uint32_t, reverse_bytes>(valueCount, buffer, 8, 4);
+        get_bytes<uint32_t, reverse_bytes>(valueCount, buffer, 4, 4);
+        get_bytes<uint32_t, reverse_bytes>(rawType, buffer, 8, 4);
 
         // Inflate key
 
@@ -261,11 +261,11 @@ PsResult psLoadFile(PsSerializer* serializer, const char* fileName)
 
     PsEndian endian;
 
-    if (memcmp(header + 4, cLEND, 4) == 0)
+    if (memcmp(header + 4, cLITE, 4) == 0)
     {
         endian = PS_ENDIAN_LITTLE;
     }
-    else if (memcmp(header + 4, cBEND, 4) == 0)
+    else if (memcmp(header + 4, cBIGE, 4) == 0)
     {
         endian = PS_ENDIAN_BIG;
     }

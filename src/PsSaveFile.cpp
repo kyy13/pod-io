@@ -43,8 +43,8 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum, u
         buffer.resize(headerSize);
 
         set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(key.size()), 0, 4);
-        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.type), 4, 4);
-        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.count), 8, 4);
+        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.count), 4, 4);
+        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.type), 8, 4);
         set_bytes<uint8_t , reverse_bytes>(buffer, key.data(), 12, key.size());
 
         if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
@@ -139,19 +139,19 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
     switch(endian)
     {
         case PS_ENDIAN_LITTLE:
-            memcpy(header + 4, cLEND, 4);
+            memcpy(header + 4, cLITE, 4);
             break;
         case PS_ENDIAN_BIG:
-            memcpy(header + 4, cBEND, 4);
+            memcpy(header + 4, cBIGE, 4);
             break;
         case PS_ENDIAN_NATIVE:
             if (is_little_endian())
             {
-                memcpy(header + 4, cLEND, 4);
+                memcpy(header + 4, cLITE, 4);
             }
             else if (is_big_endian())
             {
-                memcpy(header + 4, cBEND, 4);
+                memcpy(header + 4, cBIGE, 4);
             }
             else
             {

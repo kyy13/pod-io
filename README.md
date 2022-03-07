@@ -10,7 +10,7 @@ by Kyle J Burgess<br>
 
 <details>
 <summary>
-show/hide
+details
 </summary>
 
 #### Data Types
@@ -39,11 +39,46 @@ show/hide
 
 </details>
 
+## Quick Start
+
+<details>
+<summary>
+details
+</summary>
+
+#### Steps
+1. Download the latest release from the *releases* page.
+2. Drop the DLL into the root directory of your build folder.
+3. If using `c#`, see the *wrappers* folder for the dll import wrapper.
+
+</details>
+
+## Build
+
+<details>
+<summary>
+details
+</summary>
+
+#### Notes
+* There are precompiled binaries available on the *releases* page.
+* See the build scripts in the *scripts* folder for examples on how to build with cmake.<br>The scripts are setup to target `mingw-w64` for `64-bit windows`.
+
+#### Requirements
+1. A working `c++17` (or higher) compiler.
+2. `CMake` version 3.7 or higher
+
+#### Steps
+1. Run cmake with DCMAKE_BUILD_TYPE=Release to generate the build files
+2. Run make to compile
+
+</details>
+
 ## File Format
 
 <details>
 <summary>
-show/hide
+details
 </summary>
 
 <br>

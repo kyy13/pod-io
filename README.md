@@ -45,14 +45,14 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 #### BODY
 | byte(s) | value(s)
 | --- | --- |
-| `16...N` | DEFLATE compressed bytes of a contiguous array of data blocks.<br>See **DATA BLOCK** |
+| `16...N` | DEFLATE compressed bytes of a contiguous array of data blocks.<br>See **BLOCK** |
 
 #### TRAILER
 | byte(s) | value(s)
 | --- | --- |
 | `None` or<br>`N+1...N+4` | If *checksum* is `NONE`, then 0 bytes.<br>If *checksum* is `AD32` or `CR32`, then 4 bytes of 32-bit unsigned integer checksum stored in the endian order specified by *endianness*. |
 
-#### DATA BLOCK
+#### BLOCK
 | byte(s) | value(s)
 | --- | --- |
 | `0...3` | *key size*<br>32-bit unsigned integer stored in the endian order specified by *endianness*.<br>Represents the number of characters in the *key*. |

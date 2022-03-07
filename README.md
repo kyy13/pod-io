@@ -1,10 +1,37 @@
-# PODserializer
+# PODstore
 by Kyle J Burgess
 
+## Summary
 
-c++ (and c# interface) endian-independent binary POD serializer with optional compression and CRC
+`c#` and `c++` endian-independent binary POD (plain old data) file reader/writer with compression and crc options.
 
-# File Format
+## Features
+
+#### Data Types
+* Store any number of arrays of POD types indexed by keys of 8-bit ASCII characters
+    * 8-bit ASCII characters
+    * 8-bit, 16-bit, 32-bit, or 64-bit unsigned integers
+    * 8-bit, 16-bit, 32-bit, or 64-bit twos-complement signed integers
+    * 32-bit, or 64-bit IEEE floating point numbers
+* Individual array size is limited to 2^32 bytes
+
+#### Data Validation
+* Data types and sizes are validated on the host by providing the intended size and type of data when both storing and retrieving data.
+* Corrupt files are reported on load. See **Checksum** for further data validation options.
+
+#### Endian Independence
+* Files keep track of the endianness they were saved in--allowing for optimal performance when writing and reading from a host with the same endianness.
+* When a file is loaded into memory, the POD values are converted into the correct endianness for the host.
+* Reading a file saved for an endianness that differs from the host will incur a small performance overhead.
+
+#### Checksum
+* Choose between no checksum, `adler32` checksum, or `crc32` checksum when saving a file.
+* PODstore will automatically read and validate checksums on load.
+
+#### Compression Level
+* Choose betweening varying levels of compression based on `zlib`'s DEFLATE comoression levels.
+
+## File Format
 All character types are stored in ASCII where the smallest byte corresponds to the left-most character.
 
 #### HEADER

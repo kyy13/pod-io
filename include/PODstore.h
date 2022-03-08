@@ -14,7 +14,7 @@ extern "C"
     // Serializer used to write/read files, and retrieve/store data
     struct                   PsSerializer;
 
-    // Result for PODstore functions
+    // Result of PODstore functions
     enum                     PsResult : uint32_t
     {
         PS_SUCCESS                = 0u,          // Success
@@ -64,59 +64,59 @@ extern "C"
 
     // Delete a serializer
     void             __cdecl psDeleteSerializer(
-        PsSerializer*           serializer);
+        PsSerializer*           serializer);     // Handle to a valid PsSerializer
 
     // Load a file into a serializer
     // If checksum is NONE, then checksumValue isn't used.
     // If checksum is not NONE, then checksumValue must be
     // equal to the same checksumValue used to save the file
     PsResult         __cdecl psLoadFile(
-        PsSerializer*           serializer,
-        const char*             fileName,
-        PsChecksum              checksum,
-        uint32_t                checksumValue);
+        PsSerializer*           serializer,      // Handle to a valid PsSerializer
+        const char*             fileName,        // File name
+        PsChecksum              checksum,        // Checksum type
+        uint32_t                checksumValue);  // Initial checksum value
 
     // Save a file using data stored in the serializer
     // If checksum is NONE, then checksumValue isn't used.
     // If checksum is not NONE, then checksumValue must be
     // used again to load the file.
     PsResult         __cdecl psSaveFile(
-        PsSerializer*           serializer,
-        const char*             fileName,
-        PsChecksum              checksum,
-        uint32_t                checksumValue,
+        PsSerializer*           serializer,      // Handle to a valid PsSerializer
+        const char*             fileName,        // File name
+        PsChecksum              checksum,        // Checksum type
+        uint32_t                checksumValue,   // Initial checksum value
         PsEndian                endianness);
 
     // Get a block of data from the serializer using its key
     // If a block doesn't exist, then it will be created
     // returns nullptr only if the key size exceeds available memory
     PsBlock*         __cdecl psGetBlock(
-        PsSerializer*           serializer,
-        const char*             key);
+        PsSerializer*           serializer,      // Handle to a valid PsSerializer
+        const char*             key);            // Null-terminated key
 
     // Set the values in a block
     PsResult         __cdecl psSetValues(
-        PsBlock*                block,
-        const void*             srcValueArray,
-        uint32_t                valueCount,
-        PsType                  valueType);
+        PsBlock*                block,           // Handle to a valid PsBlock
+        const void*             srcValueArray,   // Array of values to set
+        uint32_t                valueCount,      // Number of values in the array
+        PsType                  valueType);      // Type of values in the array
 
     // Count the number of values in a block
     PsResult         __cdecl psTryCountValues(
-        const PsBlock*          block,
-        uint32_t&               valueCount);
+        const PsBlock*          block,           // Handle to a valid PsBlock
+        uint32_t&               valueCount);     // Returned number of values in the block
 
     // Get the data type of a block
     PsResult         __cdecl psTryGetType(
-        const PsBlock*          block,
-        PsType&                 valueType);
+        const PsBlock*          block,           // Handle to a valid PsBlock
+        PsType&                 valueType);      // Returned type of values in the block
 
     // Copy the values from a block into a destination array
     PsResult         __cdecl psTryCopyValues(
-        const PsBlock*          block,
-        void*                   dstValueArray,
-        uint32_t                valueCount,
-        PsType                  type);
+        const PsBlock*          block,           // Handle to a valid PsBlock
+        void*                   dstValueArray,   // Array to copy values to
+        uint32_t                valueCount,      // Number of values to copy
+        PsType                  type);           // The type of the values being copied
 }
 
 #endif

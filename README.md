@@ -112,3 +112,8 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 | `12...X` | *key*<br>encoded as *key size* number of 8-bit ASCII characters.
 | `X+1...Y` | *data*<br>encoded as *data size* number of values stored contiguously in an array where each value is stored in the endian order specified by *endianness*.
 </details>
+
+
+## Credits
+
+PODstore uses zlib (https://zlib.net/) for data compression and decompression

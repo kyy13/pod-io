@@ -4,8 +4,7 @@
 cmake_minimum_required(VERSION 3.7)
 project(PODserializer)
 
-find_package ( ZLIB REQUIRED )
-include_directories ( ${ZLIB_INCLUDE_DIR} )
+add_subdirectory(ext/zlib)
 
 option(BUILD_TESTS "build tests?" ON)
 
@@ -13,7 +12,7 @@ option(BUILD_TESTS "build tests?" ON)
 add_library(
     ${PROJECT_NAME}
     SHARED
-        src/PODstore.cpp
+    src/PODstore.cpp
     src/PsLoadFile.cpp
     src/PsSaveFile.cpp
     src/PsDeflate.cpp
@@ -27,7 +26,6 @@ target_include_directories(
     PUBLIC
     include
     ext/k13/include
-    ${ZLIB_INCLUDE_DIR}
 )
 
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -57,7 +55,7 @@ set_target_properties(
 # link libraries
 target_link_libraries(
     ${PROJECT_NAME}
-    ${ZLIB_LIBRARY}
+    zlibstatic
     -static-libgcc
     -static-libstdc++
 )

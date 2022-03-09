@@ -4,7 +4,7 @@
 #include "PsDeflate.h"
 #include "PsBytes.h"
 
-compress_result deflate_init(compress_stream& is, File* file, PsChecksum checksum, uint32_t check32)
+compress_result deflate_init(compress_stream& is, File* file, PsCompression compression, PsChecksum checksum, uint32_t check32)
 {
     auto& zs = is.zs;
 
@@ -19,7 +19,7 @@ compress_result deflate_init(compress_stream& is, File* file, PsChecksum checksu
     is.checksum = checksum;
     is.check32 = check32;
 
-    if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+    if (deflateInit2(&zs, static_cast<int>(compression), Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK)
     {
         return COMPRESS_ERROR;
     }

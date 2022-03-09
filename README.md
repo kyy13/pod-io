@@ -36,7 +36,7 @@ details
 * PODstore will automatically read and validate checksums on load.
 
 #### Compression Level
-* Choose betweening varying levels of compression based on `zlib`'s DEFLATE comoression levels.
+* Choose betweening varying levels of compression based on `zlib`'s DEFLATE compression levels.
 
 </details>
 

@@ -24,7 +24,7 @@ std::vector<char> create()
     psSetValues(psGetBlock(serializer, "val1"), val1, 4, PS_UINT32);
     psSetValues(psGetBlock(serializer, "val2"), val2, 8, PS_INT64);
 
-    if (psSaveFile(serializer, filename, checksum, 0x01020304u, endian) != PS_SUCCESS)
+    if (psSaveFile(serializer, filename, PS_COMPRESSION_6, checksum, 0x01020304u, endian) != PS_SUCCESS)
     {
         std::cout << "failed to psSaveFile()" << std::endl;
         return {};

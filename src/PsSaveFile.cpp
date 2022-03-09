@@ -12,14 +12,14 @@
 #include "PsFile.h"
 
 template<bool reverse_bytes>
-PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum, uint32_t check32)
+PsResult writeBytes(PsSerializer* serializer, File& file, PsCompression compression, PsChecksum checksum, uint32_t check32)
 {
     auto& map = serializer->map;
 
     std::vector<uint8_t> buffer;
 
     compress_stream cs {};
-    if (deflate_init(cs, &file, checksum, check32) != COMPRESS_SUCCESS)
+    if (deflate_init(cs, &file, compression, checksum, check32) != COMPRESS_SUCCESS)
     {
         return PS_ZLIB_ERROR;
     }
@@ -114,7 +114,7 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsChecksum checksum, u
     return PS_SUCCESS;
 }
 
-PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum checksum, uint32_t checksumValue, PsEndian endian)
+PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsCompression compression, PsChecksum checksum, uint32_t checksumValue, PsEndian endian)
 {
     // Open File
 
@@ -203,11 +203,11 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsChecksum c
 
     if (requiresByteSwap)
     {
-        result = writeBytes<true>(serializer, file, checksum, checksumValue);
+        result = writeBytes<true>(serializer, file, compression, checksum, checksumValue);
     }
     else
     {
-        result = writeBytes<false>(serializer, file, checksum, checksumValue);
+        result = writeBytes<false>(serializer, file, compression, checksum, checksumValue);
     }
 
     if (result != PS_SUCCESS)

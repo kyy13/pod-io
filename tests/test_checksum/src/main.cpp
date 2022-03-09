@@ -112,7 +112,7 @@ bool test()
     psSetValues(psGetBlock(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
     psSetValues(psGetBlock(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
 
-    if (psSaveFile(serializer, fileName, checksum, 0x236534AAu, endian) != PS_SUCCESS)
+    if (psSaveFile(serializer, fileName, PS_COMPRESSION_6, checksum, 0x236534AAu, endian) != PS_SUCCESS)
     {
         return false;
     }

@@ -43,6 +43,21 @@ extern "C"
         PS_FLOAT64                = 0x01010008u, // 64-bit IEEE floating point number
     };
 
+    // Compression Levels
+    enum                     PsCompression : uint32_t
+    {
+        PS_COMPRESSION_0          = 0u,          // No compression (largest size)
+        PS_COMPRESSION_1          = 1u,          // Least compression
+        PS_COMPRESSION_2          = 2u,
+        PS_COMPRESSION_3          = 3u,
+        PS_COMPRESSION_4          = 4u,
+        PS_COMPRESSION_5          = 5u,
+        PS_COMPRESSION_6          = 6u,
+        PS_COMPRESSION_7          = 7u,
+        PS_COMPRESSION_8          = 8u,
+        PS_COMPRESSION_9          = 9u,          // Most compression (smallest size)
+    };
+
     // Endianness
     enum                     PsEndian : uint32_t
     {
@@ -83,6 +98,7 @@ extern "C"
     PsResult         __cdecl psSaveFile(
         PsSerializer*           serializer,      // Handle to a valid PsSerializer
         const char*             fileName,        // File name
+        PsCompression           compression,     // Compression level
         PsChecksum              checksum,        // Checksum type
         uint32_t                checksumValue,   // Initial checksum value
         PsEndian                endianness);

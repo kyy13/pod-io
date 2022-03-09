@@ -28,9 +28,9 @@ public class PODstore : IDisposable
         }
     }
 
-    public void Save(string fileName, PsChecksum checksum, uint checksumValue = 0, PsEndian endianness = PsEndian.PS_ENDIAN_NATIVE)
+    public void Save(string fileName, PsCompression compression, PsChecksum checksum, uint checksumValue = 0, PsEndian endianness = PsEndian.PS_ENDIAN_NATIVE)
     {
-        PsResult r = PsSaveFile(m_podSerializer, Encoding.ASCII.GetBytes(fileName), checksum, checksumValue, endianness);
+        PsResult r = PsSaveFile(m_podSerializer, Encoding.ASCII.GetBytes(fileName), compression, checksum, checksumValue, endianness);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -818,46 +818,60 @@ public class PODstore : IDisposable
     // Result of PODstore functions
     protected enum           PsResult : uint
     {
-        PS_SUCCESS                = 0u,          // Success
-        PS_UNASSIGNED_BLOCK       = 1u,          // Tried to read, copy, or access data from a block with no data
-        PS_TYPE_MISMATCH          = 2u,          // Tried to get a type that does not match the stored type
-        PS_OUT_OF_RANGE           = 3u,          // Tried to copy values out of the range of the stored buffer
-        PS_FILE_CORRUPT           = 4u,          // Save file is corrupt
-        PS_FILE_NOT_FOUND         = 5u,          // Unable to open file for read or write
-        PS_ARGUMENT_ERROR         = 6u,          // Provided an incorrect argument to a method
-        PS_ZLIB_ERROR             = 7u,          // Error during zlib initialization
+        PS_SUCCESS                = 0u,                     // Success
+        PS_UNASSIGNED_BLOCK       = 1u,                     // Tried to read, copy, or access data from a block with no data
+        PS_TYPE_MISMATCH          = 2u,                     // Tried to get a type that does not match the stored type
+        PS_OUT_OF_RANGE           = 3u,                     // Tried to copy values out of the range of the stored buffer
+        PS_FILE_CORRUPT           = 4u,                     // Save file is corrupt
+        PS_FILE_NOT_FOUND         = 5u,                     // Unable to open file for read or write
+        PS_ARGUMENT_ERROR         = 6u,                     // Provided an incorrect argument to a method
+        PS_ZLIB_ERROR             = 7u,                     // Error during zlib initialization
     };
 
     // Types of Data
     protected enum           PsType : uint
     {
-        PS_CHAR8                  = 0x02000001u, // 8-bit ASCII character
-        PS_UINT8                  = 0x00000001u, // 8-bit unsigned integer
-        PS_UINT16                 = 0x00000002u, // 16-bit unsigned integer
-        PS_UINT32                 = 0x00000004u, // 32-bit unsigned integer
-        PS_UINT64                 = 0x00000008u, // 64-bit unsigned integer
-        PS_INT8                   = 0x00010001u, // 8-bit signed twos-complement integer
-        PS_INT16                  = 0x00010002u, // 16-bit signed twos-complement integer
-        PS_INT32                  = 0x00010004u, // 32-bit signed twos-complement integer
-        PS_INT64                  = 0x00010008u, // 64-bit signed twos-complement integer
-        PS_FLOAT32                = 0x01010004u, // 32-bit IEEE floating point number
-        PS_FLOAT64                = 0x01010008u, // 64-bit IEEE floating point number
+        PS_CHAR8                  = 0x02000001u,            // 8-bit ASCII character
+        PS_UINT8                  = 0x00000001u,            // 8-bit unsigned integer
+        PS_UINT16                 = 0x00000002u,            // 16-bit unsigned integer
+        PS_UINT32                 = 0x00000004u,            // 32-bit unsigned integer
+        PS_UINT64                 = 0x00000008u,            // 64-bit unsigned integer
+        PS_INT8                   = 0x00010001u,            // 8-bit signed twos-complement integer
+        PS_INT16                  = 0x00010002u,            // 16-bit signed twos-complement integer
+        PS_INT32                  = 0x00010004u,            // 32-bit signed twos-complement integer
+        PS_INT64                  = 0x00010008u,            // 64-bit signed twos-complement integer
+        PS_FLOAT32                = 0x01010004u,            // 32-bit IEEE floating point number
+        PS_FLOAT64                = 0x01010008u,            // 64-bit IEEE floating point number
+    };
+
+    protected enum           PsCompression : uint
+    {
+        PS_COMPRESSION_0          = 0u,                     // No compression (largest size)
+        PS_COMPRESSION_1          = 1u,                     // Least compression
+        PS_COMPRESSION_2          = 2u,
+        PS_COMPRESSION_3          = 3u,
+        PS_COMPRESSION_4          = 4u,
+        PS_COMPRESSION_5          = 5u,
+        PS_COMPRESSION_6          = 6u,
+        PS_COMPRESSION_7          = 7u,
+        PS_COMPRESSION_8          = 8u,
+        PS_COMPRESSION_9          = 9u,                     // Most compression (smallest size)
     };
 
     // Endianness
-    public enum           PsEndian : uint
+    public enum              PsEndian : uint
     {
-        PS_ENDIAN_LITTLE          = 0u,          // Save the file in little endian format
-        PS_ENDIAN_BIG             = 1u,          // Save the file in big endian format
-        PS_ENDIAN_NATIVE          = 2u,          // Save the file in the endianness of the host
+        PS_ENDIAN_LITTLE          = 0u,                     // Save the file in little endian format
+        PS_ENDIAN_BIG             = 1u,                     // Save the file in big endian format
+        PS_ENDIAN_NATIVE          = 2u,                     // Save the file in the endianness of the host
     };
 
     // Checksum Type
-    public enum           PsChecksum : uint
+    public enum              PsChecksum : uint
     {
-        PS_CHECKSUM_NONE          = 0u,          // Read/write a file with no checksum
-        PS_CHECKSUM_ADLER32       = 1u,          // Read/write a file with an adler32 checksum
-        PS_CHECKSUM_CRC32         = 2u,          // Read/write a file with a crc32 checksum
+        PS_CHECKSUM_NONE          = 0u,                     // Read/write a file with no checksum
+        PS_CHECKSUM_ADLER32       = 1u,                     // Read/write a file with an adler32 checksum
+        PS_CHECKSUM_CRC32         = 2u,                     // Read/write a file with a crc32 checksum
     };
 
     // Create a serializer
@@ -867,7 +881,7 @@ public class PODstore : IDisposable
     // Delete a serializer
     [DllImport("libPODstore", EntryPoint = "psDeleteSerializer", CallingConvention = CallingConvention.Cdecl)]
     protected static extern void        PsDeleteSerializer(
-        IntPtr                             serializer); // Handle to a valid PsSerializer
+        IntPtr                             serializer);     // Handle to a valid PsSerializer
 
     // Load a file into a serializer
     // If checksum is NONE, then checksumValue isn't used.
@@ -888,6 +902,7 @@ public class PODstore : IDisposable
     protected static extern PsResult    PsSaveFile(
         IntPtr                             serializer,      // Handle to a valid PsSerializer
         byte[]                             fileName,        // File name
+        PsCompression                      compression,     // Compression level
         PsChecksum                         checksum,        // Checksum type
         uint                               checksumValue,   // Initial checksum value
         PsEndian                           endianness);

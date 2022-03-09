@@ -33,7 +33,7 @@ enum compress_result
 // Initialize a deflate stream
 // returns COMPRESS_SUCCESS on success
 // and COMPRESS_ERROR on failure
-compress_result deflate_init(compress_stream& cs, File* file, PsChecksum checksum, uint32_t check32);
+compress_result deflate_init(compress_stream& cs, File* file, PsCompression compression, PsChecksum checksum, uint32_t check32);
 
 // Finish deflating and write any extra bytes held by the stream
 // returns COMPRESS_SUCCESS on success

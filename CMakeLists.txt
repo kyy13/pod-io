@@ -1,8 +1,8 @@
-# PODserializer
+# PODstore
 # Kyle J Burgess
 
 cmake_minimum_required(VERSION 3.7)
-project(PODserializer)
+project(PODstore)
 
 add_subdirectory(ext/zlib)
 

@@ -1,4 +1,4 @@
-# PODstore
+# pod-index
 by Kyle J Burgess<br>
 (github.com/kyy13)
 
@@ -33,7 +33,7 @@ details
 
 #### Checksum
 * Choose between no checksum, `adler32` checksum, or `crc32` checksum and a starting 32-bit checksum value when saving and/or loading a file.
-* PODstore will automatically read and validate checksums on load.
+* pod-index will automatically read and validate checksums on load.
 
 #### Compression Level
 * Choose betweening varying levels of compression based on `zlib`'s DEFLATE compression levels.
@@ -116,6 +116,6 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 
 ##
 
-PODstore uses zlib [1] for data compression and decompression.
+pod-index uses zlib [1] for data compression and decompression.
 
 [1] https://zlib.net/

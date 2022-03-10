@@ -10,16 +10,16 @@
 #include <vector>
 #include <string>
 
-struct PsBlock
+struct PsData
 {
-    std::vector<uint8_t> data;
+    std::vector<uint8_t> values;
     size_t count;
     PsType type;
 };
 
-using PsMap = std::unordered_map<std::string, PsBlock>;
+using PsMap = std::unordered_map<std::string, PsData>;
 
-struct PsSerializer
+struct PsContainer
 {
     PsMap map;
 };

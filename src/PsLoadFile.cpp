@@ -11,7 +11,7 @@
 #include <fstream>
 
 template<bool reverse_bytes>
-PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, uint32_t check32)
+PsResult readBytes(PsContainer* serializer, File& file, PsChecksum checksum, uint32_t check32)
 {
     int r;
     auto& map = serializer->map;
@@ -75,87 +75,87 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, ui
         std::string key;
         key.assign(reinterpret_cast<char*>(buffer.data()), strSize);
 
-        // Setup block
+        // Setup data
 
-        auto& block = map[key];
-        block.count = valueCount;
+        auto& data = map[key];
+        data.count = valueCount;
 
         switch (rawType)
         {
-            case PS_CHAR8:
-                block.type = PS_CHAR8;
+            case PS_ASCII_CHAR8:
+                data.type = PS_ASCII_CHAR8;
                 break;
             case PS_UINT8:
-                block.type = PS_UINT8;
+                data.type = PS_UINT8;
                 break;
             case PS_UINT16:
-                block.type = PS_UINT16;
+                data.type = PS_UINT16;
                 break;
             case PS_UINT32:
-                block.type = PS_UINT32;
+                data.type = PS_UINT32;
                 break;
             case PS_UINT64:
-                block.type = PS_UINT64;
+                data.type = PS_UINT64;
                 break;
             case PS_INT8:
-                block.type = PS_INT8;
+                data.type = PS_INT8;
                 break;
             case PS_INT16:
-                block.type = PS_INT16;
+                data.type = PS_INT16;
                 break;
             case PS_INT32:
-                block.type = PS_INT32;
+                data.type = PS_INT32;
                 break;
             case PS_INT64:
-                block.type = PS_INT64;
+                data.type = PS_INT64;
                 break;
             case PS_FLOAT32:
-                block.type = PS_FLOAT32;
+                data.type = PS_FLOAT32;
                 break;
             case PS_FLOAT64:
-                block.type = PS_FLOAT64;
+                data.type = PS_FLOAT64;
                 break;
             default:
                 return PS_FILE_CORRUPT;
         }
 
         // Inflate values
-        uint32_t blockSize = block.count * size_of_type(block.type);
+        uint32_t blockSize = data.count * size_of_type(data.type);
 
-        block.data.resize(blockSize);
+        data.values.resize(blockSize);
 
         if constexpr (reverse_bytes)
         {
-            buffer.resize(block.data.size());
+            buffer.resize(data.values.size());
             r = inflate_next(is, buffer.data(), buffer.size());
         }
         else
         {
-            r = inflate_next(is, block.data.data(), block.data.size());
+            r = inflate_next(is, data.values.data(), data.values.size());
         }
 
         if constexpr (reverse_bytes)
         {
-            switch(block.type)
+            switch(data.type)
             {
-                case PS_CHAR8:
+                case PS_ASCII_CHAR8:
                 case PS_UINT8:
                 case PS_INT8:
-                    get_bytes<uint8_t , reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
+                    get_bytes<uint8_t , reverse_bytes>(data.values.data(), buffer, 0, buffer.size());
                     break;
                 case PS_UINT16:
                 case PS_INT16:
-                    get_bytes<uint16_t, reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
+                    get_bytes<uint16_t, reverse_bytes>(data.values.data(), buffer, 0, buffer.size());
                     break;
                 case PS_UINT32:
                 case PS_INT32:
                 case PS_FLOAT32:
-                    get_bytes<uint32_t, reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
+                    get_bytes<uint32_t, reverse_bytes>(data.values.data(), buffer, 0, buffer.size());
                     break;
                 case PS_UINT64:
                 case PS_INT64:
                 case PS_FLOAT64:
-                    get_bytes<uint64_t, reverse_bytes>(block.data.data(), buffer, 0, buffer.size());
+                    get_bytes<uint64_t, reverse_bytes>(data.values.data(), buffer, 0, buffer.size());
                     break;
                 default:
                     return PS_FILE_CORRUPT;
@@ -230,7 +230,7 @@ PsResult readBytes(PsSerializer* serializer, File& file, PsChecksum checksum, ui
     return PS_SUCCESS;
 }
 
-PsResult psLoadFile(PsSerializer* serializer, const char* fileName, PsChecksum checksum, uint32_t checksumValue)
+PsResult psLoadFile(PsContainer* serializer, const char* fileName, PsChecksum checksum, uint32_t checksumValue)
 {
     File file(fileName, FM_READ);
 

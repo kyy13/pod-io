@@ -4,7 +4,7 @@ by Kyle J Burgess<br>
 
 ## Summary
 
-`c#` and `c++` endian-independent binary POD (plain old data) file reader/writer with compression and crc options.
+`c`, `c++` and `c#` endian-independent binary POD (plain old data) file reader/writer with compression and crc options. Store and retrieve any number of arrays of POD types indexed by ASCII keys.
 
 ## Features
 

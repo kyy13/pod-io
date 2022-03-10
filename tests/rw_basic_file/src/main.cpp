@@ -21,22 +21,22 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
     float f32[11];
     double f64[12];
 
-    auto serializer = psCreateSerializer();
+    auto serializer = psCreateContainer();
 
-    psSetValues(psGetBlock(serializer, "test string"), c8, 20, PS_CHAR8);
+    psSetValues(psGetItem(serializer, "test string"), c8, 20, PS_ASCII_CHAR8);
 
-    psSetValues(psGetBlock(serializer, "UKeyA"), u8, 6, PS_UINT8);
-    psSetValues(psGetBlock(serializer, "UKeyB"), u16, 7, PS_UINT16);
-    psSetValues(psGetBlock(serializer, "UKeyC"), u32, 8, PS_UINT32);
-    psSetValues(psGetBlock(serializer, "UKeyD"), u64, 9, PS_UINT64);
+    psSetValues(psGetItem(serializer, "UKeyA"), u8, 6, PS_UINT8);
+    psSetValues(psGetItem(serializer, "UKeyB"), u16, 7, PS_UINT16);
+    psSetValues(psGetItem(serializer, "UKeyC"), u32, 8, PS_UINT32);
+    psSetValues(psGetItem(serializer, "UKeyD"), u64, 9, PS_UINT64);
 
-    psSetValues(psGetBlock(serializer, "KeyE"), i8, 6, PS_INT8);
-    psSetValues(psGetBlock(serializer, "KeyF"), i16, 7, PS_INT16);
-    psSetValues(psGetBlock(serializer, "KeyG"), i32, 8, PS_INT32);
-    psSetValues(psGetBlock(serializer, "KeyH"), i64, 9, PS_INT64);
+    psSetValues(psGetItem(serializer, "KeyE"), i8, 6, PS_INT8);
+    psSetValues(psGetItem(serializer, "KeyF"), i16, 7, PS_INT16);
+    psSetValues(psGetItem(serializer, "KeyG"), i32, 8, PS_INT32);
+    psSetValues(psGetItem(serializer, "KeyH"), i64, 9, PS_INT64);
 
-    psSetValues(psGetBlock(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
-    psSetValues(psGetBlock(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
+    psSetValues(psGetItem(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
+    psSetValues(psGetItem(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
 
     if (psSaveFile(serializer, "rw_basic_file.test.bin", compression, checksum, 0x01020304u, endian) != PS_SUCCESS)
     {
@@ -44,7 +44,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    psDeleteSerializer(serializer);
+    psDeleteContainer(serializer);
     uint32_t count;
 
     std::vector<uint8_t> n_c8;
@@ -59,7 +59,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
     std::vector<float> n_f32;
     std::vector<double> n_f64;
 
-    serializer = psCreateSerializer();
+    serializer = psCreateContainer();
 
     if (psLoadFile(serializer, "rw_basic_file.test.bin", checksum, 0x01020304u) != PS_SUCCESS)
     {
@@ -67,7 +67,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    auto block = psGetBlock(serializer, "test string");
+    auto block = psGetItem(serializer, "test string");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "2\n";
@@ -75,13 +75,13 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
     }
 
     n_c8.resize(count);
-    if (psTryCopyValues(block, n_c8.data(), count, PS_CHAR8) != PS_SUCCESS)
+    if (psTryCopyValues(block, n_c8.data(), count, PS_ASCII_CHAR8) != PS_SUCCESS)
     {
         std::cout << "3\n";
         return false;
     }
 
-    block = psGetBlock(serializer, "UKeyA");
+    block = psGetItem(serializer, "UKeyA");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "4\n";
@@ -95,7 +95,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "UKeyB");
+    block = psGetItem(serializer, "UKeyB");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "6\n";
@@ -109,7 +109,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "UKeyC");
+    block = psGetItem(serializer, "UKeyC");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "8\n";
@@ -123,7 +123,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "UKeyD");
+    block = psGetItem(serializer, "UKeyD");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "9\n";
@@ -137,7 +137,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "KeyE");
+    block = psGetItem(serializer, "KeyE");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "11\n";
@@ -151,7 +151,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "KeyF");
+    block = psGetItem(serializer, "KeyF");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "13\n";
@@ -165,7 +165,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "KeyG");
+    block = psGetItem(serializer, "KeyG");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "15\n";
@@ -179,7 +179,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "KeyH");
+    block = psGetItem(serializer, "KeyH");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "17\n";
@@ -193,7 +193,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "FloatKeyI");
+    block = psGetItem(serializer, "FloatKeyI");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "19\n";
@@ -207,7 +207,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    block = psGetBlock(serializer, "DoubleKeyJ");
+    block = psGetItem(serializer, "DoubleKeyJ");
     if (psTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "21\n";
@@ -221,7 +221,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
         return false;
     }
 
-    psDeleteSerializer(serializer);
+    psDeleteContainer(serializer);
 
     if (memcmp(c8, n_c8.data(), 20 * sizeof(uint8_t)) != 0)
     {

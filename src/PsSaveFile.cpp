@@ -12,7 +12,7 @@
 #include "PsFile.h"
 
 template<bool reverse_bytes>
-PsResult writeBytes(PsSerializer* serializer, File& file, PsCompression compression, PsChecksum checksum, uint32_t check32)
+PsResult writeBytes(PsContainer* serializer, File& file, PsCompression compression, PsChecksum checksum, uint32_t check32)
 {
     auto& map = serializer->map;
 
@@ -27,23 +27,22 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsCompression compress
     for (auto& pair : map)
     {
         const auto& key = pair.first;
-        auto& block = pair.second;
+        auto& data = pair.second;
 
         // Write header
 
         // 8 byte-aligned header
         //    [4] key size
-        //    [4] type
         //    [4] value count
+        //    [4] type
         //    [?] key
-        //    [.] 0 padding to reach next alignment
 
         size_t headerSize = 12 + key.size();
         buffer.resize(headerSize);
 
         set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(key.size()), 0, 4);
-        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.count), 4, 4);
-        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(block.type), 8, 4);
+        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(data.count), 4, 4);
+        set_bytes<uint32_t, reverse_bytes>(buffer, static_cast<uint32_t>(data.type), 8, 4);
         set_bytes<uint8_t , reverse_bytes>(buffer, key.data(), 12, key.size());
 
         if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
@@ -55,32 +54,32 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsCompression compress
 
         // 8 byte-aligned data
         //    [?] data
-        //    [.] 0 padding to reach next alignment
 
         if constexpr (reverse_bytes)
         {
-            buffer.resize(block.data.size());
+            buffer.resize(data.values.size());
 
-            switch(block.type)
+            switch(data.type)
             {
-                case PS_CHAR8:
+                case PS_ASCII_CHAR8:
+                case PS_UTF8_CHAR8:
                 case PS_UINT8:
                 case PS_INT8:
-                    set_bytes<uint8_t , reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    set_bytes<uint8_t , reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
                 case PS_UINT16:
                 case PS_INT16:
-                    set_bytes<uint16_t, reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    set_bytes<uint16_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
                 case PS_UINT32:
                 case PS_INT32:
                 case PS_FLOAT32:
-                    set_bytes<uint32_t, reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    set_bytes<uint32_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
                 case PS_UINT64:
                 case PS_INT64:
                 case PS_FLOAT64:
-                    set_bytes<uint64_t, reverse_bytes>(buffer, block.data.data(), 0, block.data.size());
+                    set_bytes<uint64_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
             }
 
@@ -91,7 +90,7 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsCompression compress
         }
         else
         {
-            if (deflate_next(cs, block.data.data(), block.data.size()) != COMPRESS_SUCCESS)
+            if (deflate_next(cs, data.values.data(), data.values.size()) != COMPRESS_SUCCESS)
             {
                 return PS_ZLIB_ERROR;
             }
@@ -114,7 +113,7 @@ PsResult writeBytes(PsSerializer* serializer, File& file, PsCompression compress
     return PS_SUCCESS;
 }
 
-PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsCompression compression, PsChecksum checksum, uint32_t checksumValue, PsEndian endian)
+PsResult psSaveFile(PsContainer* serializer, const char* fileName, PsCompression compression, PsChecksum checksum, uint32_t checksumValue, PsEndian endianness)
 {
     // Open File
 
@@ -135,7 +134,7 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsCompressio
 
     // Endian
 
-    switch(endian)
+    switch(endianness)
     {
         case PS_ENDIAN_LITTLE:
             memcpy(header + 4, cLITE, 4);
@@ -196,8 +195,8 @@ PsResult psSaveFile(PsSerializer* serializer, const char* fileName, PsCompressio
     // Write endian-dependent blocks
 
     bool requiresByteSwap =
-        (endian == PS_ENDIAN_LITTLE && is_big_endian()) ||
-        (endian == PS_ENDIAN_BIG && is_little_endian());
+        (endianness == PS_ENDIAN_LITTLE && is_big_endian()) ||
+        (endianness == PS_ENDIAN_BIG && is_little_endian());
 
     PsResult result;
 

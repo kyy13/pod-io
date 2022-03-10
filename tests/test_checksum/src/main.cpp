@@ -95,29 +95,29 @@ bool test()
     float f32[11];
     double f64[12];
 
-    auto serializer = psCreateSerializer();
+    auto serializer = psCreateContainer();
 
-    psSetValues(psGetBlock(serializer, "test string"), c8, 20, PS_CHAR8);
+    psSetValues(psGetItem(serializer, "test string"), c8, 20, PS_ASCII_CHAR8);
 
-    psSetValues(psGetBlock(serializer, "UKeyA"), u8, 6, PS_UINT8);
-    psSetValues(psGetBlock(serializer, "UKeyB"), u16, 7, PS_UINT16);
-    psSetValues(psGetBlock(serializer, "UKeyC"), u32, 8, PS_UINT32);
-    psSetValues(psGetBlock(serializer, "UKeyD"), u64, 9, PS_UINT64);
+    psSetValues(psGetItem(serializer, "UKeyA"), u8, 6, PS_UINT8);
+    psSetValues(psGetItem(serializer, "UKeyB"), u16, 7, PS_UINT16);
+    psSetValues(psGetItem(serializer, "UKeyC"), u32, 8, PS_UINT32);
+    psSetValues(psGetItem(serializer, "UKeyD"), u64, 9, PS_UINT64);
 
-    psSetValues(psGetBlock(serializer, "KeyE"), i8, 6, PS_INT8);
-    psSetValues(psGetBlock(serializer, "KeyF"), i16, 7, PS_INT16);
-    psSetValues(psGetBlock(serializer, "KeyG"), i32, 8, PS_INT32);
-    psSetValues(psGetBlock(serializer, "KeyH"), i64, 9, PS_INT64);
+    psSetValues(psGetItem(serializer, "KeyE"), i8, 6, PS_INT8);
+    psSetValues(psGetItem(serializer, "KeyF"), i16, 7, PS_INT16);
+    psSetValues(psGetItem(serializer, "KeyG"), i32, 8, PS_INT32);
+    psSetValues(psGetItem(serializer, "KeyH"), i64, 9, PS_INT64);
 
-    psSetValues(psGetBlock(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
-    psSetValues(psGetBlock(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
+    psSetValues(psGetItem(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
+    psSetValues(psGetItem(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
 
     if (psSaveFile(serializer, fileName, PS_COMPRESSION_6, checksum, 0x236534AAu, endian) != PS_SUCCESS)
     {
         return false;
     }
 
-    psDeleteSerializer(serializer);
+    psDeleteContainer(serializer);
 
     if (!testFile<endian, checksum>())
     {

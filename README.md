@@ -20,7 +20,7 @@ details
     * 8-bit, 16-bit, 32-bit, or 64-bit twos-complement signed integers
     * 32-bit, or 64-bit IEEE floating point numbers
 * Individual array size is limited to 2^32 bytes
-* Note that any byte data can be stored in any 8-bit type, because there are no endian requirements. The differentiation between 8-bit types is merely for type hinting.
+* Note that any 8-bit data can be stored in any 8-bit type, because there is no endianness for 8-bit values. The differentiation between 8-bit types is added merely for type hinting.
 
 #### Data Validation
 * Data types and sizes are validated on the host by providing the intended size and type of data when both storing and retrieving data.

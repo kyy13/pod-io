@@ -1130,10 +1130,10 @@ public class PxContainer : IDisposable
     protected bool m_disposed = false;
 
     // -------------------------------------------
-    // PODstore C++ Library Methods and Structs
+    // pod-index C++ Library Methods and Structs
     // -------------------------------------------
 
-    // Result of PODstore functions
+    // Result of pod-index functions
     protected enum           PxResult : UInt32
     {
         PX_SUCCESS                = 0u,                     // Success
@@ -1163,7 +1163,7 @@ public class PxContainer : IDisposable
         PX_FLOAT64                = 0x01010008u,            // 64-bit IEEE floating point number
     };
 
-    // See PODstore.h for DLL documentation
+    // See pod_index.h for DLL documentation
 
     [DllImport("libpodindex", EntryPoint = "pxCreateContainer", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PxCreateContainer();

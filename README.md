@@ -4,7 +4,7 @@ by Kyle J Burgess<br>
 
 ## Summary
 
-`c`, `c++` and `c#` endian-independent binary POD (plain old data) file reader/writer with compression and crc options. Store and retrieve any number of arrays of POD types indexed by ASCII keys.
+Compatible with `c`, `c++` and `c#`.<br>Save and load POD arrays indexed with ASCII keys to and from endian-independent files. Options for various checksum types and compression levels (using DEFLATE compression).
 
 ## Features
 

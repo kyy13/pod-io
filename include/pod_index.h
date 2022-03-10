@@ -9,7 +9,7 @@
 extern "C"
 {
     // An item contains a key and its associated POD array
-    struct                   PxItem;
+    typedef void             PxItem;
 
     // A container of PsBlocks
     struct                   PxContainer;

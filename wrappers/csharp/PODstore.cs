@@ -5,6 +5,39 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
+public enum              PsCompression : UInt32
+{
+    PS_COMPRESSION_0          = 0u,                     // No compression (largest size)
+    PS_COMPRESSION_1          = 1u,                     // Least compression
+    PS_COMPRESSION_2          = 2u,
+    PS_COMPRESSION_3          = 3u,
+    PS_COMPRESSION_4          = 4u,
+    PS_COMPRESSION_5          = 5u,
+    PS_COMPRESSION_6          = 6u,
+    PS_COMPRESSION_7          = 7u,
+    PS_COMPRESSION_8          = 8u,
+    PS_COMPRESSION_9          = 9u,                     // Best compression (smallest size)
+    PS_COMPRESSION_NONE       = PS_COMPRESSION_0,
+    PS_COMPRESSION_DEFAULT    = PS_COMPRESSION_6,
+    PS_COMPRESSION_BEST       = PS_COMPRESSION_9,
+};
+
+// Endianness
+public enum              PsEndian : UInt32
+{
+    PS_ENDIAN_LITTLE          = 0u,                     // Save the file in little endian format
+    PS_ENDIAN_BIG             = 1u,                     // Save the file in big endian format
+    PS_ENDIAN_NATIVE          = 2u,                     // Save the file in the endianness of the host
+};
+
+// Checksum Type
+public enum              PsChecksum : UInt32
+{
+    PS_CHECKSUM_NONE          = 0u,                     // Read/write a file with no checksum
+    PS_CHECKSUM_ADLER32       = 1u,                     // Read/write a file with an adler32 checksum
+    PS_CHECKSUM_CRC32         = 2u,                     // Read/write a file with a crc32 checksum
+};
+
 public class PsContainer : IDisposable
 {
     public PsContainer()
@@ -18,7 +51,7 @@ public class PsContainer : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public void Load(string fileName, PsChecksum checksum, uint checksumValue = 0)
+    public void Load(string fileName, PsChecksum checksum, UInt32 checksumValue = 0)
     {
         PsResult r = PsLoadFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), checksum, checksumValue);
 
@@ -28,7 +61,7 @@ public class PsContainer : IDisposable
         }
     }
 
-    public void Save(string fileName, PsCompression compression, PsChecksum checksum, uint checksumValue = 0, PsEndian endianness = PsEndian.PS_ENDIAN_NATIVE)
+    public void Save(string fileName, PsCompression compression, PsChecksum checksum, UInt32 checksumValue = 0, PsEndian endianness = PsEndian.PS_ENDIAN_NATIVE)
     {
         PsResult r = PsSaveFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), compression, checksum, checksumValue, endianness);
 
@@ -68,14 +101,14 @@ public class PsContainer : IDisposable
         RemoveItem(TryGetItem(key));
     }
 
-    public uint? TryCountValues(IntPtr item)
+    public UInt32? TryCountValues(IntPtr item)
     {
         if (item == null)
         {
             return null;
         }
 
-        PsResult r = PsTryCountValues(item, out uint count);
+        PsResult r = PsTryCountValues(item, out UInt32 count);
 
         if (count == 0)
         {
@@ -90,19 +123,19 @@ public class PsContainer : IDisposable
         return count;
     }
 
-    public uint? TryCountValues(string key)
+    public UInt32? TryCountValues(string key)
     {
         return TryCountValues(GetItem(key));
     }
 
-    public uint? TryCountKeyChars(IntPtr item)
+    public UInt32? TryCountKeyChars(IntPtr item)
     {
         if (item == null)
         {
             return null;
         }
 
-        PsResult r = PsTryCountKeyChars(item, out uint count);
+        PsResult r = PsTryCountKeyChars(item, out UInt32 count);
 
         if (count == 0)
         {
@@ -119,16 +152,16 @@ public class PsContainer : IDisposable
 
     public string TryGetKey(IntPtr item)
     {
-        uint? count = PsTryCountKeyChars(item);
+        UInt32? count = TryCountKeyChars(item);
 
         if (count == null)
         {
             return null;
         }
 
-        byte[] dst = new byte[count];
+        byte[] dst = new byte[(int)count];
 
-        r = PsTryCopyKey(item, dst, count);
+        PsResult r = PsTryCopyKey(item, dst, count.Value);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -154,7 +187,7 @@ public class PsContainer : IDisposable
     {
         var bytes = Encoding.ASCII.GetBytes(str);
 
-        PsResult r = PsSetValues(item, bytes, (uint)bytes.Length, PsType.PS_ASCII_CHAR8);
+        PsResult r = PsSetValues(item, bytes, (UInt32)bytes.Length, PsType.PS_ASCII_CHAR8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -169,16 +202,16 @@ public class PsContainer : IDisposable
 
     public string GetAsciiString(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        byte[] dst = new byte[count];
+        byte[] dst = new byte[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_ASCII_CHAR8);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_ASCII_CHAR8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -199,7 +232,7 @@ public class PsContainer : IDisposable
     {
         var bytes = Encoding.UTF8.GetBytes(str);
 
-        PsResult r = PsSetValues(item, bytes, (uint)bytes.Length, PsType.PS_UTF8_CHAR8);
+        PsResult r = PsSetValues(item, bytes, (UInt32)bytes.Length, PsType.PS_UTF8_CHAR8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -214,16 +247,16 @@ public class PsContainer : IDisposable
 
     public string GetUtf8String(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        byte[] dst = new byte[count];
+        byte[] dst = new byte[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_UTF8_CHAR8);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UTF8_CHAR8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -242,7 +275,7 @@ public class PsContainer : IDisposable
 
     public void SetUInt8Array(IntPtr item, byte[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_UINT8);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -267,16 +300,16 @@ public class PsContainer : IDisposable
 
     public byte[] GetUInt8Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        byte[] dst = new byte[count];
+        byte[] dst = new byte[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_UINT8);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -293,7 +326,7 @@ public class PsContainer : IDisposable
 
     public byte? GetUInt8(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -307,7 +340,7 @@ public class PsContainer : IDisposable
 
         byte[] dst = new byte[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT8);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -326,7 +359,7 @@ public class PsContainer : IDisposable
 
     public void SetUInt16Array(IntPtr item, UInt16[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_UINT16);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT16);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -351,16 +384,16 @@ public class PsContainer : IDisposable
 
     public UInt16[] GetUInt16Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        UInt16[] dst = new UInt16[count];
+        UInt16[] dst = new UInt16[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_UINT16);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT16);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -377,7 +410,7 @@ public class PsContainer : IDisposable
 
     public UInt16? GetUInt16(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -391,7 +424,7 @@ public class PsContainer : IDisposable
 
         UInt16[] dst = new UInt16[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT16);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT16);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -410,7 +443,7 @@ public class PsContainer : IDisposable
 
     public void SetUInt32Array(IntPtr item, UInt32[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_UINT32);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -435,16 +468,16 @@ public class PsContainer : IDisposable
 
     public UInt32[] GetUInt32Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        UInt32[] dst = new UInt32[count];
+        UInt32[] dst = new UInt32[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_UINT32);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -461,7 +494,7 @@ public class PsContainer : IDisposable
 
     public UInt32? GetUInt32(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -475,7 +508,7 @@ public class PsContainer : IDisposable
 
         UInt32[] dst = new UInt32[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT32);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -494,7 +527,7 @@ public class PsContainer : IDisposable
 
     public void SetUInt64Array(IntPtr item, UInt64[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_UINT64);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -516,19 +549,19 @@ public class PsContainer : IDisposable
     {
         SetUInt64Array(key, new UInt64[]{ value });
     }
-    
+
     public UInt64[] GetUInt64Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        UInt64[] dst = new UInt64[count];
+        UInt64[] dst = new UInt64[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_UINT64);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -545,7 +578,7 @@ public class PsContainer : IDisposable
 
     public UInt64? GetUInt64(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -559,7 +592,7 @@ public class PsContainer : IDisposable
 
         UInt64[] dst = new UInt64[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT64);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -578,7 +611,7 @@ public class PsContainer : IDisposable
 
     public void SetInt8Array(IntPtr item, sbyte[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_INT8);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -600,19 +633,19 @@ public class PsContainer : IDisposable
     {
         SetInt8Array(key, new sbyte[]{ value });
     }
-    
+
     public sbyte[] GetInt8Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        sbyte[] dst = new sbyte[count];
+        sbyte[] dst = new sbyte[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_INT8);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -629,7 +662,7 @@ public class PsContainer : IDisposable
 
     public sbyte? GetInt8(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -643,7 +676,7 @@ public class PsContainer : IDisposable
 
         sbyte[] dst = new sbyte[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT8);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT8);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -662,7 +695,7 @@ public class PsContainer : IDisposable
 
     public void SetInt16Array(IntPtr item, Int16[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_INT16);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT16);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -684,19 +717,19 @@ public class PsContainer : IDisposable
     {
         SetInt16Array(key, new Int16[]{ value });
     }
-    
+
     public Int16[] GetInt16Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        Int16[] dst = new Int16[count];
+        Int16[] dst = new Int16[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_INT16);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT16);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -713,7 +746,7 @@ public class PsContainer : IDisposable
 
     public Int16? GetInt16(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -727,7 +760,7 @@ public class PsContainer : IDisposable
 
         Int16[] dst = new Int16[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT16);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT16);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -746,7 +779,7 @@ public class PsContainer : IDisposable
 
     public void SetInt32Array(IntPtr item, Int32[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_INT32);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -771,16 +804,16 @@ public class PsContainer : IDisposable
 
     public Int32[] GetInt32Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        Int32[] dst = new Int32[count];
+        Int32[] dst = new Int32[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_INT32);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -797,7 +830,7 @@ public class PsContainer : IDisposable
 
     public Int32? GetInt32(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -811,7 +844,7 @@ public class PsContainer : IDisposable
 
         Int32[] dst = new Int32[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT32);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -830,7 +863,7 @@ public class PsContainer : IDisposable
 
     public void SetInt64Array(IntPtr item, Int64[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_INT64);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -852,19 +885,19 @@ public class PsContainer : IDisposable
     {
         SetInt64Array(key, new Int64[]{ value });
     }
-    
+
     public Int64[] GetInt64Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        Int64[] dst = new Int64[count];
+        Int64[] dst = new Int64[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_INT64);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -881,7 +914,7 @@ public class PsContainer : IDisposable
 
     public Int64? GetInt64(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -895,7 +928,7 @@ public class PsContainer : IDisposable
 
         Int64[] dst = new Int64[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT64);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -914,7 +947,7 @@ public class PsContainer : IDisposable
 
     public void SetFloat32Array(IntPtr item, float[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_FLOAT32);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_FLOAT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -936,19 +969,19 @@ public class PsContainer : IDisposable
     {
         SetFloat32Array(key, new float[]{ value });
     }
-    
+
     public float[] GetFloat32Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        float[] dst = new float[count];
+        float[] dst = new float[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_FLOAT32);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_FLOAT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -965,7 +998,7 @@ public class PsContainer : IDisposable
 
     public float? GetFloat32(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -979,7 +1012,7 @@ public class PsContainer : IDisposable
 
         float[] dst = new float[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_FLOAT32);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_FLOAT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -998,7 +1031,7 @@ public class PsContainer : IDisposable
 
     public void SetFloat64Array(IntPtr item, double[] values)
     {
-        PsResult r = PsSetValues(item, values, (uint)values.Length, PsType.PS_FLOAT32);
+        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_FLOAT32);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -1020,19 +1053,19 @@ public class PsContainer : IDisposable
     {
         SetFloat64Array(key, new double[]{ value });
     }
-    
+
     public double[] GetFloat64Array(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
             return null;
         }
 
-        double[] dst = new double[count];
+        double[] dst = new double[(int)count];
 
-        r = PsTryCopyValues(item, dst, count, PsType.PS_FLOAT64);
+        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_FLOAT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -1049,7 +1082,7 @@ public class PsContainer : IDisposable
 
     public double? GetFloat64(IntPtr item)
     {
-        uint? count = TryCountValues(item);
+        UInt32? count = TryCountValues(item);
 
         if (count == null)
         {
@@ -1063,7 +1096,7 @@ public class PsContainer : IDisposable
 
         double[] dst = new double[1u];
 
-        r = PsTryCopyValues(item, dst, 1u, PsType.PS_FLOAT64);
+        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_FLOAT64);
 
         if (r != PsResult.PS_SUCCESS)
         {
@@ -1078,7 +1111,7 @@ public class PsContainer : IDisposable
         return GetFloat64(TryGetItem(key));
     }
 
-    ~PODstore()
+    ~PsContainer()
     {
         TryDispose();
     }
@@ -1101,7 +1134,7 @@ public class PsContainer : IDisposable
     // -------------------------------------------
 
     // Result of PODstore functions
-    protected enum           PsResult : uint
+    protected enum           PsResult : UInt32
     {
         PS_SUCCESS                = 0u,                     // Success
         PS_NULL_REFERENCE         = 1u,                     // Tried to pass null for an item or container
@@ -1114,7 +1147,7 @@ public class PsContainer : IDisposable
     };
 
     // Types of Data
-    protected enum           PsType : uint
+    protected enum           PsType : UInt32
     {
         PS_ASCII_CHAR8            = 0x02000001u,            // 8-bit ASCII character
         PS_UTF8_CHAR8             = 0x03000001u,            // 8-bit UTF8 bytes
@@ -1130,39 +1163,6 @@ public class PsContainer : IDisposable
         PS_FLOAT64                = 0x01010008u,            // 64-bit IEEE floating point number
     };
 
-    public enum              PsCompression : uint
-    {
-        PS_COMPRESSION_0          = 0u,                     // No compression (largest size)
-        PS_COMPRESSION_1          = 1u,                     // Least compression
-        PS_COMPRESSION_2          = 2u,
-        PS_COMPRESSION_3          = 3u,
-        PS_COMPRESSION_4          = 4u,
-        PS_COMPRESSION_5          = 5u,
-        PS_COMPRESSION_6          = 6u,
-        PS_COMPRESSION_7          = 7u,
-        PS_COMPRESSION_8          = 8u,
-        PS_COMPRESSION_9          = 9u,                     // Best compression (smallest size)
-        PS_COMPRESSION_NONE       = PS_COMPRESSION_0,
-        PS_COMPRESSION_DEFAULT    = PS_COMPRESSION_6,
-        PS_COMPRESSION_BEST       = PS_COMPRESSION_9,
-    };
-
-    // Endianness
-    public enum              PsEndian : uint
-    {
-        PS_ENDIAN_LITTLE          = 0u,                     // Save the file in little endian format
-        PS_ENDIAN_BIG             = 1u,                     // Save the file in big endian format
-        PS_ENDIAN_NATIVE          = 2u,                     // Save the file in the endianness of the host
-    };
-
-    // Checksum Type
-    public enum              PsChecksum : uint
-    {
-        PS_CHECKSUM_NONE          = 0u,                     // Read/write a file with no checksum
-        PS_CHECKSUM_ADLER32       = 1u,                     // Read/write a file with an adler32 checksum
-        PS_CHECKSUM_CRC32         = 2u,                     // Read/write a file with a crc32 checksum
-    };
-
     // See PODstore.h for DLL documentation
 
     [DllImport("libPODstore", EntryPoint = "psCreateContainer", CallingConvention = CallingConvention.Cdecl)]
@@ -1172,10 +1172,10 @@ public class PsContainer : IDisposable
     protected static extern void        PsDeleteContainer(IntPtr container);
 
     [DllImport("libPODstore", EntryPoint = "psLoadFile", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsLoadFile(IntPtr container, byte[] fileName, PsChecksum checksum, uint checksumValue);
+    protected static extern PsResult    PsLoadFile(IntPtr container, byte[] fileName, PsChecksum checksum, UInt32 checksumValue);
 
     [DllImport("libPODstore", EntryPoint = "psSaveFile", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSaveFile(IntPtr container, byte[] fileName, PsCompression compression, PsChecksum checksum, uint checksumValue, PsEndian endianness);
+    protected static extern PsResult    PsSaveFile(IntPtr container, byte[] fileName, PsCompression compression, PsChecksum checksum, UInt32 checksumValue, PsEndian endianness);
 
     [DllImport("libPODstore", EntryPoint = "psGetItem", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PsGetItem(IntPtr container, byte[] key);
@@ -1187,16 +1187,16 @@ public class PsContainer : IDisposable
     protected static extern PsResult    PsRemoveItem(IntPtr container, IntPtr item);
 
     [DllImport("libPODstore", EntryPoint = "psTryCountValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCountValues(IntPtr item, out uint valueCount);
+    protected static extern PsResult    PsTryCountValues(IntPtr item, out UInt32 valueCount);
 
     [DllImport("libPODstore", EntryPoint = "psTryGetType", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PsResult    PsTryGetType(IntPtr item, out PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psTryCountKeyChars", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCountKeyChars(IntPtr item, out uint charCount);
+    protected static extern PsResult    PsTryCountKeyChars(IntPtr item, out UInt32 charCount);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyKey", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyKey(IntPtr item, byte[] key, uint count);
+    protected static extern PsResult    PsTryCopyKey(IntPtr item, byte[] key, UInt32 count);
 
     [DllImport("libPODstore", EntryPoint = "psGetFirstItem", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PsGetFirstItem(IntPtr container);
@@ -1205,62 +1205,62 @@ public class PsContainer : IDisposable
     protected static extern IntPtr      PsGetNextItem(IntPtr container, IntPtr item);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, byte[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, byte[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, UInt16[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, UInt16[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, UInt32[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, UInt32[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, UInt64[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, UInt64[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, sbyte[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, sbyte[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, Int16[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, Int16[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, Int32[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, Int32[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, Int64[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, Int64[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, float[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, float[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, double[] srcValueArray, uint valueCount, PsType valueType);
+    protected static extern PsResult    PsSetValues(IntPtr item, double[] srcValueArray, UInt32 valueCount, PsType valueType);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, byte[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, byte[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt16[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt16[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt32[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt32[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt64[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt64[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, sbyte[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, sbyte[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int16[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int16[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int32[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int32[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int64[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int64[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, float[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, float[] dstValueArray, UInt32 valueCount, PsType type);
 
     [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, double[] dstValueArray, uint valueCount, PsType type);
+    protected static extern PsResult    PsTryCopyValues(IntPtr item, double[] dstValueArray, UInt32 valueCount, PsType type);
 }

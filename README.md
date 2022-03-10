@@ -114,7 +114,7 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 </details>
 
 
-## Credits
+##
 
 PODstore uses zlib [1] for data compression and decompression.
 

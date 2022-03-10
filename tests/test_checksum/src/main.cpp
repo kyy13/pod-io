@@ -1,9 +1,9 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PODstore.h"
-#include "PsFile.h"
-#include "PsBytes.h"
+#include "pod_index.h"
+#include "PxFile.h"
+#include "PxBytes.h"
 #include "zlib.h"
 
 #include <vector>
@@ -12,7 +12,7 @@
 
 const char* fileName = "checksum_file.test.bin";
 
-template<PsEndian endian, PsChecksum checksum>
+template<PxEndian endian, PxChecksum checksum>
 bool testFile()
 {
     File file(fileName, FM_READ);
@@ -80,7 +80,7 @@ bool testFile()
     return true;
 }
 
-template<PsEndian endian, PsChecksum checksum>
+template<PxEndian endian, PxChecksum checksum>
 bool test()
 {
     uint8_t c8[20];
@@ -95,29 +95,29 @@ bool test()
     float f32[11];
     double f64[12];
 
-    auto serializer = psCreateContainer();
+    auto serializer = pxCreateContainer();
 
-    psSetValues(psGetItem(serializer, "test string"), c8, 20, PS_ASCII_CHAR8);
+    pxSetValues(pxGetItem(serializer, "test string"), c8, 20, PS_ASCII_CHAR8);
 
-    psSetValues(psGetItem(serializer, "UKeyA"), u8, 6, PS_UINT8);
-    psSetValues(psGetItem(serializer, "UKeyB"), u16, 7, PS_UINT16);
-    psSetValues(psGetItem(serializer, "UKeyC"), u32, 8, PS_UINT32);
-    psSetValues(psGetItem(serializer, "UKeyD"), u64, 9, PS_UINT64);
+    pxSetValues(pxGetItem(serializer, "UKeyA"), u8, 6, PS_UINT8);
+    pxSetValues(pxGetItem(serializer, "UKeyB"), u16, 7, PS_UINT16);
+    pxSetValues(pxGetItem(serializer, "UKeyC"), u32, 8, PS_UINT32);
+    pxSetValues(pxGetItem(serializer, "UKeyD"), u64, 9, PS_UINT64);
 
-    psSetValues(psGetItem(serializer, "KeyE"), i8, 6, PS_INT8);
-    psSetValues(psGetItem(serializer, "KeyF"), i16, 7, PS_INT16);
-    psSetValues(psGetItem(serializer, "KeyG"), i32, 8, PS_INT32);
-    psSetValues(psGetItem(serializer, "KeyH"), i64, 9, PS_INT64);
+    pxSetValues(pxGetItem(serializer, "KeyE"), i8, 6, PS_INT8);
+    pxSetValues(pxGetItem(serializer, "KeyF"), i16, 7, PS_INT16);
+    pxSetValues(pxGetItem(serializer, "KeyG"), i32, 8, PS_INT32);
+    pxSetValues(pxGetItem(serializer, "KeyH"), i64, 9, PS_INT64);
 
-    psSetValues(psGetItem(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
-    psSetValues(psGetItem(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
+    pxSetValues(pxGetItem(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
+    pxSetValues(pxGetItem(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
 
-    if (psSaveFile(serializer, fileName, PS_COMPRESSION_6, checksum, 0x236534AAu, endian) != PS_SUCCESS)
+    if (pxSaveFile(serializer, fileName, PS_COMPRESSION_6, checksum, 0x236534AAu, endian) != PS_SUCCESS)
     {
         return false;
     }
 
-    psDeleteContainer(serializer);
+    pxDeleteContainer(serializer);
 
     if (!testFile<endian, checksum>())
     {

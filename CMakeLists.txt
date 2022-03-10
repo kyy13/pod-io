@@ -2,7 +2,7 @@
 # Kyle J Burgess
 
 cmake_minimum_required(VERSION 3.7)
-project(PODstore)
+project(podindex)
 
 add_subdirectory(ext/zlib)
 
@@ -12,12 +12,12 @@ option(BUILD_TESTS "build tests?" ON)
 add_library(
     ${PROJECT_NAME}
     SHARED
-    src/PODstore.cpp
-    src/PsLoadFile.cpp
-    src/PsSaveFile.cpp
-    src/PsDeflate.cpp
-    src/PsBytes.cpp
-    src/PsFile.cpp
+    src/pod_index.cpp
+    src/PxLoadFile.cpp
+    src/PxSaveFile.cpp
+    src/PxDeflate.cpp
+    src/PxBytes.cpp
+    src/PxFile.cpp
 )
 
 # includes

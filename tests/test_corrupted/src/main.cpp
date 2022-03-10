@@ -1,7 +1,7 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PODstore.h"
+#include "pod_index.h"
 
 #include <vector>
 #include <cstring>
@@ -11,26 +11,26 @@
 
 const char* filename = "corrupt_file.test.bin";
 
-template<PsEndian endian, PsChecksum checksum>
+template<PxEndian endian, PxChecksum checksum>
 std::vector<char> create()
 {
     const char* val0 = "test";
     uint32_t val1[4] = {0, 40, 400, 4000};
     int64_t val2[8] = {-1, -2, -3, -4, -5, -6, -7, -8};
 
-    auto serializer = psCreateContainer();
+    auto serializer = pxCreateContainer();
 
-    psSetValues(psGetItem(serializer, "val0"), val0, 4, PS_ASCII_CHAR8);
-    psSetValues(psGetItem(serializer, "val1"), val1, 4, PS_UINT32);
-    psSetValues(psGetItem(serializer, "val2"), val2, 8, PS_INT64);
+    pxSetValues(pxGetItem(serializer, "val0"), val0, 4, PS_ASCII_CHAR8);
+    pxSetValues(pxGetItem(serializer, "val1"), val1, 4, PS_UINT32);
+    pxSetValues(pxGetItem(serializer, "val2"), val2, 8, PS_INT64);
 
-    if (psSaveFile(serializer, filename, PS_COMPRESSION_6, checksum, 0x01020304u, endian) != PS_SUCCESS)
+    if (pxSaveFile(serializer, filename, PS_COMPRESSION_6, checksum, 0x01020304u, endian) != PS_SUCCESS)
     {
         std::cout << "failed to psSaveBlocksToFile()" << std::endl;
         return {};
     }
 
-    psDeleteContainer(serializer);
+    pxDeleteContainer(serializer);
 
     // Read the file
 
@@ -62,7 +62,7 @@ bool write(std::vector<char>& buffer)
     return true;
 }
 
-template<PsEndian endian, PsChecksum checksum>
+template<PxEndian endian, PxChecksum checksum>
 bool test()
 {
     srand(0x30405060u);
@@ -107,13 +107,13 @@ bool test()
 
         // deserialize
 
-        auto serializer = psCreateContainer();
+        auto serializer = pxCreateContainer();
 
-        PsResult result;
+        PxResult result;
 
         try
         {
-            result = psLoadFile(serializer, filename, checksum, 0x01020304u);
+            result = pxLoadFile(serializer, filename, checksum, 0x01020304u);
         }
         catch(...)
         {
@@ -126,7 +126,7 @@ bool test()
             return false;
         }
 
-        psDeleteContainer(serializer);
+        pxDeleteContainer(serializer);
 
         ++i;
     }

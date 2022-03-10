@@ -1,7 +1,7 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PsBytes.h"
+#include "PxBytes.h"
 
 bool is_little_endian()
 {
@@ -29,7 +29,7 @@ bool is_big_endian()
     return c[0] == 1;
 }
 
-size_t size_of_type(PsType type)
+size_t size_of_type(PxType type)
 {
     return type & 0xffffu;
 }

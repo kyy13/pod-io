@@ -1,10 +1,10 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PsDeflate.h"
-#include "PsBytes.h"
+#include "PxDeflate.h"
+#include "PxBytes.h"
 
-compress_result deflate_init(compress_stream& is, File* file, PsCompression compression, PsChecksum checksum, uint32_t check32)
+compress_result deflate_init(compress_stream& is, File* file, PxCompression compression, PxChecksum checksum, uint32_t check32)
 {
     auto& zs = is.zs;
 
@@ -126,7 +126,7 @@ compress_result deflate_next(compress_stream& is, uint8_t* in, size_t in_size)
     return COMPRESS_SUCCESS;
 }
 
-compress_result inflate_init(compress_stream& is, File* file, PsChecksum checksum, uint32_t check32)
+compress_result inflate_init(compress_stream& is, File* file, PxChecksum checksum, uint32_t check32)
 {
     is.zs =
         {

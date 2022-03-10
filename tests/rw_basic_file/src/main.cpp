@@ -1,13 +1,13 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PODstore.h"
+#include "pod_index.h"
 
 #include <vector>
 #include <cstring>
 #include <iostream>
 
-bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
+bool test(PxCompression compression, PxEndian endian, PxChecksum checksum)
 {
     uint8_t c8[20];
     uint8_t u8[6];
@@ -21,30 +21,30 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
     float f32[11];
     double f64[12];
 
-    auto serializer = psCreateContainer();
+    auto serializer = pxCreateContainer();
 
-    psSetValues(psGetItem(serializer, "test string"), c8, 20, PS_ASCII_CHAR8);
+    pxSetValues(pxGetItem(serializer, "test string"), c8, 20, PS_ASCII_CHAR8);
 
-    psSetValues(psGetItem(serializer, "UKeyA"), u8, 6, PS_UINT8);
-    psSetValues(psGetItem(serializer, "UKeyB"), u16, 7, PS_UINT16);
-    psSetValues(psGetItem(serializer, "UKeyC"), u32, 8, PS_UINT32);
-    psSetValues(psGetItem(serializer, "UKeyD"), u64, 9, PS_UINT64);
+    pxSetValues(pxGetItem(serializer, "UKeyA"), u8, 6, PS_UINT8);
+    pxSetValues(pxGetItem(serializer, "UKeyB"), u16, 7, PS_UINT16);
+    pxSetValues(pxGetItem(serializer, "UKeyC"), u32, 8, PS_UINT32);
+    pxSetValues(pxGetItem(serializer, "UKeyD"), u64, 9, PS_UINT64);
 
-    psSetValues(psGetItem(serializer, "KeyE"), i8, 6, PS_INT8);
-    psSetValues(psGetItem(serializer, "KeyF"), i16, 7, PS_INT16);
-    psSetValues(psGetItem(serializer, "KeyG"), i32, 8, PS_INT32);
-    psSetValues(psGetItem(serializer, "KeyH"), i64, 9, PS_INT64);
+    pxSetValues(pxGetItem(serializer, "KeyE"), i8, 6, PS_INT8);
+    pxSetValues(pxGetItem(serializer, "KeyF"), i16, 7, PS_INT16);
+    pxSetValues(pxGetItem(serializer, "KeyG"), i32, 8, PS_INT32);
+    pxSetValues(pxGetItem(serializer, "KeyH"), i64, 9, PS_INT64);
 
-    psSetValues(psGetItem(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
-    psSetValues(psGetItem(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
+    pxSetValues(pxGetItem(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
+    pxSetValues(pxGetItem(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
 
-    if (psSaveFile(serializer, "rw_basic_file.test.bin", compression, checksum, 0x01020304u, endian) != PS_SUCCESS)
+    if (pxSaveFile(serializer, "rw_basic_file.test.bin", compression, checksum, 0x01020304u, endian) != PS_SUCCESS)
     {
         std::cout << "0\n";
         return false;
     }
 
-    psDeleteContainer(serializer);
+    pxDeleteContainer(serializer);
     uint32_t count;
 
     std::vector<uint8_t> n_c8;
@@ -59,169 +59,169 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
     std::vector<float> n_f32;
     std::vector<double> n_f64;
 
-    serializer = psCreateContainer();
+    serializer = pxCreateContainer();
 
-    if (psLoadFile(serializer, "rw_basic_file.test.bin", checksum, 0x01020304u) != PS_SUCCESS)
+    if (pxLoadFile(serializer, "rw_basic_file.test.bin", checksum, 0x01020304u) != PS_SUCCESS)
     {
         std::cout << "1\n";
         return false;
     }
 
-    auto block = psGetItem(serializer, "test string");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    auto block = pxGetItem(serializer, "test string");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "2\n";
         return false;
     }
 
     n_c8.resize(count);
-    if (psTryCopyValues(block, n_c8.data(), count, PS_ASCII_CHAR8) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_c8.data(), count, PS_ASCII_CHAR8) != PS_SUCCESS)
     {
         std::cout << "3\n";
         return false;
     }
 
-    block = psGetItem(serializer, "UKeyA");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "UKeyA");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "4\n";
         return false;
     }
 
     n_u8.resize(count);
-    if (psTryCopyValues(block, n_u8.data(), count, PS_UINT8) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_u8.data(), count, PS_UINT8) != PS_SUCCESS)
     {
         std::cout << "5\n";
         return false;
     }
 
-    block = psGetItem(serializer, "UKeyB");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "UKeyB");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "6\n";
         return false;
     }
 
     n_u16.resize(count);
-    if (psTryCopyValues(block, n_u16.data(), count, PS_UINT16) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_u16.data(), count, PS_UINT16) != PS_SUCCESS)
     {
         std::cout << "7\n";
         return false;
     }
 
-    block = psGetItem(serializer, "UKeyC");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "UKeyC");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "8\n";
         return false;
     }
 
     n_u32.resize(count);
-    if (psTryCopyValues(block, n_u32.data(), count, PS_UINT32) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_u32.data(), count, PS_UINT32) != PS_SUCCESS)
     {
         std::cout << "8\n";
         return false;
     }
 
-    block = psGetItem(serializer, "UKeyD");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "UKeyD");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "9\n";
         return false;
     }
 
     n_u64.resize(count);
-    if (psTryCopyValues(block, n_u64.data(), count, PS_UINT64) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_u64.data(), count, PS_UINT64) != PS_SUCCESS)
     {
         std::cout << "10\n";
         return false;
     }
 
-    block = psGetItem(serializer, "KeyE");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "KeyE");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "11\n";
         return false;
     }
 
     n_i8.resize(count);
-    if (psTryCopyValues(block, n_i8.data(), count, PS_INT8) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_i8.data(), count, PS_INT8) != PS_SUCCESS)
     {
         std::cout << "12\n";
         return false;
     }
 
-    block = psGetItem(serializer, "KeyF");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "KeyF");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "13\n";
         return false;
     }
 
     n_i16.resize(count);
-    if (psTryCopyValues(block, n_i16.data(), count, PS_INT16) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_i16.data(), count, PS_INT16) != PS_SUCCESS)
     {
         std::cout << "14\n";
         return false;
     }
 
-    block = psGetItem(serializer, "KeyG");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "KeyG");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "15\n";
         return false;
     }
 
     n_i32.resize(count);
-    if (psTryCopyValues(block, n_i32.data(), count, PS_INT32) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_i32.data(), count, PS_INT32) != PS_SUCCESS)
     {
         std::cout << "16\n";
         return false;
     }
 
-    block = psGetItem(serializer, "KeyH");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "KeyH");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "17\n";
         return false;
     }
 
     n_i64.resize(count);
-    if (psTryCopyValues(block, n_i64.data(), count, PS_INT64) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_i64.data(), count, PS_INT64) != PS_SUCCESS)
     {
         std::cout << "18\n";
         return false;
     }
 
-    block = psGetItem(serializer, "FloatKeyI");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "FloatKeyI");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "19\n";
         return false;
     }
 
     n_f32.resize(count);
-    if (psTryCopyValues(block, n_f32.data(), count, PS_FLOAT32) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_f32.data(), count, PS_FLOAT32) != PS_SUCCESS)
     {
         std::cout << "20\n";
         return false;
     }
 
-    block = psGetItem(serializer, "DoubleKeyJ");
-    if (psTryCountValues(block, count) != PS_SUCCESS)
+    block = pxGetItem(serializer, "DoubleKeyJ");
+    if (pxTryCountValues(block, count) != PS_SUCCESS)
     {
         std::cout << "21\n";
         return false;
     }
 
     n_f64.resize(count);
-    if (psTryCopyValues(block, n_f64.data(), count, PS_FLOAT64) != PS_SUCCESS)
+    if (pxTryCopyValues(block, n_f64.data(), count, PS_FLOAT64) != PS_SUCCESS)
     {
         std::cout << "22\n";
         return false;
     }
 
-    psDeleteContainer(serializer);
+    pxDeleteContainer(serializer);
 
     if (memcmp(c8, n_c8.data(), 20 * sizeof(uint8_t)) != 0)
     {
@@ -292,7 +292,7 @@ bool test(PsCompression compression, PsEndian endian, PsChecksum checksum)
     return true;
 }
 
-bool test(PsEndian endian, PsChecksum checksum)
+bool test(PxEndian endian, PxChecksum checksum)
 {
     if (!test(PS_COMPRESSION_0, endian, checksum))
     {
@@ -357,7 +357,7 @@ bool test(PsEndian endian, PsChecksum checksum)
     return true;
 }
 
-bool test(PsChecksum checksum)
+bool test(PxChecksum checksum)
 {
     if (!test(PS_ENDIAN_NATIVE, checksum))
     {

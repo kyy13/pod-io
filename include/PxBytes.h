@@ -1,10 +1,10 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#ifndef PS_BYTES_H
-#define PS_BYTES_H
+#ifndef PODX_BYTES_H
+#define PODX_BYTES_H
 
-#include "PsTypes.h"
+#include "PxTypes.h"
 #include "bytes.h"
 
 #include <cstdint>
@@ -116,7 +116,7 @@ void get_bytes(void* dst, const std::vector<uint8_t>& src, size_t firstByte, siz
     }
 }
 
-size_t size_of_type(PsType type);
+size_t size_of_type(PxType type);
 
 void pad_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes);
 

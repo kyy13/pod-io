@@ -1,18 +1,18 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PODstore.h"
-#include "PsBytes.h"
-#include "PsTypes.h"
-#include "PsDeflate.h"
-#include "PsLookup.h"
+#include "pod_index.h"
+#include "PxBytes.h"
+#include "PxTypes.h"
+#include "PxDeflate.h"
+#include "PxLookup.h"
 
 #include <cstring>
 
-#include "PsFile.h"
+#include "PxFile.h"
 
 template<bool reverse_bytes>
-PsResult writeBytes(PsContainer* serializer, File& file, PsCompression compression, PsChecksum checksum, uint32_t check32)
+PxResult writeBytes(PxContainer* serializer, File& file, PxCompression compression, PxChecksum checksum, uint32_t check32)
 {
     auto& map = serializer->map;
 
@@ -113,7 +113,7 @@ PsResult writeBytes(PsContainer* serializer, File& file, PsCompression compressi
     return PS_SUCCESS;
 }
 
-PsResult psSaveFile(PsContainer* serializer, const char* fileName, PsCompression compression, PsChecksum checksum, uint32_t checksumValue, PsEndian endianness)
+PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression compression, PxChecksum checksum, uint32_t checksumValue, PxEndian endianness)
 {
     // Open File
 
@@ -130,7 +130,7 @@ PsResult psSaveFile(PsContainer* serializer, const char* fileName, PsCompression
 
     // "PODS"
 
-    memcpy(header, cPODS, 4);
+    memcpy(header, cPODX, 4);
 
     // Endian
 
@@ -198,15 +198,15 @@ PsResult psSaveFile(PsContainer* serializer, const char* fileName, PsCompression
         (endianness == PS_ENDIAN_LITTLE && is_big_endian()) ||
         (endianness == PS_ENDIAN_BIG && is_little_endian());
 
-    PsResult result;
+    PxResult result;
 
     if (requiresByteSwap)
     {
-        result = writeBytes<true>(serializer, file, compression, checksum, checksumValue);
+        result = writeBytes<true>(container, file, compression, checksum, checksumValue);
     }
     else
     {
-        result = writeBytes<false>(serializer, file, compression, checksum, checksumValue);
+        result = writeBytes<false>(container, file, compression, checksum, checksumValue);
     }
 
     if (result != PS_SUCCESS)

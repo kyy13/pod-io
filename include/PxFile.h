@@ -1,8 +1,8 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#ifndef PS_FILE_H
-#define PS_FILE_H
+#ifndef PODX_FILE_H
+#define PODX_FILE_H
 
 #include <fstream>
 

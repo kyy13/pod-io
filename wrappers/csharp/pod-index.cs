@@ -1,48 +1,48 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-public enum              PsCompression : UInt32
+public enum              PxCompression : UInt32
 {
-    PS_COMPRESSION_0          = 0u,                     // No compression (largest size)
-    PS_COMPRESSION_1          = 1u,                     // Least compression
-    PS_COMPRESSION_2          = 2u,
-    PS_COMPRESSION_3          = 3u,
-    PS_COMPRESSION_4          = 4u,
-    PS_COMPRESSION_5          = 5u,
-    PS_COMPRESSION_6          = 6u,
-    PS_COMPRESSION_7          = 7u,
-    PS_COMPRESSION_8          = 8u,
-    PS_COMPRESSION_9          = 9u,                     // Best compression (smallest size)
-    PS_COMPRESSION_NONE       = PS_COMPRESSION_0,
-    PS_COMPRESSION_DEFAULT    = PS_COMPRESSION_6,
-    PS_COMPRESSION_BEST       = PS_COMPRESSION_9,
+    PX_COMPRESSION_0          = 0u,                     // No compression (largest size)
+    PX_COMPRESSION_1          = 1u,                     // Least compression
+    PX_COMPRESSION_2          = 2u,
+    PX_COMPRESSION_3          = 3u,
+    PX_COMPRESSION_4          = 4u,
+    PX_COMPRESSION_5          = 5u,
+    PX_COMPRESSION_6          = 6u,
+    PX_COMPRESSION_7          = 7u,
+    PX_COMPRESSION_8          = 8u,
+    PX_COMPRESSION_9          = 9u,                     // Best compression (smallest size)
+    PX_COMPRESSION_NONE       = PX_COMPRESSION_0,
+    PX_COMPRESSION_DEFAULT    = PX_COMPRESSION_6,
+    PX_COMPRESSION_BEST       = PX_COMPRESSION_9,
 };
 
 // Endianness
-public enum              PsEndian : UInt32
+public enum              PxEndian : UInt32
 {
-    PS_ENDIAN_LITTLE          = 0u,                     // Save the file in little endian format
-    PS_ENDIAN_BIG             = 1u,                     // Save the file in big endian format
-    PS_ENDIAN_NATIVE          = 2u,                     // Save the file in the endianness of the host
+    PX_ENDIAN_LITTLE          = 0u,                     // Save the file in little endian format
+    PX_ENDIAN_BIG             = 1u,                     // Save the file in big endian format
+    PX_ENDIAN_NATIVE          = 2u,                     // Save the file in the endianness of the host
 };
 
 // Checksum Type
-public enum              PsChecksum : UInt32
+public enum              PxChecksum : UInt32
 {
-    PS_CHECKSUM_NONE          = 0u,                     // Read/write a file with no checksum
-    PS_CHECKSUM_ADLER32       = 1u,                     // Read/write a file with an adler32 checksum
-    PS_CHECKSUM_CRC32         = 2u,                     // Read/write a file with a crc32 checksum
+    PX_CHECKSUM_NONE          = 0u,                     // Read/write a file with no checksum
+    PX_CHECKSUM_ADLER32       = 1u,                     // Read/write a file with an adler32 checksum
+    PX_CHECKSUM_CRC32         = 2u,                     // Read/write a file with a crc32 checksum
 };
 
-public class PsContainer : IDisposable
+public class PxContainer : IDisposable
 {
-    public PsContainer()
+    public PxContainer()
     {
-        m_container = PsCreateContainer();
+        m_container = PxCreateContainer();
     }
 
     public void Dispose()
@@ -51,21 +51,21 @@ public class PsContainer : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public void Load(string fileName, PsChecksum checksum, UInt32 checksumValue = 0)
+    public void Load(string fileName, PxChecksum checksum, UInt32 checksumValue = 0)
     {
-        PsResult r = PsLoadFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), checksum, checksumValue);
+        PxResult r = PxLoadFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), checksum, checksumValue);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
     }
 
-    public void Save(string fileName, PsCompression compression, PsChecksum checksum, UInt32 checksumValue = 0, PsEndian endianness = PsEndian.PS_ENDIAN_NATIVE)
+    public void Save(string fileName, PxCompression compression, PxChecksum checksum, UInt32 checksumValue = 0, PxEndian endianness = PxEndian.PX_ENDIAN_NATIVE)
     {
-        PsResult r = PsSaveFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), compression, checksum, checksumValue, endianness);
+        PxResult r = PxSaveFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), compression, checksum, checksumValue, endianness);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -73,12 +73,12 @@ public class PsContainer : IDisposable
 
     public IntPtr GetItem(string key)
     {
-        return PsGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
+        return PxGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
     }
 
     public IntPtr TryGetItem(string key)
     {
-        return PsTryGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
+        return PxTryGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
     }
 
     public void RemoveItem(IntPtr item)
@@ -88,9 +88,9 @@ public class PsContainer : IDisposable
             return;
         }
 
-        PsResult r = PsRemoveItem(m_container, item);
+        PxResult r = PxRemoveItem(m_container, item);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -108,14 +108,14 @@ public class PsContainer : IDisposable
             return null;
         }
 
-        PsResult r = PsTryCountValues(item, out UInt32 count);
+        PxResult r = PxTryCountValues(item, out UInt32 count);
 
         if (count == 0)
         {
             return null;
         }
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -135,14 +135,14 @@ public class PsContainer : IDisposable
             return null;
         }
 
-        PsResult r = PsTryCountKeyChars(item, out UInt32 count);
+        PxResult r = PxTryCountKeyChars(item, out UInt32 count);
 
         if (count == 0)
         {
             return null;
         }
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -161,9 +161,9 @@ public class PsContainer : IDisposable
 
         byte[] dst = new byte[(int)count];
 
-        PsResult r = PsTryCopyKey(item, dst, count.Value);
+        PxResult r = PxTryCopyKey(item, dst, count.Value);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -173,12 +173,12 @@ public class PsContainer : IDisposable
 
     public IntPtr GetFirstItem()
     {
-        return PsGetFirstItem(m_container);
+        return PxGetFirstItem(m_container);
     }
 
     public IntPtr GetNextItem(IntPtr item)
     {
-        return PsGetNextItem(m_container, item);
+        return PxGetNextItem(m_container, item);
     }
 
     // ASCII
@@ -187,9 +187,9 @@ public class PsContainer : IDisposable
     {
         var bytes = Encoding.ASCII.GetBytes(str);
 
-        PsResult r = PsSetValues(item, bytes, (UInt32)bytes.Length, PsType.PS_ASCII_CHAR8);
+        PxResult r = PxSetValues(item, bytes, (UInt32)bytes.Length, PxType.PX_ASCII_CHAR8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -211,9 +211,9 @@ public class PsContainer : IDisposable
 
         byte[] dst = new byte[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_ASCII_CHAR8);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_ASCII_CHAR8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -232,9 +232,9 @@ public class PsContainer : IDisposable
     {
         var bytes = Encoding.UTF8.GetBytes(str);
 
-        PsResult r = PsSetValues(item, bytes, (UInt32)bytes.Length, PsType.PS_UTF8_CHAR8);
+        PxResult r = PxSetValues(item, bytes, (UInt32)bytes.Length, PxType.PX_UTF8_CHAR8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -256,9 +256,9 @@ public class PsContainer : IDisposable
 
         byte[] dst = new byte[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UTF8_CHAR8);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UTF8_CHAR8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -275,9 +275,9 @@ public class PsContainer : IDisposable
 
     public void SetUInt8Array(IntPtr item, byte[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT8);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -309,9 +309,9 @@ public class PsContainer : IDisposable
 
         byte[] dst = new byte[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT8);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -335,14 +335,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         byte[] dst = new byte[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT8);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -359,9 +359,9 @@ public class PsContainer : IDisposable
 
     public void SetUInt16Array(IntPtr item, UInt16[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT16);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT16);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -393,9 +393,9 @@ public class PsContainer : IDisposable
 
         UInt16[] dst = new UInt16[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT16);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT16);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -419,14 +419,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         UInt16[] dst = new UInt16[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT16);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT16);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -443,9 +443,9 @@ public class PsContainer : IDisposable
 
     public void SetUInt32Array(IntPtr item, UInt32[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT32);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -477,9 +477,9 @@ public class PsContainer : IDisposable
 
         UInt32[] dst = new UInt32[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT32);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -503,14 +503,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         UInt32[] dst = new UInt32[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT32);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -527,9 +527,9 @@ public class PsContainer : IDisposable
 
     public void SetUInt64Array(IntPtr item, UInt64[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_UINT64);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -561,9 +561,9 @@ public class PsContainer : IDisposable
 
         UInt64[] dst = new UInt64[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_UINT64);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -587,14 +587,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         UInt64[] dst = new UInt64[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_UINT64);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -611,9 +611,9 @@ public class PsContainer : IDisposable
 
     public void SetInt8Array(IntPtr item, sbyte[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT8);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -645,9 +645,9 @@ public class PsContainer : IDisposable
 
         sbyte[] dst = new sbyte[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT8);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -671,14 +671,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         sbyte[] dst = new sbyte[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT8);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT8);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -695,9 +695,9 @@ public class PsContainer : IDisposable
 
     public void SetInt16Array(IntPtr item, Int16[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT16);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT16);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -729,9 +729,9 @@ public class PsContainer : IDisposable
 
         Int16[] dst = new Int16[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT16);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT16);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -755,14 +755,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         Int16[] dst = new Int16[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT16);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT16);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -779,9 +779,9 @@ public class PsContainer : IDisposable
 
     public void SetInt32Array(IntPtr item, Int32[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT32);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -813,9 +813,9 @@ public class PsContainer : IDisposable
 
         Int32[] dst = new Int32[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT32);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -839,14 +839,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         Int32[] dst = new Int32[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT32);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -863,9 +863,9 @@ public class PsContainer : IDisposable
 
     public void SetInt64Array(IntPtr item, Int64[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_INT64);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -897,9 +897,9 @@ public class PsContainer : IDisposable
 
         Int64[] dst = new Int64[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_INT64);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -923,14 +923,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         Int64[] dst = new Int64[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_INT64);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -947,9 +947,9 @@ public class PsContainer : IDisposable
 
     public void SetFloat32Array(IntPtr item, float[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_FLOAT32);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_FLOAT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -981,9 +981,9 @@ public class PsContainer : IDisposable
 
         float[] dst = new float[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_FLOAT32);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_FLOAT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1007,14 +1007,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         float[] dst = new float[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_FLOAT32);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_FLOAT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1031,9 +1031,9 @@ public class PsContainer : IDisposable
 
     public void SetFloat64Array(IntPtr item, double[] values)
     {
-        PsResult r = PsSetValues(item, values, (UInt32)values.Length, PsType.PS_FLOAT32);
+        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_FLOAT32);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1065,9 +1065,9 @@ public class PsContainer : IDisposable
 
         double[] dst = new double[(int)count];
 
-        PsResult r = PsTryCopyValues(item, dst, count.Value, PsType.PS_FLOAT64);
+        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_FLOAT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1091,14 +1091,14 @@ public class PsContainer : IDisposable
 
         if (count != 1u)
         {
-            throw new Exception(PsResult.PS_TYPE_MISMATCH.ToString());
+            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
         }
 
         double[] dst = new double[1u];
 
-        PsResult r = PsTryCopyValues(item, dst, 1u, PsType.PS_FLOAT64);
+        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_FLOAT64);
 
-        if (r != PsResult.PS_SUCCESS)
+        if (r != PxResult.PX_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1111,7 +1111,7 @@ public class PsContainer : IDisposable
         return GetFloat64(TryGetItem(key));
     }
 
-    ~PsContainer()
+    ~PxContainer()
     {
         TryDispose();
     }
@@ -1120,7 +1120,7 @@ public class PsContainer : IDisposable
     {
         if (!m_disposed)
         {
-            PsDeleteContainer(m_container);
+            PxDeleteContainer(m_container);
             m_disposed = true;
         }
     }
@@ -1134,133 +1134,133 @@ public class PsContainer : IDisposable
     // -------------------------------------------
 
     // Result of PODstore functions
-    protected enum           PsResult : UInt32
+    protected enum           PxResult : UInt32
     {
-        PS_SUCCESS                = 0u,                     // Success
-        PS_NULL_REFERENCE         = 1u,                     // Tried to pass null for an item or container
-        PS_TYPE_MISMATCH          = 2u,                     // Tried to get a type that does not match the stored type
-        PS_OUT_OF_RANGE           = 3u,                     // Tried to copy values out of the range of the stored buffer
-        PS_FILE_CORRUPT           = 4u,                     // Save file is corrupt
-        PS_FILE_NOT_FOUND         = 5u,                     // Unable to open file for read or write
-        PS_ARGUMENT_ERROR         = 6u,                     // Provided an incorrect argument to a method
-        PS_ZLIB_ERROR             = 7u,                     // Error during zlib initialization
+        PX_SUCCESS                = 0u,                     // Success
+        PX_NULL_REFERENCE         = 1u,                     // Tried to pass null for an item or container
+        PX_TYPE_MISMATCH          = 2u,                     // Tried to get a type that does not match the stored type
+        PX_OUT_OF_RANGE           = 3u,                     // Tried to copy values out of the range of the stored buffer
+        PX_FILE_CORRUPT           = 4u,                     // Save file is corrupt
+        PX_FILE_NOT_FOUND         = 5u,                     // Unable to open file for read or write
+        PX_ARGUMENT_ERROR         = 6u,                     // Provided an incorrect argument to a method
+        PX_ZLIB_ERROR             = 7u,                     // Error during zlib initialization
     };
 
     // Types of Data
-    protected enum           PsType : UInt32
+    protected enum           PxType : UInt32
     {
-        PS_ASCII_CHAR8            = 0x02000001u,            // 8-bit ASCII character
-        PS_UTF8_CHAR8             = 0x03000001u,            // 8-bit UTF8 bytes
-        PS_UINT8                  = 0x00000001u,            // 8-bit unsigned integer
-        PS_UINT16                 = 0x00000002u,            // 16-bit unsigned integer
-        PS_UINT32                 = 0x00000004u,            // 32-bit unsigned integer
-        PS_UINT64                 = 0x00000008u,            // 64-bit unsigned integer
-        PS_INT8                   = 0x00010001u,            // 8-bit signed twos-complement integer
-        PS_INT16                  = 0x00010002u,            // 16-bit signed twos-complement integer
-        PS_INT32                  = 0x00010004u,            // 32-bit signed twos-complement integer
-        PS_INT64                  = 0x00010008u,            // 64-bit signed twos-complement integer
-        PS_FLOAT32                = 0x01010004u,            // 32-bit IEEE floating point number
-        PS_FLOAT64                = 0x01010008u,            // 64-bit IEEE floating point number
+        PX_ASCII_CHAR8            = 0x02000001u,            // 8-bit ASCII character
+        PX_UTF8_CHAR8             = 0x03000001u,            // 8-bit UTF8 bytes
+        PX_UINT8                  = 0x00000001u,            // 8-bit unsigned integer
+        PX_UINT16                 = 0x00000002u,            // 16-bit unsigned integer
+        PX_UINT32                 = 0x00000004u,            // 32-bit unsigned integer
+        PX_UINT64                 = 0x00000008u,            // 64-bit unsigned integer
+        PX_INT8                   = 0x00010001u,            // 8-bit signed twos-complement integer
+        PX_INT16                  = 0x00010002u,            // 16-bit signed twos-complement integer
+        PX_INT32                  = 0x00010004u,            // 32-bit signed twos-complement integer
+        PX_INT64                  = 0x00010008u,            // 64-bit signed twos-complement integer
+        PX_FLOAT32                = 0x01010004u,            // 32-bit IEEE floating point number
+        PX_FLOAT64                = 0x01010008u,            // 64-bit IEEE floating point number
     };
 
     // See PODstore.h for DLL documentation
 
-    [DllImport("libPODstore", EntryPoint = "psCreateContainer", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PsCreateContainer();
+    [DllImport("libpodindex", EntryPoint = "pxCreateContainer", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PxCreateContainer();
 
-    [DllImport("libPODstore", EntryPoint = "psDeleteContainer", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern void        PsDeleteContainer(IntPtr container);
+    [DllImport("libpodindex", EntryPoint = "pxDeleteContainer", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern void        PxDeleteContainer(IntPtr container);
 
-    [DllImport("libPODstore", EntryPoint = "psLoadFile", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsLoadFile(IntPtr container, byte[] fileName, PsChecksum checksum, UInt32 checksumValue);
+    [DllImport("libpodindex", EntryPoint = "pxLoadFile", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxLoadFile(IntPtr container, byte[] fileName, PxChecksum checksum, UInt32 checksumValue);
 
-    [DllImport("libPODstore", EntryPoint = "psSaveFile", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSaveFile(IntPtr container, byte[] fileName, PsCompression compression, PsChecksum checksum, UInt32 checksumValue, PsEndian endianness);
+    [DllImport("libpodindex", EntryPoint = "pxSaveFile", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSaveFile(IntPtr container, byte[] fileName, PxCompression compression, PxChecksum checksum, UInt32 checksumValue, PxEndian endianness);
 
-    [DllImport("libPODstore", EntryPoint = "psGetItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PsGetItem(IntPtr container, byte[] key);
+    [DllImport("libpodindex", EntryPoint = "pxGetItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PxGetItem(IntPtr container, byte[] key);
 
-    [DllImport("libPODstore", EntryPoint = "psTryGetItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PsTryGetItem(IntPtr container, byte[] key);
+    [DllImport("libpodindex", EntryPoint = "pxTryGetItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PxTryGetItem(IntPtr container, byte[] key);
 
-    [DllImport("libPODstore", EntryPoint = "psRemoveItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsRemoveItem(IntPtr container, IntPtr item);
+    [DllImport("libpodindex", EntryPoint = "pxRemoveItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxRemoveItem(IntPtr container, IntPtr item);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCountValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCountValues(IntPtr item, out UInt32 valueCount);
+    [DllImport("libpodindex", EntryPoint = "pxTryCountValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCountValues(IntPtr item, out UInt32 valueCount);
 
-    [DllImport("libPODstore", EntryPoint = "psTryGetType", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryGetType(IntPtr item, out PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxTryGetType", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryGetType(IntPtr item, out PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCountKeyChars", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCountKeyChars(IntPtr item, out UInt32 charCount);
+    [DllImport("libpodindex", EntryPoint = "pxTryCountKeyChars", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCountKeyChars(IntPtr item, out UInt32 charCount);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyKey", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyKey(IntPtr item, byte[] key, UInt32 count);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyKey", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyKey(IntPtr item, byte[] key, UInt32 count);
 
-    [DllImport("libPODstore", EntryPoint = "psGetFirstItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PsGetFirstItem(IntPtr container);
+    [DllImport("libpodindex", EntryPoint = "pxGetFirstItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PxGetFirstItem(IntPtr container);
 
-    [DllImport("libPODstore", EntryPoint = "psGetNextItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PsGetNextItem(IntPtr container, IntPtr item);
+    [DllImport("libpodindex", EntryPoint = "pxGetNextItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PxGetNextItem(IntPtr container, IntPtr item);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, byte[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, byte[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, UInt16[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, UInt16[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, UInt32[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, UInt32[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, UInt64[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, UInt64[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, sbyte[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, sbyte[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, Int16[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, Int16[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, Int32[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, Int32[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, Int64[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, Int64[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, float[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, float[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsSetValues(IntPtr item, double[] srcValueArray, UInt32 valueCount, PsType valueType);
+    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxSetValues(IntPtr item, double[] srcValueArray, UInt32 valueCount, PxType valueType);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, byte[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, byte[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt16[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, UInt16[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt32[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, UInt32[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, UInt64[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, UInt64[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, sbyte[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, sbyte[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int16[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, Int16[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int32[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, Int32[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, Int64[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, Int64[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, float[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, float[] dstValueArray, UInt32 valueCount, PxType type);
 
-    [DllImport("libPODstore", EntryPoint = "psTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PsResult    PsTryCopyValues(IntPtr item, double[] dstValueArray, UInt32 valueCount, PsType type);
+    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PxResult    PxTryCopyValues(IntPtr item, double[] dstValueArray, UInt32 valueCount, PxType type);
 }

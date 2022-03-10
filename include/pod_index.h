@@ -1,21 +1,21 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#ifndef POD_STORE_H
-#define POD_STORE_H
+#ifndef POD_INDEX_H
+#define POD_INDEX_H
 
 #include <cstdint>
 
 extern "C"
 {
     // An item contains a key and its associated POD array
-    struct                   PsItem;
+    struct                   PxItem;
 
     // A container of PsBlocks
-    struct                   PsContainer;
+    struct                   PxContainer;
 
-    // Result of PODstore functions
-    enum                     PsResult      : uint32_t
+    // Result of pod-index functions
+    enum                     PxResult      : uint32_t
     {
         PS_SUCCESS                = 0u,          // Success
         PS_NULL_REFERENCE         = 1u,          // Tried to pass null for an item or container
@@ -28,7 +28,7 @@ extern "C"
     };
 
     // Types of Data
-    enum                     PsType        : uint32_t
+    enum                     PxType        : uint32_t
     {
         PS_ASCII_CHAR8            = 0x02000001u, // 8-bit ASCII characters
         PS_UTF8_CHAR8             = 0x03000001u, // 8-bit UTF8 bytes
@@ -45,7 +45,7 @@ extern "C"
     };
 
     // Compression Levels
-    enum                     PsCompression : uint32_t
+    enum                     PxCompression : uint32_t
     {
         PS_COMPRESSION_0          = 0u,          // No compression (largest size)
         PS_COMPRESSION_1          = 1u,          // Least compression
@@ -63,7 +63,7 @@ extern "C"
     };
 
     // Endianness
-    enum                     PsEndian      : uint32_t
+    enum                     PxEndian      : uint32_t
     {
         PS_ENDIAN_LITTLE          = 0u,          // Save the file in little endian format
         PS_ENDIAN_BIG             = 1u,          // Save the file in big endian format
@@ -71,7 +71,7 @@ extern "C"
     };
 
     // Checksum Type
-    enum                     PsChecksum    : uint32_t
+    enum                     PxChecksum    : uint32_t
     {
         PS_CHECKSUM_NONE          = 0u,          // Read/write a file with no checksum
         PS_CHECKSUM_ADLER32       = 1u,          // Read/write a file with an adler32 checksum
@@ -79,88 +79,88 @@ extern "C"
     };
 
     // Create a serializer
-    PsContainer*     __cdecl psCreateContainer();
+    PxContainer*     __cdecl pxCreateContainer();
 
     // Delete a serializer
-    void             __cdecl psDeleteContainer(
-        PsContainer*           container);      // Handle to a valid PsContainer
+    void             __cdecl pxDeleteContainer(
+        PxContainer*           container);      // Handle to a valid PxContainer
 
     // Load a file into a serializer
     // If checksum is NONE, then checksumValue isn't used.
     // If checksum is not NONE, then checksumValue must be
     // equal to the same checksumValue used to save the file
-    PsResult         __cdecl psLoadFile(
-        PsContainer*            container,       // Handle to a valid PsContainer
+    PxResult         __cdecl pxLoadFile(
+        PxContainer*            container,       // Handle to a valid PxContainer
         const char*             fileName,        // File name
-        PsChecksum              checksum,        // Checksum type
+        PxChecksum              checksum,        // Checksum type
         uint32_t                checksumValue);  // Initial checksum value
 
     // Save a file using data stored in the serializer
     // If checksum is NONE, then checksumValue isn't used.
     // If checksum is not NONE, then checksumValue must be
     // used again to load the file.
-    PsResult         __cdecl psSaveFile(
-        PsContainer*            container,       // Handle to a valid PsContainer
+    PxResult         __cdecl pxSaveFile(
+        PxContainer*            container,       // Handle to a valid PxContainer
         const char*             fileName,        // File name
-        PsCompression           compression,     // Compression level
-        PsChecksum              checksum,        // Checksum type
+        PxCompression           compression,     // Compression level
+        PxChecksum              checksum,        // Checksum type
         uint32_t                checksumValue,   // Initial checksum value
-        PsEndian                endianness);
+        PxEndian                endianness);
 
     // Get an item from a container
     // If the item doesn't exist, then it will be created
     // returns nullptr if the key size exceeds available memory,
     // or if the container is null
-    PsItem*          __cdecl psGetItem(
-        PsContainer*            container,       // Handle to a valid PsContainer
+    PxItem*          __cdecl pxGetItem(
+        PxContainer*            container,       // Handle to a valid PxContainer
         const char*             key);            // Null-terminated ASCII key
 
     // Get an item from a container
     // If the item doesn't exist, or if the container is nullptr,
     // then it will return nullptr
-    PsItem*          __cdecl psTryGetItem(
-        PsContainer*            container,       // Handle to a valid PsContainer
+    PxItem*          __cdecl pxTryGetItem(
+        PxContainer*            container,       // Handle to a valid PxContainer
         const char*             key);            // Null-terminated ASCII key
 
     // Remove an item from the container
     // does nothing if the key doesn't exist
-    PsResult         __cdecl psRemoveItem(
-        PsContainer*            container,
-        PsItem*                 item);
+    PxResult         __cdecl pxRemoveItem(
+        PxContainer*            container,
+        PxItem*                 item);
 
     // Set the values in a block
-    PsResult         __cdecl psSetValues(
-        PsItem*                 item,            // Handle to a valid PsItem
+    PxResult         __cdecl pxSetValues(
+        PxItem*                 item,            // Handle to a valid PxItem
         const void*             srcValueArray,   // Array of values to set
         uint32_t                valueCount,      // Number of values in the array
-        PsType                  valueType);      // Type of values in the array
+        PxType                  valueType);      // Type of values in the array
 
     // Count the number of values in a block
-    PsResult         __cdecl psTryCountValues(
-        const PsItem*           item,            // Handle to a valid PsItem
+    PxResult         __cdecl pxTryCountValues(
+        const PxItem*           item,            // Handle to a valid PxItem
         uint32_t&               valueCount);     // Returned number of values in the block
 
     // Get the data type of a block
-    PsResult         __cdecl psTryGetType(
-        const PsItem*           item,            // Handle to a valid PsItem
-        PsType&                 valueType);      // Returned type of values in the block
+    PxResult         __cdecl pxTryGetType(
+        const PxItem*           item,            // Handle to a valid PxItem
+        PxType&                 valueType);      // Returned type of values in the block
 
     // Copy the values from a block into a destination array
-    PsResult         __cdecl psTryCopyValues(
-        const PsItem*           item,            // Handle to a valid PsItem
+    PxResult         __cdecl pxTryCopyValues(
+        const PxItem*           item,            // Handle to a valid PxItem
         void*                   dstValueArray,   // Array to copy values to
         uint32_t                valueCount,      // Number of values to copy
-        PsType                  type);           // The type of the values being copied
+        PxType                  type);           // The type of the values being copied
 
     // Count the number of characters in an item's key
-    PsResult         __cdecl psTryCountKeyChars(
-        const PsItem*           item,            // Handle to a valid PsItem
+    PxResult         __cdecl pxTryCountKeyChars(
+        const PxItem*           item,            // Handle to a valid PxItem
         uint32_t&               count);          // The returned number of ASCII characters
 
     // Copies an item's key into a buffer without
     // a null terminating character
-    PsResult         __cdecl psTryCopyKey(
-        const PsItem*           item,            // Handle to a valid PsItem
+    PxResult         __cdecl pxTryCopyKey(
+        const PxItem*           item,            // Handle to a valid PxItem
         char*                   buffer,          // The buffer to copy the key to
         uint32_t                charCount);      // The number of characters in the key
 
@@ -168,17 +168,17 @@ extern "C"
     // The order will change if items
     // are added or removed from the container.
     // Returns nullptr if there are no items in the container
-    PsItem*          __cdecl psGetFirstItem(
-        PsContainer*            container);      // Handle to a valid PsContainer
+    PxItem*          __cdecl pxGetFirstItem(
+        PxContainer*            container);      // Handle to a valid PxContainer
 
     // Get the next item in the container
     // The order will change if items
     // are added or removed from the container.
     // Returns nullptr if there are no more
     // item in the container.
-    PsItem*          __cdecl psGetNextItem(
-        PsContainer*            container,      // Handle to a valid PsContainer
-        PsItem*                 item);          // Handle to a valid PsItem
+    PxItem*          __cdecl pxGetNextItem(
+        PxContainer*            container,      // Handle to a valid PxContainer
+        PxItem*                 item);          // Handle to a valid PxItem
 }
 
 #endif

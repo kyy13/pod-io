@@ -1,37 +1,24 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PODstore.h"
-#include "PsBytes.h"
-#include "PsTypes.h"
+#include "pod_index.h"
+#include "PxBytes.h"
+#include "PxTypes.h"
+#include "PxLookup.h"
 
-#include <limits>
 #include <stdexcept>
 
-const uint32_t MaxCountLookup[] =
-    {
-        0u,
-        std::numeric_limits<uint32_t>::max() / 1u, // 1 byte
-        std::numeric_limits<uint32_t>::max() / 2u, // 2 bytes
-        0u,
-        std::numeric_limits<uint32_t>::max() / 4u, // 4 bytes
-        0u,
-        0u,
-        0u,
-        std::numeric_limits<uint32_t>::max() / 8u, // 8 bytes
-    };
-
-PsContainer* psCreateContainer()
+PxContainer* pxCreateContainer()
 {
-    return new PsContainer;
+    return new PxContainer;
 }
 
-void psDeleteContainer(PsContainer* container)
+void pxDeleteContainer(PxContainer* container)
 {
     delete container;
 }
 
-PsItem* psGetItem(PsContainer* container, const char* key)
+PxItem* pxGetItem(PxContainer* container, const char* key)
 {
     if (container == nullptr)
     {
@@ -61,7 +48,7 @@ PsItem* psGetItem(PsContainer* container, const char* key)
 
     if (it == map.end())
     {
-        const PsData data =
+        const PxData data =
             {
                 .count = 0,
                 .type = PS_UINT8,
@@ -70,24 +57,24 @@ PsItem* psGetItem(PsContainer* container, const char* key)
         it = map.insert(std::make_pair(std::move(str), data)).first;
     }
 
-    return reinterpret_cast<PsItem*>(&(*it));
+    return reinterpret_cast<PxItem*>(&(*it));
 }
 
-PsResult psRemoveItem(PsContainer* container, PsItem* item)
+PxResult pxRemoveItem(PxContainer* container, PxItem* item)
 {
     if ((container == nullptr) || (item == nullptr))
     {
         return PS_NULL_REFERENCE;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PsData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
 
     container->map.erase(key);
 
     return PS_SUCCESS;
 }
 
-PsItem* psTryGetItem(PsContainer* container, const char* key)
+PxItem* pxTryGetItem(PxContainer* container, const char* key)
 {
     if (container == nullptr)
     {
@@ -120,72 +107,72 @@ PsItem* psTryGetItem(PsContainer* container, const char* key)
         return nullptr;
     }
 
-    return reinterpret_cast<PsItem*>(&(*it));
+    return reinterpret_cast<PxItem*>(&(*it));
 }
 
-PsResult psSetValues(PsItem* b, const void* values, uint32_t count, PsType type)
+PxResult pxSetValues(PxItem* item, const void* srcValueArray, uint32_t valueCount, PxType valueType)
 {
-    if (b == nullptr)
+    if (item == nullptr)
     {
         return PS_NULL_REFERENCE;
     }
 
-    uint32_t maxCount = MaxCountLookup[size_of_type(type)];
+    uint32_t maxCount = MaxCountLookup[size_of_type(valueType)];
 
-    if (count > maxCount)
+    if (valueCount > maxCount)
     {
         return PS_OUT_OF_RANGE;
     }
 
-    size_t size = static_cast<size_t>(count) * size_of_type(type);
+    size_t size = static_cast<size_t>(valueCount) * size_of_type(valueType);
 
-    auto& data = reinterpret_cast<std::pair<std::string,PsData>*>(b)->second;
+    auto& data = reinterpret_cast<std::pair<std::string,PxData>*>(item)->second;
 
     data.values.resize(size);
-    data.count = count;
-    data.type = type;
+    data.count = valueCount;
+    data.type = valueType;
 
-    memcpy(data.values.data(), values, size);
+    memcpy(data.values.data(), srcValueArray, size);
 
     return PS_SUCCESS;
 }
 
-PsResult psTryCountValues(const PsItem* b, uint32_t& valueCount)
+PxResult pxTryCountValues(const PxItem* item, uint32_t& valueCount)
 {
-    if (b == nullptr)
+    if (item == nullptr)
     {
         return PS_NULL_REFERENCE;
     }
 
-    auto& data = reinterpret_cast<const std::pair<std::string,PsData>*>(b)->second;
+    auto& data = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->second;
 
     valueCount = data.count;
 
     return PS_SUCCESS;
 }
 
-PsResult psTryGetType(const PsItem* b, PsType& valueType)
+PxResult pxTryGetType(const PxItem* item, PxType& valueType)
 {
-    if (b == nullptr)
+    if (item == nullptr)
     {
         return PS_NULL_REFERENCE;
     }
 
-    auto& data = reinterpret_cast<const std::pair<std::string,PsData>*>(b)->second;
+    auto& data = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->second;
 
     valueType = data.type;
 
     return PS_SUCCESS;
 }
 
-PsResult psTryCopyValues(const PsItem* b, void* dst, uint32_t count, PsType type)
+PxResult pxTryCopyValues(const PxItem* item, void* dstValueArray, uint32_t valueCount, PxType type)
 {
-    if (b == nullptr)
+    if (item == nullptr)
     {
         return PS_NULL_REFERENCE;
     }
 
-    auto& data = reinterpret_cast<const std::pair<std::string,PsData>*>(b)->second;
+    auto& data = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->second;
 
     if (data.count == 0)
     {
@@ -197,41 +184,41 @@ PsResult psTryCopyValues(const PsItem* b, void* dst, uint32_t count, PsType type
         return PS_TYPE_MISMATCH;
     }
 
-    size_t size = count * size_of_type(type);
+    size_t size = valueCount * size_of_type(type);
     if (size > data.values.size())
     {
         return PS_OUT_OF_RANGE;
     }
 
-    memcpy(dst, data.values.data(), size);
+    memcpy(dstValueArray, data.values.data(), size);
 
     return PS_SUCCESS;
 }
 
-PsResult psTryCountKeyChars(const PsItem* item, uint32_t& count)
+PxResult pxTryCountKeyChars(const PxItem* item, uint32_t& count)
 {
     if (item == nullptr)
     {
         return PS_NULL_REFERENCE;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PsData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
 
     count = static_cast<uint32_t>(key.size());
 
     return PS_SUCCESS;
 }
 
-PsResult psTryCopyKey(const PsItem* item, char* buffer, uint32_t count)
+PxResult pxTryCopyKey(const PxItem* item, char* buffer, uint32_t charCount)
 {
     if (item == nullptr)
     {
         return PS_NULL_REFERENCE;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PsData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
 
-    if (count != key.size())
+    if (charCount != key.size())
     {
         return PS_OUT_OF_RANGE;
     }
@@ -241,7 +228,7 @@ PsResult psTryCopyKey(const PsItem* item, char* buffer, uint32_t count)
     return PS_SUCCESS;
 }
 
-PsItem* psGetFirstItem(PsContainer* container)
+PxItem* pxGetFirstItem(PxContainer* container)
 {
     if (container == nullptr)
     {
@@ -257,17 +244,17 @@ PsItem* psGetFirstItem(PsContainer* container)
         return nullptr;
     }
 
-    return reinterpret_cast<PsItem*>(&(*it));
+    return reinterpret_cast<PxItem*>(&(*it));
 }
 
-PsItem* psGetNextItem(PsContainer* container, PsItem* item)
+PxItem* pxGetNextItem(PxContainer* container, PxItem* item)
 {
     if ((container == nullptr) || (item == nullptr))
     {
         return nullptr;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PsData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
 
     auto& map = container->map;
 
@@ -278,5 +265,5 @@ PsItem* psGetNextItem(PsContainer* container, PsItem* item)
         return nullptr;
     }
 
-    return reinterpret_cast<PsItem*>(&(*it));
+    return reinterpret_cast<PxItem*>(&(*it));
 }

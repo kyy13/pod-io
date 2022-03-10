@@ -1,17 +1,17 @@
-// PODstore
+// pod-index
 // Kyle J Burgess
 
-#include "PODstore.h"
-#include "PsBytes.h"
-#include "PsTypes.h"
-#include "PsDeflate.h"
-#include "PsLookup.h"
+#include "pod_index.h"
+#include "PxBytes.h"
+#include "PxTypes.h"
+#include "PxDeflate.h"
+#include "PxLookup.h"
 
 #include <cstring>
 #include <fstream>
 
 template<bool reverse_bytes>
-PsResult readBytes(PsContainer* serializer, File& file, PsChecksum checksum, uint32_t check32)
+PxResult readBytes(PxContainer* serializer, File& file, PxChecksum checksum, uint32_t check32)
 {
     int r;
     auto& map = serializer->map;
@@ -230,7 +230,7 @@ PsResult readBytes(PsContainer* serializer, File& file, PsChecksum checksum, uin
     return PS_SUCCESS;
 }
 
-PsResult psLoadFile(PsContainer* serializer, const char* fileName, PsChecksum checksum, uint32_t checksumValue)
+PxResult pxLoadFile(PxContainer* container, const char* fileName, PxChecksum checksum, uint32_t checksumValue)
 {
     File file(fileName, FM_READ);
 
@@ -250,14 +250,14 @@ PsResult psLoadFile(PsContainer* serializer, const char* fileName, PsChecksum ch
 
     // PODS
 
-    if (memcmp(header, cPODS, 4) != 0)
+    if (memcmp(header, cPODX, 4) != 0)
     {
         return PS_FILE_CORRUPT;
     }
 
     // Endianness
 
-    PsEndian endian;
+    PxEndian endian;
 
     if (memcmp(header + 4, cLITE, 4) == 0)
     {
@@ -317,15 +317,15 @@ PsResult psLoadFile(PsContainer* serializer, const char* fileName, PsChecksum ch
         (endian == PS_ENDIAN_LITTLE && is_big_endian()) ||
         (endian == PS_ENDIAN_BIG && is_little_endian());
 
-    PsResult result;
+    PxResult result;
 
     if (requiresByteSwap)
     {
-        result = readBytes<true>(serializer, file, checksum, checksumValue);
+        result = readBytes<true>(container, file, checksum, checksumValue);
     }
     else
     {
-        result = readBytes<false>(serializer, file, checksum, checksumValue);
+        result = readBytes<false>(container, file, checksum, checksumValue);
     }
 
     return result;

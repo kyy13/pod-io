@@ -76,9 +76,18 @@ public class PxContainer : IDisposable
         return PxGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
     }
 
-    public IntPtr TryGetItem(string key)
+    public bool TryGetItem(string key, out IntPtr item)
     {
-        return PxTryGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
+        IntPtr ptr = PxTryGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
+
+        if (ptr == null)
+        {
+            item = IntPtr.Zero;
+            return false;
+        }
+
+        item = ptr;
+        return true;
     }
 
     public void RemoveItem(IntPtr item)
@@ -98,77 +107,93 @@ public class PxContainer : IDisposable
 
     public void RemoveItem(string key)
     {
-        RemoveItem(TryGetItem(key));
+        if (TryGetItem(key, out IntPtr item))
+        {
+            RemoveItem(item);
+        }
     }
 
-    public UInt32? TryCountValues(IntPtr item)
+    public bool TryCountValues(IntPtr item, out UInt32 count)
     {
         if (item == null)
         {
-            return null;
+            count = 0;
+            return false;
         }
 
-        PxResult r = PxTryCountValues(item, out UInt32 count);
+        PxResult r = PxTryCountValues(item, out count);
+
+        if (r != PxResult.PX_SUCCESS)
+        {
+            return false;
+        }
 
         if (count == 0)
         {
-            return null;
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool TryCountValues(string key, out UInt32 count)
+    {
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            count = 0;
+            return false;
+        }
+
+        return TryCountValues(item, out count);
+    }
+
+    public bool TryCountKeyChars(IntPtr item, out UInt32 count)
+    {
+        if (item == null)
+        {
+            count = 0;
+            return false;
+        }
+
+        PxResult r = PxTryCountKeyChars(item, out count);
+
+        if (count == 0)
+        {
+            return false;
         }
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            return false;
         }
 
-        return count;
+        return true;
     }
 
-    public UInt32? TryCountValues(string key)
+    public bool TryGetKey(IntPtr item, out string key)
     {
-        return TryCountValues(GetItem(key));
-    }
+        UInt32 count;
 
-    public UInt32? TryCountKeyChars(IntPtr item)
-    {
-        if (item == null)
+        if (!TryCountKeyChars(item, out count))
         {
-            return null;
-        }
-
-        PxResult r = PxTryCountKeyChars(item, out UInt32 count);
-
-        if (count == 0)
-        {
-            return null;
-        }
-
-        if (r != PxResult.PX_SUCCESS)
-        {
-            throw new Exception(r.ToString());
-        }
-
-        return count;
-    }
-
-    public string TryGetKey(IntPtr item)
-    {
-        UInt32? count = TryCountKeyChars(item);
-
-        if (count == null)
-        {
-            return null;
+            key = null;
+            return false;
         }
 
         byte[] dst = new byte[(int)count];
 
-        PxResult r = PxTryCopyKey(item, dst, count.Value);
+        PxResult r = PxTryCopyKey(item, dst, count);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            key = null;
+            return false;
         }
 
-        return Encoding.ASCII.GetString(dst);
+        key = Encoding.ASCII.GetString(dst);
+        return true;
     }
 
     public IntPtr GetFirstItem()
@@ -200,30 +225,41 @@ public class PxContainer : IDisposable
         SetAsciiString(GetItem(key), str);
     }
 
-    public string GetAsciiString(IntPtr item)
+    public bool TryGetAsciiString(IntPtr item, out string str)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            str = null;
+            return false;
         }
 
         byte[] dst = new byte[(int)count];
 
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_ASCII_CHAR8);
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_ASCII_CHAR8);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            str = null;
+            return false;
         }
 
-        return Encoding.ASCII.GetString(dst);
+        str = Encoding.ASCII.GetString(dst);
+        return true;
     }
 
-    public string GetAsciiString(string key)
+    public bool TryGetAsciiString(string key, out string str)
     {
-        return GetAsciiString(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            str = null;
+            return false;
+        }
+
+        return TryGetAsciiString(item, out str);
     }
 
     // UTF8
@@ -245,30 +281,41 @@ public class PxContainer : IDisposable
         SetUtf8String(GetItem(key), str);
     }
 
-    public string GetUtf8String(IntPtr item)
+    public bool TryGetUtf8String(IntPtr item, out string value)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            value = null;
+            return false;
         }
 
         byte[] dst = new byte[(int)count];
 
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UTF8_CHAR8);
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UTF8_CHAR8);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = null;
+            return false;
         }
 
-        return Encoding.UTF8.GetString(dst);
+        value = Encoding.UTF8.GetString(dst);
+        return true;
     }
 
-    public string GetUtf8String(string key)
+    public bool TryGetUtf8String(string key, out string value)
     {
-        return GetUtf8String(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = null;
+            return false;
+        }
+
+        return TryGetUtf8String(item, out value);
     }
 
     // UInt8
@@ -298,44 +345,56 @@ public class PxContainer : IDisposable
         SetUInt8Array(key, new byte[]{ value });
     }
 
-    public byte[] GetUInt8Array(IntPtr item)
+    public bool TryGetUInt8Array(IntPtr item, out byte[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        byte[] dst = new byte[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT8);
+        byte[] dst = new byte[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT8);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public byte[] GetUInt8Array(string key)
+    public bool TryGetUInt8Array(string key, out byte[] values)
     {
-        return GetUInt8Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public byte? GetUInt8(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetUInt8Array(item, out values);
+    }
+
+    public bool TryGetUInt8(IntPtr item, out byte value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         byte[] dst = new byte[1u];
@@ -344,15 +403,25 @@ public class PxContainer : IDisposable
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public byte? GetUInt8(string key)
+    public bool TryGetUInt8(string key, out byte value)
     {
-        return GetUInt8(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetUInt8(item, out value);
     }
 
     // UInt16
@@ -382,44 +451,56 @@ public class PxContainer : IDisposable
         SetUInt16Array(key, new UInt16[]{ value });
     }
 
-    public UInt16[] GetUInt16Array(IntPtr item)
+    public bool TryGetUInt16Array(IntPtr item, out UInt16[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        UInt16[] dst = new UInt16[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT16);
+        UInt16[] dst = new UInt16[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT16);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public UInt16[] GetUInt16Array(string key)
+    public bool TryGetUInt16Array(string key, out UInt16[] values)
     {
-        return GetUInt16Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public UInt16? GetUInt16(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetUInt16Array(item, out values);
+    }
+
+    public bool TryGetUInt16(IntPtr item, out UInt16 value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         UInt16[] dst = new UInt16[1u];
@@ -428,15 +509,25 @@ public class PxContainer : IDisposable
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public UInt16? GetUInt16(string key)
+    public bool TryGetUInt16(string key, out UInt16 value)
     {
-        return GetUInt16(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetUInt16(item, out value);
     }
 
     // UInt32
@@ -466,61 +557,82 @@ public class PxContainer : IDisposable
         SetUInt32Array(key, new UInt32[]{ value });
     }
 
-    public UInt32[] GetUInt32Array(IntPtr item)
+    public bool TryGetUInt32Array(IntPtr item, out UInt32[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        UInt32[] dst = new UInt32[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT32);
+        UInt32[] dst = new UInt32[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT32);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public UInt32[] GetUInt32Array(string key)
+    public bool TryGetUInt32Array(string key, out UInt32[] values)
     {
-        return GetUInt32Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public UInt32? GetUInt32(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetUInt32Array(item, out values);
+    }
+
+    public bool TryGetUInt32(IntPtr item, out UInt32 value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         UInt32[] dst = new UInt32[1u];
-
         PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT32);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public UInt32? GetUInt32(string key)
+    public bool TryGetUInt32(string key, out UInt32 value)
     {
-        return GetUInt32(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetUInt32(item, out value);
     }
 
     // UInt64
@@ -550,44 +662,56 @@ public class PxContainer : IDisposable
         SetUInt64Array(key, new UInt64[]{ value });
     }
 
-    public UInt64[] GetUInt64Array(IntPtr item)
+    public bool TryGetUInt64Array(IntPtr item, out UInt64[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        UInt64[] dst = new UInt64[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_UINT64);
+        UInt64[] dst = new UInt64[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT64);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public UInt64[] GetUInt64Array(string key)
+    public bool TryGetUInt64Array(string key, out UInt64[] values)
     {
-        return GetUInt64Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public UInt64? GetUInt64(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetUInt64Array(item, out values);
+    }
+
+    public bool TryGetUInt64(IntPtr item, out UInt64 value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         UInt64[] dst = new UInt64[1u];
@@ -596,15 +720,25 @@ public class PxContainer : IDisposable
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public UInt64? GetUInt64(string key)
+    public bool TryGetUInt64(string key, out UInt64 value)
     {
-        return GetUInt64(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetUInt64(item, out value);
     }
 
     // Int8
@@ -634,44 +768,56 @@ public class PxContainer : IDisposable
         SetInt8Array(key, new sbyte[]{ value });
     }
 
-    public sbyte[] GetInt8Array(IntPtr item)
+    public bool TryGetInt8Array(IntPtr item, out sbyte[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        sbyte[] dst = new sbyte[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT8);
+        sbyte[] dst = new sbyte[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT8);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public sbyte[] GetInt8Array(string key)
+    public bool TryGetInt8Array(string key, out sbyte[] values)
     {
-        return GetInt8Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public sbyte? GetInt8(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetInt8Array(item, out values);
+    }
+
+    public bool TryGetInt8(IntPtr item, out sbyte value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         sbyte[] dst = new sbyte[1u];
@@ -680,15 +826,25 @@ public class PxContainer : IDisposable
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public sbyte? GetInt8(string key)
+    public bool TryGetInt8(string key, out sbyte value)
     {
-        return GetInt8(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetInt8(item, out value);
     }
 
     // Int16
@@ -718,44 +874,56 @@ public class PxContainer : IDisposable
         SetInt16Array(key, new Int16[]{ value });
     }
 
-    public Int16[] GetInt16Array(IntPtr item)
+    public bool TryGetInt16Array(IntPtr item, out Int16[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        Int16[] dst = new Int16[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT16);
+        Int16[] dst = new Int16[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT16);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public Int16[] GetInt16Array(string key)
+    public bool TryGetInt16Array(string key, out Int16[] values)
     {
-        return GetInt16Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public Int16? GetInt16(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetInt16Array(item, out values);
+    }
+
+    public bool TryGetInt16(IntPtr item, out Int16 value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         Int16[] dst = new Int16[1u];
@@ -764,15 +932,25 @@ public class PxContainer : IDisposable
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public Int16? GetInt16(string key)
+    public bool TryGetInt16(string key, out Int16 value)
     {
-        return GetInt16(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetInt16(item, out value);
     }
 
     // Int32
@@ -802,61 +980,82 @@ public class PxContainer : IDisposable
         SetInt32Array(key, new Int32[]{ value });
     }
 
-    public Int32[] GetInt32Array(IntPtr item)
+    public bool TryGetInt32Array(IntPtr item, out Int32[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        Int32[] dst = new Int32[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT32);
+        Int32[] dst = new Int32[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT32);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public Int32[] GetInt32Array(string key)
+    public bool TryGetInt32Array(string key, out Int32[] values)
     {
-        return GetInt32Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public Int32? GetInt32(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetInt32Array(item, out values);
+    }
+
+    public bool TryGetInt32(IntPtr item, out Int32 value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         Int32[] dst = new Int32[1u];
-
         PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT32);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public Int32? GetInt32(string key)
+    public bool TryGetInt32(string key, out Int32 value)
     {
-        return GetInt32(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetInt32(item, out value);
     }
 
     // Int64
@@ -886,44 +1085,56 @@ public class PxContainer : IDisposable
         SetInt64Array(key, new Int64[]{ value });
     }
 
-    public Int64[] GetInt64Array(IntPtr item)
+    public bool TryGetInt64Array(IntPtr item, out Int64[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
-        Int64[] dst = new Int64[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_INT64);
+        Int64[] dst = new Int64[count];
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT64);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public Int64[] GetInt64Array(string key)
+    public bool TryGetInt64Array(string key, out Int64[] values)
     {
-        return GetInt64Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public Int64? GetInt64(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetInt64Array(item, out values);
+    }
+
+    public bool TryGetInt64(IntPtr item, out Int64 value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         Int64[] dst = new Int64[1u];
@@ -932,15 +1143,25 @@ public class PxContainer : IDisposable
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public Int64? GetInt64(string key)
+    public bool TryGetInt64(string key, out Int64 value)
     {
-        return GetInt64(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetInt64(item, out value);
     }
 
     // Float32
@@ -970,44 +1191,56 @@ public class PxContainer : IDisposable
         SetFloat32Array(key, new float[]{ value });
     }
 
-    public float[] GetFloat32Array(IntPtr item)
+    public bool TryGetFloat32Array(IntPtr item, out float[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
         float[] dst = new float[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_FLOAT32);
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_FLOAT32);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public float[] GetFloat32Array(string key)
+    public bool TryGetFloat32Array(string key, out float[] values)
     {
-        return GetFloat32Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public float? GetFloat32(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetFloat32Array(item, out values);
+    }
+
+    public bool TryGetFloat32(IntPtr item, out float value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         float[] dst = new float[1u];
@@ -1016,15 +1249,25 @@ public class PxContainer : IDisposable
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public float? GetFloat32(string key)
+    public bool TryGetFloat32(string key, out float value)
     {
-        return GetFloat32(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetFloat32(item, out value);
     }
 
     // Float64
@@ -1054,61 +1297,82 @@ public class PxContainer : IDisposable
         SetFloat64Array(key, new double[]{ value });
     }
 
-    public double[] GetFloat64Array(IntPtr item)
+    public bool TryGetFloat64Array(IntPtr item, out double[] values)
     {
-        UInt32? count = TryCountValues(item);
+        UInt32 count;
 
-        if (count == null)
+        if (!TryCountValues(item, out count))
         {
-            return null;
+            values = null;
+            return false;
         }
 
         double[] dst = new double[(int)count];
-
-        PxResult r = PxTryCopyValues(item, dst, count.Value, PxType.PX_FLOAT64);
+        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_FLOAT64);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            values = null;
+            return false;
         }
 
-        return dst;
+        values = dst;
+        return true;
     }
 
-    public double[] GetFloat64Array(string key)
+    public bool TryGetFloat64Array(string key, out double[] values)
     {
-        return GetFloat64Array(TryGetItem(key));
-    }
+        IntPtr item;
 
-    public double? GetFloat64(IntPtr item)
-    {
-        UInt32? count = TryCountValues(item);
-
-        if (count == null)
+        if (!TryGetItem(key, out item))
         {
-            return null;
+            values = null;
+            return false;
+        }
+
+        return TryGetFloat64Array(item, out values);
+    }
+
+    public bool TryGetFloat64(IntPtr item, out double value)
+    {
+        UInt32 count;
+
+        if (!TryCountValues(item, out count))
+        {
+            value = 0;
+            return false;
         }
 
         if (count != 1u)
         {
-            throw new Exception(PxResult.PX_TYPE_MISMATCH.ToString());
+            value = 0;
+            return false;
         }
 
         double[] dst = new double[1u];
-
         PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_FLOAT64);
 
         if (r != PxResult.PX_SUCCESS)
         {
-            throw new Exception(r.ToString());
+            value = 0;
+            return false;
         }
 
-        return dst[0];
+        value = dst[0];
+        return true;
     }
 
-    public double? GetFloat64(string key)
+    public bool TryGetFloat64(string key, out double value)
     {
-        return GetFloat64(TryGetItem(key));
+        IntPtr item;
+
+        if (!TryGetItem(key, out item))
+        {
+            value = 0;
+            return false;
+        }
+
+        return TryGetFloat64(item, out value);
     }
 
     ~PxContainer()

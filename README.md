@@ -93,7 +93,7 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 | `0...3` | *signature*<br>`PODX` |
 | `4...7` | *endianness*<br>`LITE` little endian<br>`BIGE` big endian |
 | `8...11` | *checksum*<br>`NONE` no checksum<br>`AD32` adler32 <br>`CR32` crc32 |
-| `12...15` | *reserved* |
+| `12...15` | *reserved*<br>`NONE` |
 
 #### BODY
 | byte(s) | value(s)

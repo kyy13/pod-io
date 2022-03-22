@@ -177,8 +177,8 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
             return PS_ARGUMENT_ERROR;
     }
 
-    // Padding
-    memset(header + 12, 0, 4);
+    // Reserved Bytes
+    memcpy(header + 12, cNONE, 4);
 
     file.write(header, 16);
 

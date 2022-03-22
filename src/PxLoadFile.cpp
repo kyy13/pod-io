@@ -299,6 +299,13 @@ PxResult pxLoadFile(PxContainer* container, const char* fileName, PxChecksum che
     {
         return PS_FILE_CORRUPT;
     }
+    
+    // Reserved
+    if (memcmp(header + 12, cNONE, 4) != 0)
+    {
+        return PS_FILE_CORRUPT;
+    }
+
 
     // Calculate checksum
 

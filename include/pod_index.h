@@ -17,75 +17,75 @@ extern "C"
     // Result of pod-index functions
     enum                     PxResult      : uint32_t
     {
-        PS_SUCCESS                = 0u,          // Success
-        PS_NULL_REFERENCE         = 1u,          // Tried to pass null for an item or container
-        PS_TYPE_MISMATCH          = 2u,          // Tried to get a type that does not match the stored type
-        PS_OUT_OF_RANGE           = 3u,          // Tried to copy values out of the range of the stored buffer
-        PS_FILE_CORRUPT           = 4u,          // Save file is corrupt
-        PS_FILE_NOT_FOUND         = 5u,          // Unable to open file for read or write
-        PS_ARGUMENT_ERROR         = 6u,          // Provided an incorrect argument to a method
-        PS_ZLIB_ERROR             = 7u,          // Error during zlib initialization
+        PX_SUCCESS                = 0u,          // Success
+        PX_NULL_REFERENCE         = 1u,          // Tried to pass null for an item or container
+        PX_TYPE_MISMATCH          = 2u,          // Tried to get a type that does not match the stored type
+        PX_OUT_OF_RANGE           = 3u,          // Tried to copy values out of the range of the stored buffer
+        PX_FILE_CORRUPT           = 4u,          // Save file is corrupt
+        PX_FILE_NOT_FOUND         = 5u,          // Unable to open file for read or write
+        PX_ARGUMENT_ERROR         = 6u,          // Provided an incorrect argument to a method
+        PX_ZLIB_ERROR             = 7u,          // Error during zlib initialization
     };
 
     // Types of Data
     enum                     PxType        : uint32_t
     {
-        PS_ASCII_CHAR8            = 0x02000001u, // 8-bit ASCII characters
-        PS_UTF8_CHAR8             = 0x03000001u, // 8-bit UTF8 bytes
-        PS_UINT8                  = 0x00000001u, // 8-bit unsigned integer
-        PS_UINT16                 = 0x00000002u, // 16-bit unsigned integer
-        PS_UINT32                 = 0x00000004u, // 32-bit unsigned integer
-        PS_UINT64                 = 0x00000008u, // 64-bit unsigned integer
-        PS_INT8                   = 0x00010001u, // 8-bit signed twos-complement integer
-        PS_INT16                  = 0x00010002u, // 16-bit signed twos-complement integer
-        PS_INT32                  = 0x00010004u, // 32-bit signed twos-complement integer
-        PS_INT64                  = 0x00010008u, // 64-bit signed twos-complement integer
-        PS_FLOAT32                = 0x01010004u, // 32-bit IEEE floating point number
-        PS_FLOAT64                = 0x01010008u, // 64-bit IEEE floating point number
+        PX_ASCII_CHAR8            = 0x02000001u, // 8-bit ASCII characters
+        PX_UTF8_CHAR8             = 0x03000001u, // 8-bit UTF8 bytes
+        PX_UINT8                  = 0x00000001u, // 8-bit unsigned integer
+        PX_UINT16                 = 0x00000002u, // 16-bit unsigned integer
+        PX_UINT32                 = 0x00000004u, // 32-bit unsigned integer
+        PX_UINT64                 = 0x00000008u, // 64-bit unsigned integer
+        PX_INT8                   = 0x00010001u, // 8-bit signed twos-complement integer
+        PX_INT16                  = 0x00010002u, // 16-bit signed twos-complement integer
+        PX_INT32                  = 0x00010004u, // 32-bit signed twos-complement integer
+        PX_INT64                  = 0x00010008u, // 64-bit signed twos-complement integer
+        PX_FLOAT32                = 0x01010004u, // 32-bit IEEE floating point number
+        PX_FLOAT64                = 0x01010008u, // 64-bit IEEE floating point number
     };
 
     // Compression Levels
     enum                     PxCompression : uint32_t
     {
-        PS_COMPRESSION_0          = 0u,          // No compression (largest size)
-        PS_COMPRESSION_1          = 1u,          // Least compression
-        PS_COMPRESSION_2          = 2u,
-        PS_COMPRESSION_3          = 3u,
-        PS_COMPRESSION_4          = 4u,
-        PS_COMPRESSION_5          = 5u,
-        PS_COMPRESSION_6          = 6u,
-        PS_COMPRESSION_7          = 7u,
-        PS_COMPRESSION_8          = 8u,
-        PS_COMPRESSION_9          = 9u,          // Best compression (smallest size)
-        PS_COMPRESSION_NONE       = PS_COMPRESSION_0,
-        PS_COMPRESSION_DEFAULT    = PS_COMPRESSION_6,
-        PS_COMPRESSION_BEST       = PS_COMPRESSION_9,
+        PX_COMPRESSION_0          = 0u,          // No compression (largest size)
+        PX_COMPRESSION_1          = 1u,          // Least compression
+        PX_COMPRESSION_2          = 2u,
+        PX_COMPRESSION_3          = 3u,
+        PX_COMPRESSION_4          = 4u,
+        PX_COMPRESSION_5          = 5u,
+        PX_COMPRESSION_6          = 6u,
+        PX_COMPRESSION_7          = 7u,
+        PX_COMPRESSION_8          = 8u,
+        PX_COMPRESSION_9          = 9u,          // Best compression (smallest size)
+        PX_COMPRESSION_NONE       = PX_COMPRESSION_0,
+        PX_COMPRESSION_DEFAULT    = PX_COMPRESSION_6,
+        PX_COMPRESSION_BEST       = PX_COMPRESSION_9,
     };
 
     // Endianness
     enum                     PxEndian      : uint32_t
     {
-        PS_ENDIAN_LITTLE          = 0u,          // Save the file in little endian format
-        PS_ENDIAN_BIG             = 1u,          // Save the file in big endian format
-        PS_ENDIAN_NATIVE          = 2u,          // Save the file in the endianness of the host
+        PX_ENDIAN_LITTLE          = 0u,          // Save the file in little endian format
+        PX_ENDIAN_BIG             = 1u,          // Save the file in big endian format
+        PX_ENDIAN_NATIVE          = 2u,          // Save the file in the endianness of the host
     };
 
     // Checksum Type
     enum                     PxChecksum    : uint32_t
     {
-        PS_CHECKSUM_NONE          = 0u,          // Read/write a file with no checksum
-        PS_CHECKSUM_ADLER32       = 1u,          // Read/write a file with an adler32 checksum
-        PS_CHECKSUM_CRC32         = 2u,          // Read/write a file with a crc32 checksum
+        PX_CHECKSUM_NONE          = 0u,          // Read/write a file with no checksum
+        PX_CHECKSUM_ADLER32       = 1u,          // Read/write a file with an adler32 checksum
+        PX_CHECKSUM_CRC32         = 2u,          // Read/write a file with a crc32 checksum
     };
 
-    // Create a serializer
+    // Create a container
     PxContainer*     __cdecl pxCreateContainer();
 
-    // Delete a serializer
+    // Delete a container
     void             __cdecl pxDeleteContainer(
         PxContainer*           container);      // Handle to a valid PxContainer
 
-    // Load a file into a serializer
+    // Load a file into a container
     // If checksum is NONE, then checksumValue isn't used.
     // If checksum is not NONE, then checksumValue must be
     // equal to the same checksumValue used to save the file
@@ -95,7 +95,7 @@ extern "C"
         PxChecksum              checksum,        // Checksum type
         uint32_t                checksumValue);  // Initial checksum value
 
-    // Save a file using data stored in the serializer
+    // Save a file using data stored in the container
     // If checksum is NONE, then checksumValue isn't used.
     // If checksum is not NONE, then checksumValue must be
     // used again to load the file.

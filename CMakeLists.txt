@@ -1,4 +1,4 @@
-# PODstore
+# pod-index
 # Kyle J Burgess
 
 cmake_minimum_required(VERSION 3.7)

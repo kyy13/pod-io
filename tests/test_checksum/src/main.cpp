@@ -46,8 +46,8 @@ bool testFile()
     memcpy(crcbuf.data(), buffer.data() + buffer.size() - 4, 4);
 
     bool requiresByteSwap =
-        (endian == PS_ENDIAN_LITTLE && is_big_endian()) ||
-        (endian == PS_ENDIAN_BIG && is_little_endian());
+        (endian == PX_ENDIAN_LITTLE && is_big_endian()) ||
+        (endian == PX_ENDIAN_BIG && is_little_endian());
 
     if (requiresByteSwap)
     {
@@ -60,10 +60,10 @@ bool testFile()
 
     switch(checksum)
     {
-        case PS_CHECKSUM_ADLER32:
+        case PX_CHECKSUM_ADLER32:
             c1 = adler32(c1, buffer.data(), buffer.size() - 4);
             break;
-        case PS_CHECKSUM_CRC32:
+        case PX_CHECKSUM_CRC32:
             c1 = crc32(c1, buffer.data(), buffer.size() - 4);
             break;
         default:
@@ -95,29 +95,29 @@ bool test()
     float f32[11];
     double f64[12];
 
-    auto serializer = pxCreateContainer();
+    auto container = pxCreateContainer();
 
-    pxSetValues(pxGetItem(serializer, "test string"), c8, 20, PS_ASCII_CHAR8);
+    pxSetValues(pxGetItem(container, "test string"), c8, 20, PX_ASCII_CHAR8);
 
-    pxSetValues(pxGetItem(serializer, "UKeyA"), u8, 6, PS_UINT8);
-    pxSetValues(pxGetItem(serializer, "UKeyB"), u16, 7, PS_UINT16);
-    pxSetValues(pxGetItem(serializer, "UKeyC"), u32, 8, PS_UINT32);
-    pxSetValues(pxGetItem(serializer, "UKeyD"), u64, 9, PS_UINT64);
+    pxSetValues(pxGetItem(container, "UKeyA"), u8, 6, PX_UINT8);
+    pxSetValues(pxGetItem(container, "UKeyB"), u16, 7, PX_UINT16);
+    pxSetValues(pxGetItem(container, "UKeyC"), u32, 8, PX_UINT32);
+    pxSetValues(pxGetItem(container, "UKeyD"), u64, 9, PX_UINT64);
 
-    pxSetValues(pxGetItem(serializer, "KeyE"), i8, 6, PS_INT8);
-    pxSetValues(pxGetItem(serializer, "KeyF"), i16, 7, PS_INT16);
-    pxSetValues(pxGetItem(serializer, "KeyG"), i32, 8, PS_INT32);
-    pxSetValues(pxGetItem(serializer, "KeyH"), i64, 9, PS_INT64);
+    pxSetValues(pxGetItem(container, "KeyE"), i8, 6, PX_INT8);
+    pxSetValues(pxGetItem(container, "KeyF"), i16, 7, PX_INT16);
+    pxSetValues(pxGetItem(container, "KeyG"), i32, 8, PX_INT32);
+    pxSetValues(pxGetItem(container, "KeyH"), i64, 9, PX_INT64);
 
-    pxSetValues(pxGetItem(serializer, "FloatKeyI"), f32, 11, PS_FLOAT32);
-    pxSetValues(pxGetItem(serializer, "DoubleKeyJ"), f64, 12, PS_FLOAT64);
+    pxSetValues(pxGetItem(container, "FloatKeyI"), f32, 11, PX_FLOAT32);
+    pxSetValues(pxGetItem(container, "DoubleKeyJ"), f64, 12, PX_FLOAT64);
 
-    if (pxSaveFile(serializer, fileName, PS_COMPRESSION_6, checksum, 0x236534AAu, endian) != PS_SUCCESS)
+    if (pxSaveFile(container, fileName, PX_COMPRESSION_6, checksum, 0x236534AAu, endian) != PX_SUCCESS)
     {
         return false;
     }
 
-    pxDeleteContainer(serializer);
+    pxDeleteContainer(container);
 
     if (!testFile<endian, checksum>())
     {
@@ -129,39 +129,39 @@ bool test()
 
 int main()
 {
-    if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_CRC32>())
+    if (!test<PX_ENDIAN_NATIVE, PX_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_CRC32 << "\n";
+        std::cout << "failed, endian = " << PX_ENDIAN_NATIVE << ", checksum = " << PX_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
-    if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_CRC32>())
+    if (!test<PX_ENDIAN_LITTLE, PX_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_LITTLE << ", checksum = " << PS_CHECKSUM_CRC32 << "\n";
+        std::cout << "failed, endian = " << PX_ENDIAN_LITTLE << ", checksum = " << PX_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
-    if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_CRC32>())
+    if (!test<PX_ENDIAN_BIG, PX_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_BIG << ", checksum = " << PS_CHECKSUM_CRC32 << "\n";
+        std::cout << "failed, endian = " << PX_ENDIAN_BIG << ", checksum = " << PX_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
-    if (!test<PS_ENDIAN_NATIVE, PS_CHECKSUM_ADLER32>())
+    if (!test<PX_ENDIAN_NATIVE, PX_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_NATIVE << ", checksum = " << PS_CHECKSUM_ADLER32 << "\n";
+        std::cout << "failed, endian = " << PX_ENDIAN_NATIVE << ", checksum = " << PX_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 
-    if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_ADLER32>())
+    if (!test<PX_ENDIAN_LITTLE, PX_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_LITTLE << ", checksum = " << PS_CHECKSUM_ADLER32 << "\n";
+        std::cout << "failed, endian = " << PX_ENDIAN_LITTLE << ", checksum = " << PX_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 
-    if (!test<PS_ENDIAN_BIG, PS_CHECKSUM_ADLER32>())
+    if (!test<PX_ENDIAN_BIG, PX_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PS_ENDIAN_BIG << ", checksum = " << PS_CHECKSUM_ADLER32 << "\n";
+        std::cout << "failed, endian = " << PX_ENDIAN_BIG << ", checksum = " << PX_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 

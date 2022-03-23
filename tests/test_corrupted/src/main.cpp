@@ -18,19 +18,19 @@ std::vector<char> create()
     uint32_t val1[4] = {0, 40, 400, 4000};
     int64_t val2[8] = {-1, -2, -3, -4, -5, -6, -7, -8};
 
-    auto serializer = pxCreateContainer();
+    auto container = pxCreateContainer();
 
-    pxSetValues(pxGetItem(serializer, "val0"), val0, 4, PS_ASCII_CHAR8);
-    pxSetValues(pxGetItem(serializer, "val1"), val1, 4, PS_UINT32);
-    pxSetValues(pxGetItem(serializer, "val2"), val2, 8, PS_INT64);
+    pxSetValues(pxGetItem(container, "val0"), val0, 4, PX_ASCII_CHAR8);
+    pxSetValues(pxGetItem(container, "val1"), val1, 4, PX_UINT32);
+    pxSetValues(pxGetItem(container, "val2"), val2, 8, PX_INT64);
 
-    if (pxSaveFile(serializer, filename, PS_COMPRESSION_6, checksum, 0x01020304u, endian) != PS_SUCCESS)
+    if (pxSaveFile(container, filename, PX_COMPRESSION_6, checksum, 0x01020304u, endian) != PX_SUCCESS)
     {
         std::cout << "failed to psSaveBlocksToFile()" << std::endl;
         return {};
     }
 
-    pxDeleteContainer(serializer);
+    pxDeleteContainer(container);
 
     // Read the file
 
@@ -107,26 +107,26 @@ bool test()
 
         // deserialize
 
-        auto serializer = pxCreateContainer();
+        auto container = pxCreateContainer();
 
         PxResult result;
 
         try
         {
-            result = pxLoadFile(serializer, filename, checksum, 0x01020304u);
+            result = pxLoadFile(container, filename, checksum, 0x01020304u);
         }
         catch(...)
         {
             return false;
         }
 
-        if (result != PS_FILE_CORRUPT && result != PS_SUCCESS)
+        if (result != PX_FILE_CORRUPT && result != PX_SUCCESS)
         {
             std::cout << "returned " << result << std::endl;
             return false;
         }
 
-        pxDeleteContainer(serializer);
+        pxDeleteContainer(container);
 
         ++i;
     }
@@ -136,7 +136,7 @@ bool test()
 
 int main()
 {
-    if (!test<PS_ENDIAN_LITTLE, PS_CHECKSUM_NONE>())
+    if (!test<PX_ENDIAN_LITTLE, PX_CHECKSUM_NONE>())
     {
         return -1;
     }

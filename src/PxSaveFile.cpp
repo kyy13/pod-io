@@ -12,16 +12,16 @@
 #include "PxFile.h"
 
 template<bool reverse_bytes>
-PxResult writeBytes(PxContainer* serializer, File& file, PxCompression compression, PxChecksum checksum, uint32_t check32)
+PxResult writeBytes(PxContainer* container, File& file, PxCompression compression, PxChecksum checksum, uint32_t check32)
 {
-    auto& map = serializer->map;
+    auto& map = container->map;
 
     std::vector<uint8_t> buffer;
 
     compress_stream cs {};
     if (deflate_init(cs, &file, compression, checksum, check32) != COMPRESS_SUCCESS)
     {
-        return PS_ZLIB_ERROR;
+        return PX_ZLIB_ERROR;
     }
 
     for (auto& pair : map)
@@ -47,7 +47,7 @@ PxResult writeBytes(PxContainer* serializer, File& file, PxCompression compressi
 
         if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
         {
-            return PS_ZLIB_ERROR;
+            return PX_ZLIB_ERROR;
         }
 
         // Write data
@@ -61,56 +61,56 @@ PxResult writeBytes(PxContainer* serializer, File& file, PxCompression compressi
 
             switch(data.type)
             {
-                case PS_ASCII_CHAR8:
-                case PS_UTF8_CHAR8:
-                case PS_UINT8:
-                case PS_INT8:
+                case PX_ASCII_CHAR8:
+                case PX_UTF8_CHAR8:
+                case PX_UINT8:
+                case PX_INT8:
                     set_bytes<uint8_t , reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
-                case PS_UINT16:
-                case PS_INT16:
+                case PX_UINT16:
+                case PX_INT16:
                     set_bytes<uint16_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
-                case PS_UINT32:
-                case PS_INT32:
-                case PS_FLOAT32:
+                case PX_UINT32:
+                case PX_INT32:
+                case PX_FLOAT32:
                     set_bytes<uint32_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
-                case PS_UINT64:
-                case PS_INT64:
-                case PS_FLOAT64:
+                case PX_UINT64:
+                case PX_INT64:
+                case PX_FLOAT64:
                     set_bytes<uint64_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
             }
 
             if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
             {
-                return PS_ZLIB_ERROR;
+                return PX_ZLIB_ERROR;
             }
         }
         else
         {
             if (deflate_next(cs, data.values.data(), data.values.size()) != COMPRESS_SUCCESS)
             {
-                return PS_ZLIB_ERROR;
+                return PX_ZLIB_ERROR;
             }
         }
     }
 
     if (deflate_end(cs) != COMPRESS_SUCCESS)
     {
-        return PS_ZLIB_ERROR;
+        return PX_ZLIB_ERROR;
     }
 
     // Write checksum
-    if (checksum != PS_CHECKSUM_NONE)
+    if (checksum != PX_CHECKSUM_NONE)
     {
         buffer.resize(4);
         set_bytes<uint32_t, reverse_bytes>(buffer, cs.check32, 0, 4);
         file.write(buffer.data(), buffer.size());
     }
 
-    return PS_SUCCESS;
+    return PX_SUCCESS;
 }
 
 PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression compression, PxChecksum checksum, uint32_t checksumValue, PxEndian endianness)
@@ -121,7 +121,7 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
 
     if (!file.is_open())
     {
-        return PS_FILE_NOT_FOUND;
+        return PX_FILE_NOT_FOUND;
     }
 
     // Write header
@@ -136,13 +136,13 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
 
     switch(endianness)
     {
-        case PS_ENDIAN_LITTLE:
+        case PX_ENDIAN_LITTLE:
             memcpy(header + 4, cLITE, 4);
             break;
-        case PS_ENDIAN_BIG:
+        case PX_ENDIAN_BIG:
             memcpy(header + 4, cBIGE, 4);
             break;
-        case PS_ENDIAN_NATIVE:
+        case PX_ENDIAN_NATIVE:
             if (is_little_endian())
             {
                 memcpy(header + 4, cLITE, 4);
@@ -153,28 +153,28 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
             }
             else
             {
-                return PS_ARGUMENT_ERROR;
+                return PX_ARGUMENT_ERROR;
             }
             break;
         default:
-            return PS_ARGUMENT_ERROR;
+            return PX_ARGUMENT_ERROR;
     }
 
     // Checksum
 
     switch(checksum)
     {
-        case PS_CHECKSUM_NONE:
+        case PX_CHECKSUM_NONE:
             memcpy(header + 8, cNONE, 4);
             break;
-        case PS_CHECKSUM_ADLER32:
+        case PX_CHECKSUM_ADLER32:
             memcpy(header + 8, cAD32, 4);
             break;
-        case PS_CHECKSUM_CRC32:
+        case PX_CHECKSUM_CRC32:
             memcpy(header + 8, cCR32, 4);
             break;
         default:
-            return PS_ARGUMENT_ERROR;
+            return PX_ARGUMENT_ERROR;
     }
 
     // Reserved Bytes
@@ -183,11 +183,11 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
     file.write(header, 16);
 
     // Compute checksum
-    if (checksum == PS_CHECKSUM_ADLER32)
+    if (checksum == PX_CHECKSUM_ADLER32)
     {
         checksumValue = adler32(checksumValue, header, 16);
     }
-    else if (checksum == PS_CHECKSUM_CRC32)
+    else if (checksum == PX_CHECKSUM_CRC32)
     {
         checksumValue = crc32(checksumValue, header, 16);
     }
@@ -195,8 +195,8 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
     // Write endian-dependent blocks
 
     bool requiresByteSwap =
-        (endianness == PS_ENDIAN_LITTLE && is_big_endian()) ||
-        (endianness == PS_ENDIAN_BIG && is_little_endian());
+        (endianness == PX_ENDIAN_LITTLE && is_big_endian()) ||
+        (endianness == PX_ENDIAN_BIG && is_little_endian());
 
     PxResult result;
 
@@ -209,10 +209,10 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
         result = writeBytes<false>(container, file, compression, checksum, checksumValue);
     }
 
-    if (result != PS_SUCCESS)
+    if (result != PX_SUCCESS)
     {
         return result;
     }
 
-    return PS_SUCCESS;
+    return PX_SUCCESS;
 }

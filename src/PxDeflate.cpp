@@ -44,11 +44,11 @@ compress_result deflate_end(compress_stream& is)
             zs.avail_out = sizeof(is.buffer);
             zs.next_out = is.buffer;
 
-            if (is.checksum == PS_CHECKSUM_ADLER32)
+            if (is.checksum == PX_CHECKSUM_ADLER32)
             {
                 is.check32 = adler32(is.check32, is.buffer, sizeof(is.buffer));
             }
-            else if (is.checksum == PS_CHECKSUM_CRC32)
+            else if (is.checksum == PX_CHECKSUM_CRC32)
             {
                 is.check32 = crc32(is.check32, is.buffer, sizeof(is.buffer));
             }
@@ -70,11 +70,11 @@ compress_result deflate_end(compress_stream& is)
         size_t size = sizeof(is.buffer) - zs.avail_out;
         is.file->write(is.buffer, size);
 
-        if (is.checksum == PS_CHECKSUM_ADLER32)
+        if (is.checksum == PX_CHECKSUM_ADLER32)
         {
             is.check32 = adler32(is.check32, is.buffer, size);
         }
-        else if (is.checksum == PS_CHECKSUM_CRC32)
+        else if (is.checksum == PX_CHECKSUM_CRC32)
         {
             is.check32 = crc32(is.check32, is.buffer, size);
         }
@@ -112,11 +112,11 @@ compress_result deflate_next(compress_stream& is, uint8_t* in, size_t in_size)
             zs.avail_out = sizeof(is.buffer);
             zs.next_out = is.buffer;
 
-            if (is.checksum == PS_CHECKSUM_ADLER32)
+            if (is.checksum == PX_CHECKSUM_ADLER32)
             {
                 is.check32 = adler32(is.check32, is.buffer, sizeof(is.buffer));
             }
-            else if (is.checksum == PS_CHECKSUM_CRC32)
+            else if (is.checksum == PX_CHECKSUM_CRC32)
             {
                 is.check32 = crc32(is.check32, is.buffer, sizeof(is.buffer));
             }
@@ -186,11 +186,11 @@ compress_result inflate_next(compress_stream& is, uint8_t* out, size_t out_size)
             return COMPRESS_ERROR;
         }
 
-        if (is.checksum == PS_CHECKSUM_ADLER32)
+        if (is.checksum == PX_CHECKSUM_ADLER32)
         {
             is.check32 = adler32(is.check32, prev_next_in, prev_avail_in - zs.avail_in);
         }
-        else if (is.checksum == PS_CHECKSUM_CRC32)
+        else if (is.checksum == PX_CHECKSUM_CRC32)
         {
             is.check32 = crc32(is.check32, prev_next_in, prev_avail_in - zs.avail_in);
         }

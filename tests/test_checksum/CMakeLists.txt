@@ -1,4 +1,4 @@
-# PODserializer
+# pod-index
 # Kyle J Burgess
 
 add_executable(

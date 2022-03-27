@@ -58,6 +58,7 @@ target_link_libraries(
     zlibstatic
     -static-libgcc
     -static-libstdc++
+    -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
 )
 
 IF(BUILD_TESTS)

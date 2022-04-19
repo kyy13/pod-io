@@ -11,7 +11,7 @@ extern "C"
     // An item contains a key and its associated POD array
     typedef void             PxItem;
 
-    // A container of PsBlocks
+    // A container of PsItems
     struct                   PxContainer;
 
     // Result of pod-index functions

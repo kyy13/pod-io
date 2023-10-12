@@ -4,14 +4,16 @@
 cmake_minimum_required(VERSION 3.7)
 project(podindex)
 
-add_subdirectory(ext/zlib)
+option(POD_BUILD_SHARED "build shared?" ON)
+option(POD_BUILD_TESTS "build tests?" ON)
+option(POD_BUILD_ZLIB "build zlib?" ON)
+option(POD_STATIC_ZLIB "link statically to zlib?" ON)
 
-option(BUILD_TESTS "build tests?" ON)
+if (${POD_BUILD_ZLIB})
+    add_subdirectory(ext/zlib)
+endif()
 
-# library
-add_library(
-    ${PROJECT_NAME}
-    SHARED
+set(SOURCES
     src/pod_index.cpp
     src/PxLoadFile.cpp
     src/PxSaveFile.cpp
@@ -20,12 +22,33 @@ add_library(
     src/PxFile.cpp
 )
 
+# library
+if (${POD_BUILD_SHARED})
+    add_library(
+        ${PROJECT_NAME}
+        SHARED
+        ${SOURCES}
+    )
+else()
+    add_library(
+        ${PROJECT_NAME}
+        STATIC
+        ${SOURCES}
+    )
+endif()
+
 # includes
 target_include_directories(
     ${PROJECT_NAME}
     PUBLIC
     include
-    ext/k13/include
+)
+
+target_include_directories(
+    ${PROJECT_NAME}
+    PRIVATE
+    include
+    src
 )
 
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -52,16 +75,22 @@ set_target_properties(
     CXX_EXTENSIONS ON
 )
 
+if (${POD_STATIC_ZLIB})
+    set(ZLIB_LIBRARY zlibstatic)
+else()
+    set(ZLIB_LIBRARY zlib)
+endif()
+
 # link libraries
 target_link_libraries(
     ${PROJECT_NAME}
-    zlibstatic
+    ${ZLIB_LIBRARY}
     -static-libgcc
     -static-libstdc++
     -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
 )
 
-IF(BUILD_TESTS)
+IF(POD_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 ENDIF()

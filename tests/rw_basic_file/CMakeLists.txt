@@ -10,6 +10,7 @@ target_include_directories(
     rw_basic_file
     PUBLIC
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/src
 )
 
 IF (CMAKE_BUILD_TYPE MATCHES Debug)

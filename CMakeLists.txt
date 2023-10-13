@@ -85,8 +85,6 @@ endif()
 target_link_libraries(
     ${PROJECT_NAME}
     ${ZLIB_LIBRARY}
-    -static-libgcc
-    -static-libstdc++
     -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
 )
 

@@ -1,8 +1,8 @@
-# pod-index
+# pod-io
 # Kyle J Burgess
 
 cmake_minimum_required(VERSION 3.7)
-project(podindex)
+project(pod-io)
 
 option(POD_BUILD_SHARED "build shared?" ON)
 option(POD_BUILD_TESTS "build tests?" ON)
@@ -14,12 +14,12 @@ if (${POD_BUILD_ZLIB})
 endif()
 
 set(SOURCES
-    src/pod_index.cpp
-    src/PxLoadFile.cpp
-    src/PxSaveFile.cpp
-    src/PxDeflate.cpp
-    src/PxBytes.cpp
-    src/PxFile.cpp
+    src/pod_io.cpp
+    src/PodLoadFile.cpp
+    src/PodSaveFile.cpp
+    src/PodDeflate.cpp
+    src/PodBytes.cpp
+    src/PodFile.cpp
 )
 
 # library

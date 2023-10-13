@@ -1,24 +1,24 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#include "pod_index.h"
-#include "PxBytes.h"
-#include "PxTypes.h"
-#include "PxLookup.h"
+#include "pod_io.h"
+#include "PodBytes.h"
+#include "PodTypes.h"
+#include "PodLookup.h"
 
 #include <stdexcept>
 
-PxContainer* pxCreateContainer()
+PodContainer* podCreateContainer()
 {
-    return new PxContainer;
+    return new PodContainer;
 }
 
-void pxDeleteContainer(PxContainer* container)
+void podDeleteContainer(PodContainer* container)
 {
     delete container;
 }
 
-PxItem* pxGetItem(PxContainer* container, const char* key)
+PodItem* podGetItem(PodContainer* container, const char* key)
 {
     if (container == nullptr)
     {
@@ -48,33 +48,33 @@ PxItem* pxGetItem(PxContainer* container, const char* key)
 
     if (it == map.end())
     {
-        const PxData data =
+        const PodData data =
             {
                 .count = 0,
-                .type = PX_UINT8,
+                .type = POD_UINT8,
             };
 
         it = map.insert(std::make_pair(std::move(str), data)).first;
     }
 
-    return reinterpret_cast<PxItem*>(&(*it));
+    return reinterpret_cast<PodItem*>(&(*it));
 }
 
-PxResult pxRemoveItem(PxContainer* container, PxItem* item)
+PodResult podRemoveItem(PodContainer* container, PodItem* item)
 {
     if ((container == nullptr) || (item == nullptr))
     {
-        return PX_NULL_REFERENCE;
+        return POD_NULL_REFERENCE;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->first;
 
     container->map.erase(key);
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxItem* pxTryGetItem(PxContainer* container, const char* key)
+PodItem* podTryGetItem(PodContainer* container, const char* key)
 {
     if (container == nullptr)
     {
@@ -107,26 +107,26 @@ PxItem* pxTryGetItem(PxContainer* container, const char* key)
         return nullptr;
     }
 
-    return reinterpret_cast<PxItem*>(&(*it));
+    return reinterpret_cast<PodItem*>(&(*it));
 }
 
-PxResult pxSetValues(PxItem* item, const void* srcValueArray, uint32_t valueCount, PxType valueType)
+PodResult podSetValues(PodItem* item, const void* srcValueArray, uint32_t valueCount, PodType valueType)
 {
     if (item == nullptr)
     {
-        return PX_NULL_REFERENCE;
+        return POD_NULL_REFERENCE;
     }
 
     uint32_t maxCount = MaxCountLookup[size_of_type(valueType)];
 
     if (valueCount > maxCount)
     {
-        return PX_OUT_OF_RANGE;
+        return POD_OUT_OF_RANGE;
     }
 
     size_t size = static_cast<size_t>(valueCount) * size_of_type(valueType);
 
-    auto& data = reinterpret_cast<std::pair<std::string,PxData>*>(item)->second;
+    auto& data = reinterpret_cast<std::pair<std::string,PodData>*>(item)->second;
 
     data.values.resize(size);
     data.count = valueCount;
@@ -134,101 +134,101 @@ PxResult pxSetValues(PxItem* item, const void* srcValueArray, uint32_t valueCoun
 
     memcpy(data.values.data(), srcValueArray, size);
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxResult pxTryCountValues(const PxItem* item, uint32_t& valueCount)
+PodResult podTryCountValues(const PodItem* item, uint32_t& valueCount)
 {
     if (item == nullptr)
     {
-        return PX_NULL_REFERENCE;
+        return POD_NULL_REFERENCE;
     }
 
-    auto& data = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->second;
+    auto& data = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->second;
 
     valueCount = data.count;
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxResult pxTryGetType(const PxItem* item, PxType& valueType)
+PodResult podTryGetType(const PodItem* item, PodType& valueType)
 {
     if (item == nullptr)
     {
-        return PX_NULL_REFERENCE;
+        return POD_NULL_REFERENCE;
     }
 
-    auto& data = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->second;
+    auto& data = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->second;
 
     valueType = data.type;
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxResult pxTryCopyValues(const PxItem* item, void* dstValueArray, uint32_t valueCount, PxType type)
+PodResult podTryCopyValues(const PodItem* item, void* dstValueArray, uint32_t valueCount, PodType type)
 {
     if (item == nullptr)
     {
-        return PX_NULL_REFERENCE;
+        return POD_NULL_REFERENCE;
     }
 
-    auto& data = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->second;
+    auto& data = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->second;
 
     if (data.count == 0)
     {
-        return PX_SUCCESS;
+        return POD_SUCCESS;
     }
 
     if (type != data.type)
     {
-        return PX_TYPE_MISMATCH;
+        return POD_TYPE_MISMATCH;
     }
 
     size_t size = valueCount * size_of_type(type);
     if (size > data.values.size())
     {
-        return PX_OUT_OF_RANGE;
+        return POD_OUT_OF_RANGE;
     }
 
     memcpy(dstValueArray, data.values.data(), size);
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxResult pxTryCountKeyChars(const PxItem* item, uint32_t& count)
+PodResult podTryCountKeyChars(const PodItem* item, uint32_t& count)
 {
     if (item == nullptr)
     {
-        return PX_NULL_REFERENCE;
+        return POD_NULL_REFERENCE;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->first;
 
     count = static_cast<uint32_t>(key.size());
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxResult pxTryCopyKey(const PxItem* item, char* buffer, uint32_t charCount)
+PodResult podTryCopyKey(const PodItem* item, char* buffer, uint32_t charCount)
 {
     if (item == nullptr)
     {
-        return PX_NULL_REFERENCE;
+        return POD_NULL_REFERENCE;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->first;
 
     if (charCount != key.size())
     {
-        return PX_OUT_OF_RANGE;
+        return POD_OUT_OF_RANGE;
     }
 
     memcpy(buffer, key.data(), key.size());
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxItem* pxGetFirstItem(PxContainer* container)
+PodItem* podGetFirstItem(PodContainer* container)
 {
     if (container == nullptr)
     {
@@ -244,17 +244,17 @@ PxItem* pxGetFirstItem(PxContainer* container)
         return nullptr;
     }
 
-    return reinterpret_cast<PxItem*>(&(*it));
+    return reinterpret_cast<PodItem*>(&(*it));
 }
 
-PxItem* pxGetNextItem(PxContainer* container, PxItem* item)
+PodItem* podGetNextItem(PodContainer* container, PodItem* item)
 {
     if ((container == nullptr) || (item == nullptr))
     {
         return nullptr;
     }
 
-    auto& key = reinterpret_cast<const std::pair<std::string,PxData>*>(item)->first;
+    auto& key = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->first;
 
     auto& map = container->map;
 
@@ -265,5 +265,5 @@ PxItem* pxGetNextItem(PxContainer* container, PxItem* item)
         return nullptr;
     }
 
-    return reinterpret_cast<PxItem*>(&(*it));
+    return reinterpret_cast<PodItem*>(&(*it));
 }

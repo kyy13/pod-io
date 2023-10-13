@@ -1,8 +1,8 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#ifndef PODX_FILE_H
-#define PODX_FILE_H
+#ifndef POD_FILE_H
+#define POD_FILE_H
 
 #include <fstream>
 

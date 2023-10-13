@@ -1,10 +1,10 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#ifndef PODX_BYTES_H
-#define PODX_BYTES_H
+#ifndef POD_BYTES_H
+#define POD_BYTES_H
 
-#include "PxTypes.h"
+#include "PodTypes.h"
 #include "bytes.h"
 
 #include <cstdint>
@@ -116,7 +116,7 @@ void get_bytes(void* dst, const std::vector<uint8_t>& src, size_t firstByte, siz
     }
 }
 
-size_t size_of_type(PxType type);
+size_t size_of_type(PodType type);
 
 void pad_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes);
 

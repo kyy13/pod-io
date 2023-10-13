@@ -1,4 +1,4 @@
-# pod-index
+# pod-io
 by Kyle J Burgess<br>
 (github.com/kyy13)
 
@@ -34,7 +34,7 @@ details
 
 #### Checksum
 * Choose between no checksum, `adler32` checksum, or `crc32` checksum and a starting 32-bit checksum value when saving and/or loading a file.
-* pod-index will automatically read and validate checksums on load.
+* pod-io will automatically read and validate checksums on load.
 
 #### Compression Level
 * Choose betweening varying levels of compression based on `zlib`'s DEFLATE compression levels.
@@ -71,7 +71,7 @@ details
 2. `CMake` version 3.7 or higher
 
 #### Steps
-1. Clone the repository with `git clone --recurse-submodules https://github.com/kyy13/pod-index`
+1. Clone the repository with `git clone --recurse-submodules https://github.com/kyy13/pod-io`
 2. Run `cmake` with `DCMAKE_BUILD_TYPE=Release` to generate the build files
 3. Run `make` to build
 
@@ -118,6 +118,6 @@ All character types are stored in ASCII where the smallest byte corresponds to t
 
 ##
 
-pod-index uses zlib [1] for data compression and decompression.
+pod-io uses zlib [1] for data compression and decompression.
 
 [1] https://zlib.net/

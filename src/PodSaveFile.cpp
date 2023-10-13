@@ -1,18 +1,18 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#include "pod_index.h"
-#include "PxBytes.h"
-#include "PxTypes.h"
-#include "PxDeflate.h"
-#include "PxLookup.h"
+#include "pod_io.h"
+#include "PodBytes.h"
+#include "PodTypes.h"
+#include "PodDeflate.h"
+#include "PodLookup.h"
 
 #include <cstring>
 
-#include "PxFile.h"
+#include "PodFile.h"
 
 template<bool reverse_bytes>
-PxResult writeBytes(PxContainer* container, File& file, PxCompression compression, PxChecksum checksum, uint32_t check32)
+PodResult writeBytes(PodContainer* container, File& file, PodCompression compression, PodChecksum checksum, uint32_t check32)
 {
     auto& map = container->map;
 
@@ -21,7 +21,7 @@ PxResult writeBytes(PxContainer* container, File& file, PxCompression compressio
     compress_stream cs {};
     if (deflate_init(cs, &file, compression, checksum, check32) != COMPRESS_SUCCESS)
     {
-        return PX_ZLIB_ERROR;
+        return POD_ZLIB_ERROR;
     }
 
     for (auto& pair : map)
@@ -47,7 +47,7 @@ PxResult writeBytes(PxContainer* container, File& file, PxCompression compressio
 
         if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
         {
-            return PX_ZLIB_ERROR;
+            return POD_ZLIB_ERROR;
         }
 
         // Write data
@@ -61,59 +61,59 @@ PxResult writeBytes(PxContainer* container, File& file, PxCompression compressio
 
             switch(data.type)
             {
-                case PX_ASCII_CHAR8:
-                case PX_UTF8_CHAR8:
-                case PX_UINT8:
-                case PX_INT8:
+                case POD_ASCII_CHAR8:
+                case POD_UTF8_CHAR8:
+                case POD_UINT8:
+                case POD_INT8:
                     set_bytes<uint8_t , reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
-                case PX_UINT16:
-                case PX_INT16:
+                case POD_UINT16:
+                case POD_INT16:
                     set_bytes<uint16_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
-                case PX_UINT32:
-                case PX_INT32:
-                case PX_FLOAT32:
+                case POD_UINT32:
+                case POD_INT32:
+                case POD_FLOAT32:
                     set_bytes<uint32_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
-                case PX_UINT64:
-                case PX_INT64:
-                case PX_FLOAT64:
+                case POD_UINT64:
+                case POD_INT64:
+                case POD_FLOAT64:
                     set_bytes<uint64_t, reverse_bytes>(buffer, data.values.data(), 0, data.values.size());
                     break;
             }
 
             if (deflate_next(cs, buffer.data(), buffer.size()) != COMPRESS_SUCCESS)
             {
-                return PX_ZLIB_ERROR;
+                return POD_ZLIB_ERROR;
             }
         }
         else
         {
             if (deflate_next(cs, data.values.data(), data.values.size()) != COMPRESS_SUCCESS)
             {
-                return PX_ZLIB_ERROR;
+                return POD_ZLIB_ERROR;
             }
         }
     }
 
     if (deflate_end(cs) != COMPRESS_SUCCESS)
     {
-        return PX_ZLIB_ERROR;
+        return POD_ZLIB_ERROR;
     }
 
     // Write checksum
-    if (checksum != PX_CHECKSUM_NONE)
+    if (checksum != POD_CHECKSUM_NONE)
     {
         buffer.resize(4);
         set_bytes<uint32_t, reverse_bytes>(buffer, cs.check32, 0, 4);
         file.write(buffer.data(), buffer.size());
     }
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }
 
-PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression compression, PxChecksum checksum, uint32_t checksumValue, PxEndian endianness)
+PodResult podSaveFile(PodContainer* container, const char* fileName, PodCompression compression, PodChecksum checksum, uint32_t checksumValue, PodEndian endianness)
 {
     // Open File
 
@@ -121,7 +121,7 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
 
     if (!file.is_open())
     {
-        return PX_FILE_NOT_FOUND;
+        return POD_FILE_NOT_FOUND;
     }
 
     // Write header
@@ -136,13 +136,13 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
 
     switch(endianness)
     {
-        case PX_ENDIAN_LITTLE:
+        case POD_ENDIAN_LITTLE:
             memcpy(header + 4, cLITE, 4);
             break;
-        case PX_ENDIAN_BIG:
+        case POD_ENDIAN_BIG:
             memcpy(header + 4, cBIGE, 4);
             break;
-        case PX_ENDIAN_NATIVE:
+        case POD_ENDIAN_NATIVE:
             if (is_little_endian())
             {
                 memcpy(header + 4, cLITE, 4);
@@ -153,28 +153,28 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
             }
             else
             {
-                return PX_ARGUMENT_ERROR;
+                return POD_ARGUMENT_ERROR;
             }
             break;
         default:
-            return PX_ARGUMENT_ERROR;
+            return POD_ARGUMENT_ERROR;
     }
 
     // Checksum
 
     switch(checksum)
     {
-        case PX_CHECKSUM_NONE:
+        case POD_CHECKSUM_NONE:
             memcpy(header + 8, cNONE, 4);
             break;
-        case PX_CHECKSUM_ADLER32:
+        case POD_CHECKSUM_ADLER32:
             memcpy(header + 8, cAD32, 4);
             break;
-        case PX_CHECKSUM_CRC32:
+        case POD_CHECKSUM_CRC32:
             memcpy(header + 8, cCR32, 4);
             break;
         default:
-            return PX_ARGUMENT_ERROR;
+            return POD_ARGUMENT_ERROR;
     }
 
     // Reserved Bytes
@@ -183,11 +183,11 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
     file.write(header, 16);
 
     // Compute checksum
-    if (checksum == PX_CHECKSUM_ADLER32)
+    if (checksum == POD_CHECKSUM_ADLER32)
     {
         checksumValue = adler32(checksumValue, header, 16);
     }
-    else if (checksum == PX_CHECKSUM_CRC32)
+    else if (checksum == POD_CHECKSUM_CRC32)
     {
         checksumValue = crc32(checksumValue, header, 16);
     }
@@ -195,10 +195,10 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
     // Write endian-dependent blocks
 
     bool requiresByteSwap =
-        (endianness == PX_ENDIAN_LITTLE && is_big_endian()) ||
-        (endianness == PX_ENDIAN_BIG && is_little_endian());
+        (endianness == POD_ENDIAN_LITTLE && is_big_endian()) ||
+        (endianness == POD_ENDIAN_BIG && is_little_endian());
 
-    PxResult result;
+    PodResult result;
 
     if (requiresByteSwap)
     {
@@ -209,10 +209,10 @@ PxResult pxSaveFile(PxContainer* container, const char* fileName, PxCompression 
         result = writeBytes<false>(container, file, compression, checksum, checksumValue);
     }
 
-    if (result != PX_SUCCESS)
+    if (result != POD_SUCCESS)
     {
         return result;
     }
 
-    return PX_SUCCESS;
+    return POD_SUCCESS;
 }

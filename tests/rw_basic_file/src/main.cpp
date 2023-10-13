@@ -1,13 +1,13 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#include "pod_index.h"
+#include "pod_io.h"
 
 #include <vector>
 #include <cstring>
 #include <iostream>
 
-bool test(PxCompression compression, PxEndian endian, PxChecksum checksum)
+bool test(PodCompression compression, PodEndian endian, PodChecksum checksum)
 {
     uint8_t c8[20];
     uint8_t u8[6];
@@ -21,30 +21,30 @@ bool test(PxCompression compression, PxEndian endian, PxChecksum checksum)
     float f32[11];
     double f64[12];
 
-    auto container = pxCreateContainer();
+    auto container = podCreateContainer();
 
-    pxSetValues(pxGetItem(container, "test string"), c8, 20, PX_ASCII_CHAR8);
+    podSetValues(podGetItem(container, "test string"), c8, 20, POD_ASCII_CHAR8);
 
-    pxSetValues(pxGetItem(container, "UKeyA"), u8, 6, PX_UINT8);
-    pxSetValues(pxGetItem(container, "UKeyB"), u16, 7, PX_UINT16);
-    pxSetValues(pxGetItem(container, "UKeyC"), u32, 8, PX_UINT32);
-    pxSetValues(pxGetItem(container, "UKeyD"), u64, 9, PX_UINT64);
+    podSetValues(podGetItem(container, "UKeyA"), u8, 6, POD_UINT8);
+    podSetValues(podGetItem(container, "UKeyB"), u16, 7, POD_UINT16);
+    podSetValues(podGetItem(container, "UKeyC"), u32, 8, POD_UINT32);
+    podSetValues(podGetItem(container, "UKeyD"), u64, 9, POD_UINT64);
 
-    pxSetValues(pxGetItem(container, "KeyE"), i8, 6, PX_INT8);
-    pxSetValues(pxGetItem(container, "KeyF"), i16, 7, PX_INT16);
-    pxSetValues(pxGetItem(container, "KeyG"), i32, 8, PX_INT32);
-    pxSetValues(pxGetItem(container, "KeyH"), i64, 9, PX_INT64);
+    podSetValues(podGetItem(container, "KeyE"), i8, 6, POD_INT8);
+    podSetValues(podGetItem(container, "KeyF"), i16, 7, POD_INT16);
+    podSetValues(podGetItem(container, "KeyG"), i32, 8, POD_INT32);
+    podSetValues(podGetItem(container, "KeyH"), i64, 9, POD_INT64);
 
-    pxSetValues(pxGetItem(container, "FloatKeyI"), f32, 11, PX_FLOAT32);
-    pxSetValues(pxGetItem(container, "DoubleKeyJ"), f64, 12, PX_FLOAT64);
+    podSetValues(podGetItem(container, "FloatKeyI"), f32, 11, POD_FLOAT32);
+    podSetValues(podGetItem(container, "DoubleKeyJ"), f64, 12, POD_FLOAT64);
 
-    if (pxSaveFile(container, "rw_basic_file.test.bin", compression, checksum, 0x01020304u, endian) != PX_SUCCESS)
+    if (podSaveFile(container, "rw_basic_file.test.bin", compression, checksum, 0x01020304u, endian) != POD_SUCCESS)
     {
         std::cout << "0\n";
         return false;
     }
 
-    pxDeleteContainer(container);
+    podDeleteContainer(container);
     uint32_t count;
 
     std::vector<uint8_t> n_c8;
@@ -59,169 +59,169 @@ bool test(PxCompression compression, PxEndian endian, PxChecksum checksum)
     std::vector<float> n_f32;
     std::vector<double> n_f64;
 
-    container = pxCreateContainer();
+    container = podCreateContainer();
 
-    if (pxLoadFile(container, "rw_basic_file.test.bin", checksum, 0x01020304u) != PX_SUCCESS)
+    if (podLoadFile(container, "rw_basic_file.test.bin", checksum, 0x01020304u) != POD_SUCCESS)
     {
         std::cout << "1\n";
         return false;
     }
 
-    auto block = pxGetItem(container, "test string");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    auto block = podGetItem(container, "test string");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "2\n";
         return false;
     }
 
     n_c8.resize(count);
-    if (pxTryCopyValues(block, n_c8.data(), count, PX_ASCII_CHAR8) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_c8.data(), count, POD_ASCII_CHAR8) != POD_SUCCESS)
     {
         std::cout << "3\n";
         return false;
     }
 
-    block = pxGetItem(container, "UKeyA");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "UKeyA");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "4\n";
         return false;
     }
 
     n_u8.resize(count);
-    if (pxTryCopyValues(block, n_u8.data(), count, PX_UINT8) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_u8.data(), count, POD_UINT8) != POD_SUCCESS)
     {
         std::cout << "5\n";
         return false;
     }
 
-    block = pxGetItem(container, "UKeyB");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "UKeyB");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "6\n";
         return false;
     }
 
     n_u16.resize(count);
-    if (pxTryCopyValues(block, n_u16.data(), count, PX_UINT16) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_u16.data(), count, POD_UINT16) != POD_SUCCESS)
     {
         std::cout << "7\n";
         return false;
     }
 
-    block = pxGetItem(container, "UKeyC");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "UKeyC");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "8\n";
         return false;
     }
 
     n_u32.resize(count);
-    if (pxTryCopyValues(block, n_u32.data(), count, PX_UINT32) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_u32.data(), count, POD_UINT32) != POD_SUCCESS)
     {
         std::cout << "8\n";
         return false;
     }
 
-    block = pxGetItem(container, "UKeyD");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "UKeyD");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "9\n";
         return false;
     }
 
     n_u64.resize(count);
-    if (pxTryCopyValues(block, n_u64.data(), count, PX_UINT64) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_u64.data(), count, POD_UINT64) != POD_SUCCESS)
     {
         std::cout << "10\n";
         return false;
     }
 
-    block = pxGetItem(container, "KeyE");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "KeyE");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "11\n";
         return false;
     }
 
     n_i8.resize(count);
-    if (pxTryCopyValues(block, n_i8.data(), count, PX_INT8) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_i8.data(), count, POD_INT8) != POD_SUCCESS)
     {
         std::cout << "12\n";
         return false;
     }
 
-    block = pxGetItem(container, "KeyF");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "KeyF");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "13\n";
         return false;
     }
 
     n_i16.resize(count);
-    if (pxTryCopyValues(block, n_i16.data(), count, PX_INT16) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_i16.data(), count, POD_INT16) != POD_SUCCESS)
     {
         std::cout << "14\n";
         return false;
     }
 
-    block = pxGetItem(container, "KeyG");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "KeyG");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "15\n";
         return false;
     }
 
     n_i32.resize(count);
-    if (pxTryCopyValues(block, n_i32.data(), count, PX_INT32) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_i32.data(), count, POD_INT32) != POD_SUCCESS)
     {
         std::cout << "16\n";
         return false;
     }
 
-    block = pxGetItem(container, "KeyH");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "KeyH");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "17\n";
         return false;
     }
 
     n_i64.resize(count);
-    if (pxTryCopyValues(block, n_i64.data(), count, PX_INT64) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_i64.data(), count, POD_INT64) != POD_SUCCESS)
     {
         std::cout << "18\n";
         return false;
     }
 
-    block = pxGetItem(container, "FloatKeyI");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "FloatKeyI");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "19\n";
         return false;
     }
 
     n_f32.resize(count);
-    if (pxTryCopyValues(block, n_f32.data(), count, PX_FLOAT32) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_f32.data(), count, POD_FLOAT32) != POD_SUCCESS)
     {
         std::cout << "20\n";
         return false;
     }
 
-    block = pxGetItem(container, "DoubleKeyJ");
-    if (pxTryCountValues(block, count) != PX_SUCCESS)
+    block = podGetItem(container, "DoubleKeyJ");
+    if (podTryCountValues(block, count) != POD_SUCCESS)
     {
         std::cout << "21\n";
         return false;
     }
 
     n_f64.resize(count);
-    if (pxTryCopyValues(block, n_f64.data(), count, PX_FLOAT64) != PX_SUCCESS)
+    if (podTryCopyValues(block, n_f64.data(), count, POD_FLOAT64) != POD_SUCCESS)
     {
         std::cout << "22\n";
         return false;
     }
 
-    pxDeleteContainer(container);
+    podDeleteContainer(container);
 
     if (memcmp(c8, n_c8.data(), 20 * sizeof(uint8_t)) != 0)
     {
@@ -292,63 +292,63 @@ bool test(PxCompression compression, PxEndian endian, PxChecksum checksum)
     return true;
 }
 
-bool test(PxEndian endian, PxChecksum checksum)
+bool test(PodEndian endian, PodChecksum checksum)
 {
-    if (!test(PX_COMPRESSION_0, endian, checksum))
+    if (!test(POD_COMPRESSION_0, endian, checksum))
     {
         std::cout << "failed compress 0\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_1, endian, checksum))
+    if (!test(POD_COMPRESSION_1, endian, checksum))
     {
         std::cout << "failed compress 1\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_2, endian, checksum))
+    if (!test(POD_COMPRESSION_2, endian, checksum))
     {
         std::cout << "failed compress 2\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_3, endian, checksum))
+    if (!test(POD_COMPRESSION_3, endian, checksum))
     {
         std::cout << "failed compress 3\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_4, endian, checksum))
+    if (!test(POD_COMPRESSION_4, endian, checksum))
     {
         std::cout << "failed compress 4\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_5, endian, checksum))
+    if (!test(POD_COMPRESSION_5, endian, checksum))
     {
         std::cout << "failed compress 5\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_6, endian, checksum))
+    if (!test(POD_COMPRESSION_6, endian, checksum))
     {
         std::cout << "failed compress 6\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_7, endian, checksum))
+    if (!test(POD_COMPRESSION_7, endian, checksum))
     {
         std::cout << "failed compress 7\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_8, endian, checksum))
+    if (!test(POD_COMPRESSION_8, endian, checksum))
     {
         std::cout << "failed compress 8\n";
         return false;
     }
 
-    if (!test(PX_COMPRESSION_9, endian, checksum))
+    if (!test(POD_COMPRESSION_9, endian, checksum))
     {
         std::cout << "failed compress 9\n";
         return false;
@@ -357,21 +357,21 @@ bool test(PxEndian endian, PxChecksum checksum)
     return true;
 }
 
-bool test(PxChecksum checksum)
+bool test(PodChecksum checksum)
 {
-    if (!test(PX_ENDIAN_NATIVE, checksum))
+    if (!test(POD_ENDIAN_NATIVE, checksum))
     {
         std::cout << "failed native endianness\n";
         return false;
     }
 
-    if (!test(PX_ENDIAN_LITTLE, checksum))
+    if (!test(POD_ENDIAN_LITTLE, checksum))
     {
         std::cout << "failed little endianness\n";
         return false;
     }
 
-    if (!test(PX_ENDIAN_BIG, checksum))
+    if (!test(POD_ENDIAN_BIG, checksum))
     {
         std::cout << "failed big endianness\n";
         return false;
@@ -382,19 +382,19 @@ bool test(PxChecksum checksum)
 
 int main()
 {
-    if (!test(PX_CHECKSUM_NONE))
+    if (!test(POD_CHECKSUM_NONE))
     {
         std::cout << "failed no checksum\n";
         return -1;
     }
 
-    if (!test(PX_CHECKSUM_ADLER32))
+    if (!test(POD_CHECKSUM_ADLER32))
     {
         std::cout << "failed adler32\n";
         return -1;
     }
 
-    if (!test(PX_CHECKSUM_CRC32))
+    if (!test(POD_CHECKSUM_CRC32))
     {
         std::cout << "failed crc32\n";
         return -1;

@@ -1,4 +1,4 @@
-# pod-index
+# pod-io
 # Kyle J Burgess
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})

@@ -1,48 +1,48 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-public enum              PxCompression : UInt32
+public enum              PodCompression : UInt32
 {
-    PX_COMPRESSION_0          = 0u,                     // No compression (largest size)
-    PX_COMPRESSION_1          = 1u,                     // Least compression
-    PX_COMPRESSION_2          = 2u,
-    PX_COMPRESSION_3          = 3u,
-    PX_COMPRESSION_4          = 4u,
-    PX_COMPRESSION_5          = 5u,
-    PX_COMPRESSION_6          = 6u,
-    PX_COMPRESSION_7          = 7u,
-    PX_COMPRESSION_8          = 8u,
-    PX_COMPRESSION_9          = 9u,                     // Best compression (smallest size)
-    PX_COMPRESSION_NONE       = PX_COMPRESSION_0,
-    PX_COMPRESSION_DEFAULT    = PX_COMPRESSION_6,
-    PX_COMPRESSION_BEST       = PX_COMPRESSION_9,
+    POD_COMPRESSION_0          = 0u,                     // No compression (largest size)
+    POD_COMPRESSION_1          = 1u,                     // Least compression
+    POD_COMPRESSION_2          = 2u,
+    POD_COMPRESSION_3          = 3u,
+    POD_COMPRESSION_4          = 4u,
+    POD_COMPRESSION_5          = 5u,
+    POD_COMPRESSION_6          = 6u,
+    POD_COMPRESSION_7          = 7u,
+    POD_COMPRESSION_8          = 8u,
+    POD_COMPRESSION_9          = 9u,                     // Best compression (smallest size)
+    POD_COMPRESSION_NONE       = POD_COMPRESSION_0,
+    POD_COMPRESSION_DEFAULT    = POD_COMPRESSION_6,
+    POD_COMPRESSION_BEST       = POD_COMPRESSION_9,
 };
 
 // Endianness
-public enum              PxEndian : UInt32
+public enum              PodEndian : UInt32
 {
-    PX_ENDIAN_LITTLE          = 0u,                     // Save the file in little endian format
-    PX_ENDIAN_BIG             = 1u,                     // Save the file in big endian format
-    PX_ENDIAN_NATIVE          = 2u,                     // Save the file in the endianness of the host
+    POD_ENDIAN_LITTLE          = 0u,                     // Save the file in little endian format
+    POD_ENDIAN_BIG             = 1u,                     // Save the file in big endian format
+    POD_ENDIAN_NATIVE          = 2u,                     // Save the file in the endianness of the host
 };
 
 // Checksum Type
-public enum              PxChecksum : UInt32
+public enum              PodChecksum : UInt32
 {
-    PX_CHECKSUM_NONE          = 0u,                     // Read/write a file with no checksum
-    PX_CHECKSUM_ADLER32       = 1u,                     // Read/write a file with an adler32 checksum
-    PX_CHECKSUM_CRC32         = 2u,                     // Read/write a file with a crc32 checksum
+    POD_CHECKSUM_NONE          = 0u,                     // Read/write a file with no checksum
+    POD_CHECKSUM_ADLER32       = 1u,                     // Read/write a file with an adler32 checksum
+    POD_CHECKSUM_CRC32         = 2u,                     // Read/write a file with a crc32 checksum
 };
 
-public class PxContainer : IDisposable
+public class PodContainer : IDisposable
 {
-    public PxContainer()
+    public PodContainer()
     {
-        m_container = PxCreateContainer();
+        m_container = PodCreateContainer();
     }
 
     public void Dispose()
@@ -51,21 +51,21 @@ public class PxContainer : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public void Load(string fileName, PxChecksum checksum, UInt32 checksumValue = 0)
+    public void Load(string fileName, PodChecksum checksum, UInt32 checksumValue = 0)
     {
-        PxResult r = PxLoadFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), checksum, checksumValue);
+        PodResult r = PodLoadFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), checksum, checksumValue);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
     }
 
-    public void Save(string fileName, PxCompression compression, PxChecksum checksum, UInt32 checksumValue = 0, PxEndian endianness = PxEndian.PX_ENDIAN_NATIVE)
+    public void Save(string fileName, PodCompression compression, PodChecksum checksum, UInt32 checksumValue = 0, PodEndian endianness = PodEndian.POD_ENDIAN_NATIVE)
     {
-        PxResult r = PxSaveFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), compression, checksum, checksumValue, endianness);
+        PodResult r = PodSaveFile(m_container, Encoding.ASCII.GetBytes(fileName + '\0'), compression, checksum, checksumValue, endianness);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -73,12 +73,12 @@ public class PxContainer : IDisposable
 
     public IntPtr GetItem(string key)
     {
-        return PxGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
+        return PodGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
     }
 
     public bool TryGetItem(string key, out IntPtr item)
     {
-        IntPtr ptr = PxTryGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
+        IntPtr ptr = PodTryGetItem(m_container, Encoding.ASCII.GetBytes(key + '\0'));
 
         if (ptr == null)
         {
@@ -97,9 +97,9 @@ public class PxContainer : IDisposable
             return;
         }
 
-        PxResult r = PxRemoveItem(m_container, item);
+        PodResult r = PodRemoveItem(m_container, item);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -121,9 +121,9 @@ public class PxContainer : IDisposable
             return false;
         }
 
-        PxResult r = PxTryCountValues(item, out count);
+        PodResult r = PodTryCountValues(item, out count);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             return false;
         }
@@ -157,14 +157,14 @@ public class PxContainer : IDisposable
             return false;
         }
 
-        PxResult r = PxTryCountKeyChars(item, out count);
+        PodResult r = PodTryCountKeyChars(item, out count);
 
         if (count == 0)
         {
             return false;
         }
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             return false;
         }
@@ -184,9 +184,9 @@ public class PxContainer : IDisposable
 
         byte[] dst = new byte[(int)count];
 
-        PxResult r = PxTryCopyKey(item, dst, count);
+        PodResult r = PodTryCopyKey(item, dst, count);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             key = null;
             return false;
@@ -198,12 +198,12 @@ public class PxContainer : IDisposable
 
     public IntPtr GetFirstItem()
     {
-        return PxGetFirstItem(m_container);
+        return PodGetFirstItem(m_container);
     }
 
     public IntPtr GetNextItem(IntPtr item)
     {
-        return PxGetNextItem(m_container, item);
+        return PodGetNextItem(m_container, item);
     }
 
     // ASCII
@@ -212,9 +212,9 @@ public class PxContainer : IDisposable
     {
         var bytes = Encoding.ASCII.GetBytes(str);
 
-        PxResult r = PxSetValues(item, bytes, (UInt32)bytes.Length, PxType.PX_ASCII_CHAR8);
+        PodResult r = PodSetValues(item, bytes, (UInt32)bytes.Length, PodType.POD_ASCII_CHAR8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -237,9 +237,9 @@ public class PxContainer : IDisposable
 
         byte[] dst = new byte[(int)count];
 
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_ASCII_CHAR8);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_ASCII_CHAR8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             str = null;
             return false;
@@ -268,9 +268,9 @@ public class PxContainer : IDisposable
     {
         var bytes = Encoding.UTF8.GetBytes(str);
 
-        PxResult r = PxSetValues(item, bytes, (UInt32)bytes.Length, PxType.PX_UTF8_CHAR8);
+        PodResult r = PodSetValues(item, bytes, (UInt32)bytes.Length, PodType.POD_UTF8_CHAR8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -293,9 +293,9 @@ public class PxContainer : IDisposable
 
         byte[] dst = new byte[(int)count];
 
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UTF8_CHAR8);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_UTF8_CHAR8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = null;
             return false;
@@ -322,9 +322,9 @@ public class PxContainer : IDisposable
 
     public void SetUInt8Array(IntPtr item, byte[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT8);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_UINT8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -356,9 +356,9 @@ public class PxContainer : IDisposable
         }
 
         byte[] dst = new byte[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT8);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_UINT8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -399,9 +399,9 @@ public class PxContainer : IDisposable
 
         byte[] dst = new byte[1u];
 
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT8);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_UINT8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -428,9 +428,9 @@ public class PxContainer : IDisposable
 
     public void SetUInt16Array(IntPtr item, UInt16[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT16);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_UINT16);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -462,9 +462,9 @@ public class PxContainer : IDisposable
         }
 
         UInt16[] dst = new UInt16[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT16);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_UINT16);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -505,9 +505,9 @@ public class PxContainer : IDisposable
 
         UInt16[] dst = new UInt16[1u];
 
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT16);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_UINT16);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -534,9 +534,9 @@ public class PxContainer : IDisposable
 
     public void SetUInt32Array(IntPtr item, UInt32[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT32);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_UINT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -568,9 +568,9 @@ public class PxContainer : IDisposable
         }
 
         UInt32[] dst = new UInt32[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT32);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_UINT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -610,9 +610,9 @@ public class PxContainer : IDisposable
         }
 
         UInt32[] dst = new UInt32[1u];
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT32);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_UINT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -639,9 +639,9 @@ public class PxContainer : IDisposable
 
     public void SetUInt64Array(IntPtr item, UInt64[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_UINT64);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_UINT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -673,9 +673,9 @@ public class PxContainer : IDisposable
         }
 
         UInt64[] dst = new UInt64[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_UINT64);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_UINT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -716,9 +716,9 @@ public class PxContainer : IDisposable
 
         UInt64[] dst = new UInt64[1u];
 
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_UINT64);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_UINT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -745,9 +745,9 @@ public class PxContainer : IDisposable
 
     public void SetInt8Array(IntPtr item, sbyte[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT8);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_INT8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -779,9 +779,9 @@ public class PxContainer : IDisposable
         }
 
         sbyte[] dst = new sbyte[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT8);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_INT8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -822,9 +822,9 @@ public class PxContainer : IDisposable
 
         sbyte[] dst = new sbyte[1u];
 
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT8);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_INT8);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -851,9 +851,9 @@ public class PxContainer : IDisposable
 
     public void SetInt16Array(IntPtr item, Int16[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT16);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_INT16);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -885,9 +885,9 @@ public class PxContainer : IDisposable
         }
 
         Int16[] dst = new Int16[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT16);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_INT16);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -928,9 +928,9 @@ public class PxContainer : IDisposable
 
         Int16[] dst = new Int16[1u];
 
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT16);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_INT16);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -957,9 +957,9 @@ public class PxContainer : IDisposable
 
     public void SetInt32Array(IntPtr item, Int32[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT32);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_INT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -991,9 +991,9 @@ public class PxContainer : IDisposable
         }
 
         Int32[] dst = new Int32[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT32);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_INT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -1033,9 +1033,9 @@ public class PxContainer : IDisposable
         }
 
         Int32[] dst = new Int32[1u];
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT32);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_INT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -1062,9 +1062,9 @@ public class PxContainer : IDisposable
 
     public void SetInt64Array(IntPtr item, Int64[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_INT64);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_INT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1096,9 +1096,9 @@ public class PxContainer : IDisposable
         }
 
         Int64[] dst = new Int64[count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_INT64);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_INT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -1139,9 +1139,9 @@ public class PxContainer : IDisposable
 
         Int64[] dst = new Int64[1u];
 
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_INT64);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_INT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -1168,9 +1168,9 @@ public class PxContainer : IDisposable
 
     public void SetFloat32Array(IntPtr item, float[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_FLOAT32);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_FLOAT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1202,9 +1202,9 @@ public class PxContainer : IDisposable
         }
 
         float[] dst = new float[(int)count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_FLOAT32);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_FLOAT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -1245,9 +1245,9 @@ public class PxContainer : IDisposable
 
         float[] dst = new float[1u];
 
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_FLOAT32);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_FLOAT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -1274,9 +1274,9 @@ public class PxContainer : IDisposable
 
     public void SetFloat64Array(IntPtr item, double[] values)
     {
-        PxResult r = PxSetValues(item, values, (UInt32)values.Length, PxType.PX_FLOAT32);
+        PodResult r = PodSetValues(item, values, (UInt32)values.Length, PodType.POD_FLOAT32);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             throw new Exception(r.ToString());
         }
@@ -1308,9 +1308,9 @@ public class PxContainer : IDisposable
         }
 
         double[] dst = new double[(int)count];
-        PxResult r = PxTryCopyValues(item, dst, count, PxType.PX_FLOAT64);
+        PodResult r = PodTryCopyValues(item, dst, count, PodType.POD_FLOAT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             values = null;
             return false;
@@ -1350,9 +1350,9 @@ public class PxContainer : IDisposable
         }
 
         double[] dst = new double[1u];
-        PxResult r = PxTryCopyValues(item, dst, 1u, PxType.PX_FLOAT64);
+        PodResult r = PodTryCopyValues(item, dst, 1u, PodType.POD_FLOAT64);
 
-        if (r != PxResult.PX_SUCCESS)
+        if (r != PodResult.POD_SUCCESS)
         {
             value = 0;
             return false;
@@ -1375,7 +1375,7 @@ public class PxContainer : IDisposable
         return TryGetFloat64(item, out value);
     }
 
-    ~PxContainer()
+    ~PodContainer()
     {
         TryDispose();
     }
@@ -1384,7 +1384,7 @@ public class PxContainer : IDisposable
     {
         if (!m_disposed)
         {
-            PxDeleteContainer(m_container);
+            PodDeleteContainer(m_container);
             m_disposed = true;
         }
     }
@@ -1394,137 +1394,137 @@ public class PxContainer : IDisposable
     protected bool m_disposed = false;
 
     // -------------------------------------------
-    // pod-index C++ Library Methods and Structs
+    // pod-io C++ Library Methods and Structs
     // -------------------------------------------
 
-    // Result of pod-index functions
-    protected enum           PxResult : UInt32
+    // Result of pod-io functions
+    protected enum           PodResult : UInt32
     {
-        PX_SUCCESS                = 0u,                     // Success
-        PX_NULL_REFERENCE         = 1u,                     // Tried to pass null for an item or container
-        PX_TYPE_MISMATCH          = 2u,                     // Tried to get a type that does not match the stored type
-        PX_OUT_OF_RANGE           = 3u,                     // Tried to copy values out of the range of the stored buffer
-        PX_FILE_CORRUPT           = 4u,                     // Save file is corrupt
-        PX_FILE_NOT_FOUND         = 5u,                     // Unable to open file for read or write
-        PX_ARGUMENT_ERROR         = 6u,                     // Provided an incorrect argument to a method
-        PX_ZLIB_ERROR             = 7u,                     // Error during zlib initialization
+        POD_SUCCESS                = 0u,                     // Success
+        POD_NULL_REFERENCE         = 1u,                     // Tried to pass null for an item or container
+        POD_TYPE_MISMATCH          = 2u,                     // Tried to get a type that does not match the stored type
+        POD_OUT_OF_RANGE           = 3u,                     // Tried to copy values out of the range of the stored buffer
+        POD_FILE_CORRUPT           = 4u,                     // Save file is corrupt
+        POD_FILE_NOT_FOUND         = 5u,                     // Unable to open file for read or write
+        POD_ARGUMENT_ERROR         = 6u,                     // Provided an incorrect argument to a method
+        POD_ZLIB_ERROR             = 7u,                     // Error during zlib initialization
     };
 
     // Types of Data
-    protected enum           PxType : UInt32
+    protected enum           PodType : UInt32
     {
-        PX_ASCII_CHAR8            = 0x02000001u,            // 8-bit ASCII character
-        PX_UTF8_CHAR8             = 0x03000001u,            // 8-bit UTF8 bytes
-        PX_UINT8                  = 0x00000001u,            // 8-bit unsigned integer
-        PX_UINT16                 = 0x00000002u,            // 16-bit unsigned integer
-        PX_UINT32                 = 0x00000004u,            // 32-bit unsigned integer
-        PX_UINT64                 = 0x00000008u,            // 64-bit unsigned integer
-        PX_INT8                   = 0x00010001u,            // 8-bit signed twos-complement integer
-        PX_INT16                  = 0x00010002u,            // 16-bit signed twos-complement integer
-        PX_INT32                  = 0x00010004u,            // 32-bit signed twos-complement integer
-        PX_INT64                  = 0x00010008u,            // 64-bit signed twos-complement integer
-        PX_FLOAT32                = 0x01010004u,            // 32-bit IEEE floating point number
-        PX_FLOAT64                = 0x01010008u,            // 64-bit IEEE floating point number
+        POD_ASCII_CHAR8            = 0x02000001u,            // 8-bit ASCII character
+        POD_UTF8_CHAR8             = 0x03000001u,            // 8-bit UTF8 bytes
+        POD_UINT8                  = 0x00000001u,            // 8-bit unsigned integer
+        POD_UINT16                 = 0x00000002u,            // 16-bit unsigned integer
+        POD_UINT32                 = 0x00000004u,            // 32-bit unsigned integer
+        POD_UINT64                 = 0x00000008u,            // 64-bit unsigned integer
+        POD_INT8                   = 0x00010001u,            // 8-bit signed twos-complement integer
+        POD_INT16                  = 0x00010002u,            // 16-bit signed twos-complement integer
+        POD_INT32                  = 0x00010004u,            // 32-bit signed twos-complement integer
+        POD_INT64                  = 0x00010008u,            // 64-bit signed twos-complement integer
+        POD_FLOAT32                = 0x01010004u,            // 32-bit IEEE floating point number
+        POD_FLOAT64                = 0x01010008u,            // 64-bit IEEE floating point number
     };
 
-    // See pod_index.h for DLL documentation
+    // See pod_io.h for DLL documentation
 
-    [DllImport("libpodindex", EntryPoint = "pxCreateContainer", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PxCreateContainer();
+    [DllImport("libpod-io", EntryPoint = "podCreateContainer", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PodCreateContainer();
 
-    [DllImport("libpodindex", EntryPoint = "pxDeleteContainer", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern void        PxDeleteContainer(IntPtr container);
+    [DllImport("libpod-io", EntryPoint = "podDeleteContainer", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern void        PodDeleteContainer(IntPtr container);
 
-    [DllImport("libpodindex", EntryPoint = "pxLoadFile", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxLoadFile(IntPtr container, byte[] fileName, PxChecksum checksum, UInt32 checksumValue);
+    [DllImport("libpod-io", EntryPoint = "podLoadFile", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodLoadFile(IntPtr container, byte[] fileName, PodChecksum checksum, UInt32 checksumValue);
 
-    [DllImport("libpodindex", EntryPoint = "pxSaveFile", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSaveFile(IntPtr container, byte[] fileName, PxCompression compression, PxChecksum checksum, UInt32 checksumValue, PxEndian endianness);
+    [DllImport("libpod-io", EntryPoint = "podSaveFile", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSaveFile(IntPtr container, byte[] fileName, PodCompression compression, PodChecksum checksum, UInt32 checksumValue, PodEndian endianness);
 
-    [DllImport("libpodindex", EntryPoint = "pxGetItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PxGetItem(IntPtr container, byte[] key);
+    [DllImport("libpod-io", EntryPoint = "podGetItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PodGetItem(IntPtr container, byte[] key);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryGetItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PxTryGetItem(IntPtr container, byte[] key);
+    [DllImport("libpod-io", EntryPoint = "podTryGetItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PodTryGetItem(IntPtr container, byte[] key);
 
-    [DllImport("libpodindex", EntryPoint = "pxRemoveItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxRemoveItem(IntPtr container, IntPtr item);
+    [DllImport("libpod-io", EntryPoint = "podRemoveItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodRemoveItem(IntPtr container, IntPtr item);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCountValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCountValues(IntPtr item, out UInt32 valueCount);
+    [DllImport("libpod-io", EntryPoint = "podTryCountValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCountValues(IntPtr item, out UInt32 valueCount);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryGetType", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryGetType(IntPtr item, out PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podTryGetType", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryGetType(IntPtr item, out PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCountKeyChars", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCountKeyChars(IntPtr item, out UInt32 charCount);
+    [DllImport("libpod-io", EntryPoint = "podTryCountKeyChars", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCountKeyChars(IntPtr item, out UInt32 charCount);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyKey", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyKey(IntPtr item, byte[] key, UInt32 count);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyKey", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyKey(IntPtr item, byte[] key, UInt32 count);
 
-    [DllImport("libpodindex", EntryPoint = "pxGetFirstItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PxGetFirstItem(IntPtr container);
+    [DllImport("libpod-io", EntryPoint = "podGetFirstItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PodGetFirstItem(IntPtr container);
 
-    [DllImport("libpodindex", EntryPoint = "pxGetNextItem", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern IntPtr      PxGetNextItem(IntPtr container, IntPtr item);
+    [DllImport("libpod-io", EntryPoint = "podGetNextItem", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern IntPtr      PodGetNextItem(IntPtr container, IntPtr item);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, byte[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, byte[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, UInt16[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, UInt16[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, UInt32[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, UInt32[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, UInt64[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, UInt64[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, sbyte[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, sbyte[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, Int16[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, Int16[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, Int32[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, Int32[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, Int64[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, Int64[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, float[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, float[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxSetValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxSetValues(IntPtr item, double[] srcValueArray, UInt32 valueCount, PxType valueType);
+    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodSetValues(IntPtr item, double[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, byte[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, byte[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, UInt16[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, UInt16[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, UInt32[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, UInt32[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, UInt64[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, UInt64[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, sbyte[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, sbyte[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, Int16[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, Int16[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, Int32[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, Int32[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, Int64[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, Int64[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, float[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, float[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpodindex", EntryPoint = "pxTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
-    protected static extern PxResult    PxTryCopyValues(IntPtr item, double[] dstValueArray, UInt32 valueCount, PxType type);
+    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    protected static extern PodResult    PodTryCopyValues(IntPtr item, double[] dstValueArray, UInt32 valueCount, PodType type);
 }

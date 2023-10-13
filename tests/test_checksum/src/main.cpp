@@ -1,9 +1,9 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#include "pod_index.h"
-#include "PxFile.h"
-#include "PxBytes.h"
+#include "pod_io.h"
+#include "PodFile.h"
+#include "PodBytes.h"
 #include "zlib.h"
 
 #include <vector>
@@ -12,7 +12,7 @@
 
 const char* fileName = "checksum_file.test.bin";
 
-template<PxEndian endian, PxChecksum checksum>
+template<PodEndian endian, PodChecksum checksum>
 bool testFile()
 {
     File file(fileName, FM_READ);
@@ -46,8 +46,8 @@ bool testFile()
     memcpy(crcbuf.data(), buffer.data() + buffer.size() - 4, 4);
 
     bool requiresByteSwap =
-        (endian == PX_ENDIAN_LITTLE && is_big_endian()) ||
-        (endian == PX_ENDIAN_BIG && is_little_endian());
+        (endian == POD_ENDIAN_LITTLE && is_big_endian()) ||
+        (endian == POD_ENDIAN_BIG && is_little_endian());
 
     if (requiresByteSwap)
     {
@@ -60,10 +60,10 @@ bool testFile()
 
     switch(checksum)
     {
-        case PX_CHECKSUM_ADLER32:
+        case POD_CHECKSUM_ADLER32:
             c1 = adler32(c1, buffer.data(), buffer.size() - 4);
             break;
-        case PX_CHECKSUM_CRC32:
+        case POD_CHECKSUM_CRC32:
             c1 = crc32(c1, buffer.data(), buffer.size() - 4);
             break;
         default:
@@ -80,7 +80,7 @@ bool testFile()
     return true;
 }
 
-template<PxEndian endian, PxChecksum checksum>
+template<PodEndian endian, PodChecksum checksum>
 bool test()
 {
     uint8_t c8[20];
@@ -95,29 +95,29 @@ bool test()
     float f32[11];
     double f64[12];
 
-    auto container = pxCreateContainer();
+    auto container = podCreateContainer();
 
-    pxSetValues(pxGetItem(container, "test string"), c8, 20, PX_ASCII_CHAR8);
+    podSetValues(podGetItem(container, "test string"), c8, 20, POD_ASCII_CHAR8);
 
-    pxSetValues(pxGetItem(container, "UKeyA"), u8, 6, PX_UINT8);
-    pxSetValues(pxGetItem(container, "UKeyB"), u16, 7, PX_UINT16);
-    pxSetValues(pxGetItem(container, "UKeyC"), u32, 8, PX_UINT32);
-    pxSetValues(pxGetItem(container, "UKeyD"), u64, 9, PX_UINT64);
+    podSetValues(podGetItem(container, "UKeyA"), u8, 6, POD_UINT8);
+    podSetValues(podGetItem(container, "UKeyB"), u16, 7, POD_UINT16);
+    podSetValues(podGetItem(container, "UKeyC"), u32, 8, POD_UINT32);
+    podSetValues(podGetItem(container, "UKeyD"), u64, 9, POD_UINT64);
 
-    pxSetValues(pxGetItem(container, "KeyE"), i8, 6, PX_INT8);
-    pxSetValues(pxGetItem(container, "KeyF"), i16, 7, PX_INT16);
-    pxSetValues(pxGetItem(container, "KeyG"), i32, 8, PX_INT32);
-    pxSetValues(pxGetItem(container, "KeyH"), i64, 9, PX_INT64);
+    podSetValues(podGetItem(container, "KeyE"), i8, 6, POD_INT8);
+    podSetValues(podGetItem(container, "KeyF"), i16, 7, POD_INT16);
+    podSetValues(podGetItem(container, "KeyG"), i32, 8, POD_INT32);
+    podSetValues(podGetItem(container, "KeyH"), i64, 9, POD_INT64);
 
-    pxSetValues(pxGetItem(container, "FloatKeyI"), f32, 11, PX_FLOAT32);
-    pxSetValues(pxGetItem(container, "DoubleKeyJ"), f64, 12, PX_FLOAT64);
+    podSetValues(podGetItem(container, "FloatKeyI"), f32, 11, POD_FLOAT32);
+    podSetValues(podGetItem(container, "DoubleKeyJ"), f64, 12, POD_FLOAT64);
 
-    if (pxSaveFile(container, fileName, PX_COMPRESSION_6, checksum, 0x236534AAu, endian) != PX_SUCCESS)
+    if (podSaveFile(container, fileName, POD_COMPRESSION_6, checksum, 0x236534AAu, endian) != POD_SUCCESS)
     {
         return false;
     }
 
-    pxDeleteContainer(container);
+    podDeleteContainer(container);
 
     if (!testFile<endian, checksum>())
     {
@@ -129,39 +129,39 @@ bool test()
 
 int main()
 {
-    if (!test<PX_ENDIAN_NATIVE, PX_CHECKSUM_CRC32>())
+    if (!test<POD_ENDIAN_NATIVE, POD_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PX_ENDIAN_NATIVE << ", checksum = " << PX_CHECKSUM_CRC32 << "\n";
+        std::cout << "failed, endian = " << POD_ENDIAN_NATIVE << ", checksum = " << POD_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
-    if (!test<PX_ENDIAN_LITTLE, PX_CHECKSUM_CRC32>())
+    if (!test<POD_ENDIAN_LITTLE, POD_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PX_ENDIAN_LITTLE << ", checksum = " << PX_CHECKSUM_CRC32 << "\n";
+        std::cout << "failed, endian = " << POD_ENDIAN_LITTLE << ", checksum = " << POD_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
-    if (!test<PX_ENDIAN_BIG, PX_CHECKSUM_CRC32>())
+    if (!test<POD_ENDIAN_BIG, POD_CHECKSUM_CRC32>())
     {
-        std::cout << "failed, endian = " << PX_ENDIAN_BIG << ", checksum = " << PX_CHECKSUM_CRC32 << "\n";
+        std::cout << "failed, endian = " << POD_ENDIAN_BIG << ", checksum = " << POD_CHECKSUM_CRC32 << "\n";
         return -1;
     }
 
-    if (!test<PX_ENDIAN_NATIVE, PX_CHECKSUM_ADLER32>())
+    if (!test<POD_ENDIAN_NATIVE, POD_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PX_ENDIAN_NATIVE << ", checksum = " << PX_CHECKSUM_ADLER32 << "\n";
+        std::cout << "failed, endian = " << POD_ENDIAN_NATIVE << ", checksum = " << POD_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 
-    if (!test<PX_ENDIAN_LITTLE, PX_CHECKSUM_ADLER32>())
+    if (!test<POD_ENDIAN_LITTLE, POD_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PX_ENDIAN_LITTLE << ", checksum = " << PX_CHECKSUM_ADLER32 << "\n";
+        std::cout << "failed, endian = " << POD_ENDIAN_LITTLE << ", checksum = " << POD_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 
-    if (!test<PX_ENDIAN_BIG, PX_CHECKSUM_ADLER32>())
+    if (!test<POD_ENDIAN_BIG, POD_CHECKSUM_ADLER32>())
     {
-        std::cout << "failed, endian = " << PX_ENDIAN_BIG << ", checksum = " << PX_CHECKSUM_ADLER32 << "\n";
+        std::cout << "failed, endian = " << POD_ENDIAN_BIG << ", checksum = " << POD_CHECKSUM_ADLER32 << "\n";
         return -1;
     }
 

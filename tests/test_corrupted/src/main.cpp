@@ -1,7 +1,7 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#include "pod_index.h"
+#include "pod_io.h"
 
 #include <vector>
 #include <cstring>
@@ -11,26 +11,26 @@
 
 const char* filename = "corrupt_file.test.bin";
 
-template<PxEndian endian, PxChecksum checksum>
+template<PodEndian endian, PodChecksum checksum>
 std::vector<char> create()
 {
     const char* val0 = "test";
     uint32_t val1[4] = {0, 40, 400, 4000};
     int64_t val2[8] = {-1, -2, -3, -4, -5, -6, -7, -8};
 
-    auto container = pxCreateContainer();
+    auto container = podCreateContainer();
 
-    pxSetValues(pxGetItem(container, "val0"), val0, 4, PX_ASCII_CHAR8);
-    pxSetValues(pxGetItem(container, "val1"), val1, 4, PX_UINT32);
-    pxSetValues(pxGetItem(container, "val2"), val2, 8, PX_INT64);
+    podSetValues(podGetItem(container, "val0"), val0, 4, POD_ASCII_CHAR8);
+    podSetValues(podGetItem(container, "val1"), val1, 4, POD_UINT32);
+    podSetValues(podGetItem(container, "val2"), val2, 8, POD_INT64);
 
-    if (pxSaveFile(container, filename, PX_COMPRESSION_6, checksum, 0x01020304u, endian) != PX_SUCCESS)
+    if (podSaveFile(container, filename, POD_COMPRESSION_6, checksum, 0x01020304u, endian) != POD_SUCCESS)
     {
         std::cout << "failed to psSaveBlocksToFile()" << std::endl;
         return {};
     }
 
-    pxDeleteContainer(container);
+    podDeleteContainer(container);
 
     // Read the file
 
@@ -62,7 +62,7 @@ bool write(std::vector<char>& buffer)
     return true;
 }
 
-template<PxEndian endian, PxChecksum checksum>
+template<PodEndian endian, PodChecksum checksum>
 bool test()
 {
     srand(0x30405060u);
@@ -107,26 +107,26 @@ bool test()
 
         // deserialize
 
-        auto container = pxCreateContainer();
+        auto container = podCreateContainer();
 
-        PxResult result;
+        PodResult result;
 
         try
         {
-            result = pxLoadFile(container, filename, checksum, 0x01020304u);
+            result = podLoadFile(container, filename, checksum, 0x01020304u);
         }
         catch(...)
         {
             return false;
         }
 
-        if (result != PX_FILE_CORRUPT && result != PX_SUCCESS)
+        if (result != POD_FILE_CORRUPT && result != POD_SUCCESS)
         {
             std::cout << "returned " << result << std::endl;
             return false;
         }
 
-        pxDeleteContainer(container);
+        podDeleteContainer(container);
 
         ++i;
     }
@@ -136,7 +136,7 @@ bool test()
 
 int main()
 {
-    if (!test<PX_ENDIAN_LITTLE, PX_CHECKSUM_NONE>())
+    if (!test<POD_ENDIAN_LITTLE, POD_CHECKSUM_NONE>())
     {
         return -1;
     }

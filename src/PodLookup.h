@@ -1,8 +1,8 @@
-// pod-index
+// pod-io
 // Kyle J Burgess
 
-#ifndef PODX_LOOKUP_H
-#define PODX_LOOKUP_H
+#ifndef POD_LOOKUP_H
+#define POD_LOOKUP_H
 
 #include <limits>
 

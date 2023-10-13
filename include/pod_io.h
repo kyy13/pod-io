@@ -91,9 +91,9 @@ extern "C"
     // equal to the same checksumValue used to save the file
     PodResult         __cdecl podLoadFile(
         PodContainer*            container,       // Handle to a valid PodContainer
-        const char*             fileName,        // File name
+        const char*              fileName,        // File name
         PodChecksum              checksum,        // Checksum type
-        uint32_t                checksumValue);  // Initial checksum value
+        uint32_t                 checksumValue);  // Initial checksum value
 
     // Save a file using data stored in the container
     // If checksum is NONE, then checksumValue isn't used.
@@ -101,10 +101,10 @@ extern "C"
     // used again to load the file.
     PodResult         __cdecl podSaveFile(
         PodContainer*            container,       // Handle to a valid PodContainer
-        const char*             fileName,        // File name
+        const char*              fileName,        // File name
         PodCompression           compression,     // Compression level
         PodChecksum              checksum,        // Checksum type
-        uint32_t                checksumValue,   // Initial checksum value
+        uint32_t                 checksumValue,   // Initial checksum value
         PodEndian                endianness);
 
     // Get an item from a container
@@ -113,14 +113,14 @@ extern "C"
     // or if the container is null
     PodItem*          __cdecl podGetItem(
         PodContainer*            container,       // Handle to a valid PodContainer
-        const char*             key);            // Null-terminated ASCII key
+        const char*              key);            // Null-terminated ASCII key
 
     // Get an item from a container
     // If the item doesn't exist, or if the container is nullptr,
     // then it will return nullptr
     PodItem*          __cdecl podTryGetItem(
         PodContainer*            container,       // Handle to a valid PodContainer
-        const char*             key);            // Null-terminated ASCII key
+        const char*              key);            // Null-terminated ASCII key
 
     // Remove an item from the container
     // does nothing if the key doesn't exist
@@ -131,14 +131,14 @@ extern "C"
     // Set the values in a block
     PodResult         __cdecl podSetValues(
         PodItem*                 item,            // Handle to a valid PodItem
-        const void*             srcValueArray,   // Array of values to set
-        uint32_t                valueCount,      // Number of values in the array
+        const void*              srcValueArray,   // Array of values to set
+        uint32_t                 valueCount,      // Number of values in the array
         PodType                  valueType);      // Type of values in the array
 
     // Count the number of values in a block
     PodResult         __cdecl podTryCountValues(
         const PodItem*           item,            // Handle to a valid PodItem
-        uint32_t&               valueCount);     // Returned number of values in the block
+        uint32_t&                valueCount);     // Returned number of values in the block
 
     // Get the data type of a block
     PodResult         __cdecl podTryGetType(
@@ -148,21 +148,21 @@ extern "C"
     // Copy the values from a block into a destination array
     PodResult         __cdecl podTryCopyValues(
         const PodItem*           item,            // Handle to a valid PodItem
-        void*                   dstValueArray,   // Array to copy values to
-        uint32_t                valueCount,      // Number of values to copy
+        void*                    dstValueArray,   // Array to copy values to
+        uint32_t                 valueCount,      // Number of values to copy
         PodType                  type);           // The type of the values being copied
 
     // Count the number of characters in an item's key
     PodResult         __cdecl podTryCountKeyChars(
         const PodItem*           item,            // Handle to a valid PodItem
-        uint32_t&               count);          // The returned number of ASCII characters
+        uint32_t&                count);          // The returned number of ASCII characters
 
     // Copies an item's key into a buffer without
     // a null terminating character
     PodResult         __cdecl podTryCopyKey(
         const PodItem*           item,            // Handle to a valid PodItem
-        char*                   buffer,          // The buffer to copy the key to
-        uint32_t                charCount);      // The number of characters in the key
+        char*                    buffer,          // The buffer to copy the key to
+        uint32_t                 charCount);      // The number of characters in the key
 
     // Get the first item in the container's current state
     // The order will change if items

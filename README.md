@@ -4,7 +4,7 @@ by Kyle J Burgess<br>
 
 ## Summary
 
-Compatible with `c`, `c++` and `c#`.<br>Save and load POD arrays indexed with ASCII keys to and from endian-independent files. Options for various checksum types and compression levels (using DEFLATE compression).
+pod-io is a key-value pair binary serialization library.<br>It has options for various checksum types, compression levels (using DEFLATE compression), and the data is recoverable independent of system endianness.<br>Compatible with `c`, `c++` and `c#`.
 
 ## Features
 
@@ -14,30 +14,24 @@ details
 </summary>
 
 #### Data Types
-* Store any number of arrays of POD types indexed by keys of 8-bit ASCII encoded strings
+* Stores key-value pairs where the key is an ASCII string, and the value is an array the following:
     * 8-bit ASCII characters, or UTF8 characters
     * 8-bit, 16-bit, 32-bit, or 64-bit unsigned integers
     * 8-bit, 16-bit, 32-bit, or 64-bit twos-complement signed integers
     * 32-bit, or 64-bit IEEE floating point numbers
 * Individual array size is limited to 2^32 bytes
-* Note that any 8-bit data can be stored in any 8-bit type, because there is no endianness for 8-bit values. The differentiation between 8-bit types is added merely for type hinting.
-
-#### Data Validation
-* Data types and sizes are validated on the host by providing the intended size and type of data when both storing and retrieving data.
-* Corrupt files are reported on load.
-* See **Checksum** for further data validation options.
+* Note that any 8-bit data can be stored in any 8-bit type, because there is no endianness for 8-bit values. The differentiation between 8-bit types is just for type hinting.
 
 #### Endian Independence
 * Files keep track of the endianness they were saved in--allowing for optimal performance when writing and reading from a host with the same endianness.
 * When a file is loaded into memory, the POD values are converted into the correct endianness for the host.
-* Reading a file saved for an endianness that differs from the host will incur a small performance overhead.
 
 #### Checksum
-* Choose between no checksum, `adler32` checksum, or `crc32` checksum and a starting 32-bit checksum value when saving and/or loading a file.
-* pod-io will automatically read and validate checksums on load.
+* Supports `adler32`, and `crc32` checksum.
+* pod-io validates checksums on load.
 
 #### Compression Level
-* Choose betweening varying levels of compression based on `zlib`'s DEFLATE compression levels.
+* Compression levels are 0-9, the same as `zlib`'s DEFLATE compression levels.
 
 </details>
 

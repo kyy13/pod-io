@@ -8,9 +8,24 @@ option(POD_BUILD_SHARED "build shared?" ON)
 option(POD_BUILD_TESTS "build tests?" ON)
 option(POD_BUILD_ZLIB "build zlib?" ON)
 option(POD_STATIC_ZLIB "link statically to zlib?" ON)
+set(POD_ZLIB_LOCATION "" CACHE FILEPATH "location of zlib *.a/*.dll/*.so if POD_BUILD_ZLIB=OFF")
+set(POD_ZLIB_IMPLIB "" CACHE FILEPATH "location of zlib *.lib/*.dll.a if POD_BUILD_ZLIB=OFF")
+set(POD_ZLIB_INCLUDE "ext/zlib" CACHE PATH "location of zlib headers if POD_BUILD_ZLIB=OFF")
 
 if (${POD_BUILD_ZLIB})
     add_subdirectory(ext/zlib)
+else()
+    if (${POD_STATIC_ZLIB})
+        add_library(zlib STATIC IMPORTED GLOBAL)
+    else()
+        add_library(zlib SHARED IMPORTED GLOBAL)
+    endif()
+    set_target_properties(
+        zlib PROPERTIES
+        IMPORTED_LOCATION ${POD_ZLIB_LOCATION}
+        IMPORTED_IMPLIB ${POD_ZLIB_IMPLIB}
+        INTERFACE_INCLUDE_DIRECTORIES ${POD_ZLIB_INCLUDE}
+    )
 endif()
 
 set(SOURCES

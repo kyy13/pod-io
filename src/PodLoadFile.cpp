@@ -11,7 +11,7 @@
 #include <fstream>
 
 template<bool reverse_bytes>
-PodResult readBytes(PodContainer* container, File& file, PodChecksum checksum, uint32_t check32)
+pod_result_t readBytes(pod_container_t* container, File& file, pod_checksum_t checksum, uint32_t check32)
 {
     int r;
     auto& map = container->map;
@@ -230,7 +230,7 @@ PodResult readBytes(PodContainer* container, File& file, PodChecksum checksum, u
     return POD_SUCCESS;
 }
 
-PodResult podLoadFile(PodContainer* container, const char* fileName, PodChecksum checksum, uint32_t checksumValue)
+pod_result_t pod_load_file(pod_container_t* container, const char* fileName, pod_checksum_t checksum, uint32_t checksumValue)
 {
     File file(fileName, FM_READ);
 
@@ -257,7 +257,7 @@ PodResult podLoadFile(PodContainer* container, const char* fileName, PodChecksum
 
     // Endianness
 
-    PodEndian endian;
+    pod_endian_t endian;
 
     if (memcmp(header + 4, cLITE, 4) == 0)
     {
@@ -323,7 +323,7 @@ PodResult podLoadFile(PodContainer* container, const char* fileName, PodChecksum
         (endian == POD_ENDIAN_LITTLE && is_big_endian()) ||
         (endian == POD_ENDIAN_BIG && is_little_endian());
 
-    PodResult result;
+    pod_result_t result;
 
     if (requiresByteSwap)
     {

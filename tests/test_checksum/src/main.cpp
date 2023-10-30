@@ -12,7 +12,7 @@
 
 const char* fileName = "checksum_file.test.bin";
 
-template<PodEndian endian, PodChecksum checksum>
+template<pod_endian_t endian, pod_checksum_t checksum>
 bool testFile()
 {
     File file(fileName, FM_READ);
@@ -80,7 +80,7 @@ bool testFile()
     return true;
 }
 
-template<PodEndian endian, PodChecksum checksum>
+template<pod_endian_t endian, pod_checksum_t checksum>
 bool test()
 {
     uint8_t c8[20];
@@ -95,29 +95,29 @@ bool test()
     float f32[11];
     double f64[12];
 
-    auto container = podCreateContainer();
+    auto container = pod_alloc();
 
-    podSetValues(podGetItem(container, "test string"), c8, 20, POD_ASCII_CHAR8);
+    pod_set_values(pod_get_item(container, "test string"), c8, 20, POD_ASCII_CHAR8);
 
-    podSetValues(podGetItem(container, "UKeyA"), u8, 6, POD_UINT8);
-    podSetValues(podGetItem(container, "UKeyB"), u16, 7, POD_UINT16);
-    podSetValues(podGetItem(container, "UKeyC"), u32, 8, POD_UINT32);
-    podSetValues(podGetItem(container, "UKeyD"), u64, 9, POD_UINT64);
+    pod_set_values(pod_get_item(container, "UKeyA"), u8, 6, POD_UINT8);
+    pod_set_values(pod_get_item(container, "UKeyB"), u16, 7, POD_UINT16);
+    pod_set_values(pod_get_item(container, "UKeyC"), u32, 8, POD_UINT32);
+    pod_set_values(pod_get_item(container, "UKeyD"), u64, 9, POD_UINT64);
 
-    podSetValues(podGetItem(container, "KeyE"), i8, 6, POD_INT8);
-    podSetValues(podGetItem(container, "KeyF"), i16, 7, POD_INT16);
-    podSetValues(podGetItem(container, "KeyG"), i32, 8, POD_INT32);
-    podSetValues(podGetItem(container, "KeyH"), i64, 9, POD_INT64);
+    pod_set_values(pod_get_item(container, "KeyE"), i8, 6, POD_INT8);
+    pod_set_values(pod_get_item(container, "KeyF"), i16, 7, POD_INT16);
+    pod_set_values(pod_get_item(container, "KeyG"), i32, 8, POD_INT32);
+    pod_set_values(pod_get_item(container, "KeyH"), i64, 9, POD_INT64);
 
-    podSetValues(podGetItem(container, "FloatKeyI"), f32, 11, POD_FLOAT32);
-    podSetValues(podGetItem(container, "DoubleKeyJ"), f64, 12, POD_FLOAT64);
+    pod_set_values(pod_get_item(container, "FloatKeyI"), f32, 11, POD_FLOAT32);
+    pod_set_values(pod_get_item(container, "DoubleKeyJ"), f64, 12, POD_FLOAT64);
 
-    if (podSaveFile(container, fileName, POD_COMPRESSION_6, checksum, 0x236534AAu, endian) != POD_SUCCESS)
+    if (pod_save_file(container, fileName, POD_COMPRESSION_6, checksum, 0x236534AAu, endian) != POD_SUCCESS)
     {
         return false;
     }
 
-    podDeleteContainer(container);
+    pod_free(container);
 
     if (!testFile<endian, checksum>())
     {

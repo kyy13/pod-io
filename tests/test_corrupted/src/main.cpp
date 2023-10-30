@@ -11,26 +11,26 @@
 
 const char* filename = "corrupt_file.test.bin";
 
-template<PodEndian endian, PodChecksum checksum>
+template<pod_endian_t endian, pod_checksum_t checksum>
 std::vector<char> create()
 {
     const char* val0 = "test";
     uint32_t val1[4] = {0, 40, 400, 4000};
     int64_t val2[8] = {-1, -2, -3, -4, -5, -6, -7, -8};
 
-    auto container = podCreateContainer();
+    auto container = pod_alloc();
 
-    podSetValues(podGetItem(container, "val0"), val0, 4, POD_ASCII_CHAR8);
-    podSetValues(podGetItem(container, "val1"), val1, 4, POD_UINT32);
-    podSetValues(podGetItem(container, "val2"), val2, 8, POD_INT64);
+    pod_set_values(pod_get_item(container, "val0"), val0, 4, POD_ASCII_CHAR8);
+    pod_set_values(pod_get_item(container, "val1"), val1, 4, POD_UINT32);
+    pod_set_values(pod_get_item(container, "val2"), val2, 8, POD_INT64);
 
-    if (podSaveFile(container, filename, POD_COMPRESSION_6, checksum, 0x01020304u, endian) != POD_SUCCESS)
+    if (pod_save_file(container, filename, POD_COMPRESSION_6, checksum, 0x01020304u, endian) != POD_SUCCESS)
     {
         std::cout << "failed to psSaveBlocksToFile()" << std::endl;
         return {};
     }
 
-    podDeleteContainer(container);
+    pod_free(container);
 
     // Read the file
 
@@ -62,7 +62,7 @@ bool write(std::vector<char>& buffer)
     return true;
 }
 
-template<PodEndian endian, PodChecksum checksum>
+template<pod_endian_t endian, pod_checksum_t checksum>
 bool test()
 {
     srand(0x30405060u);
@@ -107,13 +107,13 @@ bool test()
 
         // deserialize
 
-        auto container = podCreateContainer();
+        auto container = pod_alloc();
 
-        PodResult result;
+        pod_result_t result;
 
         try
         {
-            result = podLoadFile(container, filename, checksum, 0x01020304u);
+            result = pod_load_file(container, filename, checksum, 0x01020304u);
         }
         catch(...)
         {
@@ -126,7 +126,7 @@ bool test()
             return false;
         }
 
-        podDeleteContainer(container);
+        pod_free(container);
 
         ++i;
     }

@@ -29,7 +29,7 @@ bool is_big_endian()
     return c[0] == 1;
 }
 
-size_t size_of_type(PodType type)
+size_t size_of_type(pod_type_t type)
 {
     return type & 0xffffu;
 }

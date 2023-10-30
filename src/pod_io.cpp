@@ -8,17 +8,17 @@
 
 #include <stdexcept>
 
-PodContainer* podCreateContainer()
+pod_container_t* pod_alloc()
 {
-    return new PodContainer;
+    return new pod_container_t;
 }
 
-void podDeleteContainer(PodContainer* container)
+void pod_free(pod_container_t* container)
 {
     delete container;
 }
 
-PodItem* podGetItem(PodContainer* container, const char* key)
+pod_item_t* pod_get_item(pod_container_t* container, const char* key)
 {
     if (container == nullptr)
     {
@@ -57,10 +57,10 @@ PodItem* podGetItem(PodContainer* container, const char* key)
         it = map.insert(std::make_pair(std::move(str), data)).first;
     }
 
-    return reinterpret_cast<PodItem*>(&(*it));
+    return reinterpret_cast<pod_item_t*>(&(*it));
 }
 
-PodResult podRemoveItem(PodContainer* container, PodItem* item)
+pod_result_t pod_remove_item(pod_container_t* container, pod_item_t* item)
 {
     if ((container == nullptr) || (item == nullptr))
     {
@@ -74,7 +74,7 @@ PodResult podRemoveItem(PodContainer* container, PodItem* item)
     return POD_SUCCESS;
 }
 
-PodItem* podTryGetItem(PodContainer* container, const char* key)
+pod_item_t* pod_try_get_item(pod_container_t* container, const char* key)
 {
     if (container == nullptr)
     {
@@ -107,10 +107,10 @@ PodItem* podTryGetItem(PodContainer* container, const char* key)
         return nullptr;
     }
 
-    return reinterpret_cast<PodItem*>(&(*it));
+    return reinterpret_cast<pod_item_t*>(&(*it));
 }
 
-PodResult podSetValues(PodItem* item, const void* srcValueArray, uint32_t valueCount, PodType valueType)
+pod_result_t pod_set_values(pod_item_t* item, const void* srcValueArray, uint32_t valueCount, pod_type_t valueType)
 {
     if (item == nullptr)
     {
@@ -137,7 +137,7 @@ PodResult podSetValues(PodItem* item, const void* srcValueArray, uint32_t valueC
     return POD_SUCCESS;
 }
 
-PodResult podTryCountValues(const PodItem* item, uint32_t& valueCount)
+pod_result_t pod_try_count_values(const pod_item_t* item, uint32_t* valueCount)
 {
     if (item == nullptr)
     {
@@ -146,12 +146,15 @@ PodResult podTryCountValues(const PodItem* item, uint32_t& valueCount)
 
     auto& data = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->second;
 
-    valueCount = data.count;
+    if (valueCount != nullptr)
+    {
+        *valueCount = data.count;
+    }
 
     return POD_SUCCESS;
 }
 
-PodResult podTryGetType(const PodItem* item, PodType& valueType)
+pod_result_t pod_try_get_type(const pod_item_t* item, pod_type_t* valueType)
 {
     if (item == nullptr)
     {
@@ -160,12 +163,15 @@ PodResult podTryGetType(const PodItem* item, PodType& valueType)
 
     auto& data = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->second;
 
-    valueType = data.type;
+    if (valueType != nullptr)
+    {
+        *valueType = data.type;
+    }
 
     return POD_SUCCESS;
 }
 
-PodResult podTryCopyValues(const PodItem* item, void* dstValueArray, uint32_t valueCount, PodType type)
+pod_result_t pod_try_copy_values(const pod_item_t* item, void* dstValueArray, uint32_t valueCount, pod_type_t type)
 {
     if (item == nullptr)
     {
@@ -195,7 +201,7 @@ PodResult podTryCopyValues(const PodItem* item, void* dstValueArray, uint32_t va
     return POD_SUCCESS;
 }
 
-PodResult podTryCountKeyChars(const PodItem* item, uint32_t& count)
+pod_result_t pod_try_count_key_chars(const pod_item_t* item, uint32_t* count)
 {
     if (item == nullptr)
     {
@@ -204,12 +210,15 @@ PodResult podTryCountKeyChars(const PodItem* item, uint32_t& count)
 
     auto& key = reinterpret_cast<const std::pair<std::string,PodData>*>(item)->first;
 
-    count = static_cast<uint32_t>(key.size());
+    if (count != nullptr)
+    {
+        *count = static_cast<uint32_t>(key.size());
+    }
 
     return POD_SUCCESS;
 }
 
-PodResult podTryCopyKey(const PodItem* item, char* buffer, uint32_t charCount)
+pod_result_t pod_try_copy_key(const pod_item_t* item, char* buffer, uint32_t charCount)
 {
     if (item == nullptr)
     {
@@ -228,7 +237,7 @@ PodResult podTryCopyKey(const PodItem* item, char* buffer, uint32_t charCount)
     return POD_SUCCESS;
 }
 
-PodItem* podGetFirstItem(PodContainer* container)
+pod_item_t* pod_get_first_item(pod_container_t* container)
 {
     if (container == nullptr)
     {
@@ -244,10 +253,10 @@ PodItem* podGetFirstItem(PodContainer* container)
         return nullptr;
     }
 
-    return reinterpret_cast<PodItem*>(&(*it));
+    return reinterpret_cast<pod_item_t*>(&(*it));
 }
 
-PodItem* podGetNextItem(PodContainer* container, PodItem* item)
+pod_item_t* pod_get_next_item(pod_container_t* container, pod_item_t* item)
 {
     if ((container == nullptr) || (item == nullptr))
     {
@@ -265,5 +274,5 @@ PodItem* podGetNextItem(PodContainer* container, PodItem* item)
         return nullptr;
     }
 
-    return reinterpret_cast<PodItem*>(&(*it));
+    return reinterpret_cast<pod_item_t*>(&(*it));
 }

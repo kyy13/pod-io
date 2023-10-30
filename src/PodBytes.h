@@ -116,7 +116,7 @@ void get_bytes(void* dst, const std::vector<uint8_t>& src, size_t firstByte, siz
     }
 }
 
-size_t size_of_type(PodType type);
+size_t size_of_type(pod_type_t type);
 
 void pad_bytes(std::vector<uint8_t>& v, size_t firstByte, size_t numBytes);
 

@@ -7,7 +7,7 @@
 #include <cstring>
 #include <iostream>
 
-bool test(PodCompression compression, PodEndian endian, PodChecksum checksum)
+bool test(pod_compression_t compression, pod_endian_t endian, pod_checksum_t checksum)
 {
     uint8_t c8[20];
     uint8_t u8[6];
@@ -21,30 +21,30 @@ bool test(PodCompression compression, PodEndian endian, PodChecksum checksum)
     float f32[11];
     double f64[12];
 
-    auto container = podCreateContainer();
+    auto container = pod_alloc();
 
-    podSetValues(podGetItem(container, "test string"), c8, 20, POD_ASCII_CHAR8);
+    pod_set_values(pod_get_item(container, "test string"), c8, 20, POD_ASCII_CHAR8);
 
-    podSetValues(podGetItem(container, "UKeyA"), u8, 6, POD_UINT8);
-    podSetValues(podGetItem(container, "UKeyB"), u16, 7, POD_UINT16);
-    podSetValues(podGetItem(container, "UKeyC"), u32, 8, POD_UINT32);
-    podSetValues(podGetItem(container, "UKeyD"), u64, 9, POD_UINT64);
+    pod_set_values(pod_get_item(container, "UKeyA"), u8, 6, POD_UINT8);
+    pod_set_values(pod_get_item(container, "UKeyB"), u16, 7, POD_UINT16);
+    pod_set_values(pod_get_item(container, "UKeyC"), u32, 8, POD_UINT32);
+    pod_set_values(pod_get_item(container, "UKeyD"), u64, 9, POD_UINT64);
 
-    podSetValues(podGetItem(container, "KeyE"), i8, 6, POD_INT8);
-    podSetValues(podGetItem(container, "KeyF"), i16, 7, POD_INT16);
-    podSetValues(podGetItem(container, "KeyG"), i32, 8, POD_INT32);
-    podSetValues(podGetItem(container, "KeyH"), i64, 9, POD_INT64);
+    pod_set_values(pod_get_item(container, "KeyE"), i8, 6, POD_INT8);
+    pod_set_values(pod_get_item(container, "KeyF"), i16, 7, POD_INT16);
+    pod_set_values(pod_get_item(container, "KeyG"), i32, 8, POD_INT32);
+    pod_set_values(pod_get_item(container, "KeyH"), i64, 9, POD_INT64);
 
-    podSetValues(podGetItem(container, "FloatKeyI"), f32, 11, POD_FLOAT32);
-    podSetValues(podGetItem(container, "DoubleKeyJ"), f64, 12, POD_FLOAT64);
+    pod_set_values(pod_get_item(container, "FloatKeyI"), f32, 11, POD_FLOAT32);
+    pod_set_values(pod_get_item(container, "DoubleKeyJ"), f64, 12, POD_FLOAT64);
 
-    if (podSaveFile(container, "rw_basic_file.test.bin", compression, checksum, 0x01020304u, endian) != POD_SUCCESS)
+    if (pod_save_file(container, "rw_basic_file.test.bin", compression, checksum, 0x01020304u, endian) != POD_SUCCESS)
     {
         std::cout << "0\n";
         return false;
     }
 
-    podDeleteContainer(container);
+    pod_free(container);
     uint32_t count;
 
     std::vector<uint8_t> n_c8;
@@ -59,169 +59,169 @@ bool test(PodCompression compression, PodEndian endian, PodChecksum checksum)
     std::vector<float> n_f32;
     std::vector<double> n_f64;
 
-    container = podCreateContainer();
+    container = pod_alloc();
 
-    if (podLoadFile(container, "rw_basic_file.test.bin", checksum, 0x01020304u) != POD_SUCCESS)
+    if (pod_load_file(container, "rw_basic_file.test.bin", checksum, 0x01020304u) != POD_SUCCESS)
     {
         std::cout << "1\n";
         return false;
     }
 
-    auto block = podGetItem(container, "test string");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    auto block = pod_get_item(container, "test string");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "2\n";
         return false;
     }
 
     n_c8.resize(count);
-    if (podTryCopyValues(block, n_c8.data(), count, POD_ASCII_CHAR8) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_c8.data(), count, POD_ASCII_CHAR8) != POD_SUCCESS)
     {
         std::cout << "3\n";
         return false;
     }
 
-    block = podGetItem(container, "UKeyA");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "UKeyA");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "4\n";
         return false;
     }
 
     n_u8.resize(count);
-    if (podTryCopyValues(block, n_u8.data(), count, POD_UINT8) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_u8.data(), count, POD_UINT8) != POD_SUCCESS)
     {
         std::cout << "5\n";
         return false;
     }
 
-    block = podGetItem(container, "UKeyB");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "UKeyB");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "6\n";
         return false;
     }
 
     n_u16.resize(count);
-    if (podTryCopyValues(block, n_u16.data(), count, POD_UINT16) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_u16.data(), count, POD_UINT16) != POD_SUCCESS)
     {
         std::cout << "7\n";
         return false;
     }
 
-    block = podGetItem(container, "UKeyC");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "UKeyC");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "8\n";
         return false;
     }
 
     n_u32.resize(count);
-    if (podTryCopyValues(block, n_u32.data(), count, POD_UINT32) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_u32.data(), count, POD_UINT32) != POD_SUCCESS)
     {
         std::cout << "8\n";
         return false;
     }
 
-    block = podGetItem(container, "UKeyD");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "UKeyD");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "9\n";
         return false;
     }
 
     n_u64.resize(count);
-    if (podTryCopyValues(block, n_u64.data(), count, POD_UINT64) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_u64.data(), count, POD_UINT64) != POD_SUCCESS)
     {
         std::cout << "10\n";
         return false;
     }
 
-    block = podGetItem(container, "KeyE");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "KeyE");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "11\n";
         return false;
     }
 
     n_i8.resize(count);
-    if (podTryCopyValues(block, n_i8.data(), count, POD_INT8) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_i8.data(), count, POD_INT8) != POD_SUCCESS)
     {
         std::cout << "12\n";
         return false;
     }
 
-    block = podGetItem(container, "KeyF");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "KeyF");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "13\n";
         return false;
     }
 
     n_i16.resize(count);
-    if (podTryCopyValues(block, n_i16.data(), count, POD_INT16) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_i16.data(), count, POD_INT16) != POD_SUCCESS)
     {
         std::cout << "14\n";
         return false;
     }
 
-    block = podGetItem(container, "KeyG");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "KeyG");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "15\n";
         return false;
     }
 
     n_i32.resize(count);
-    if (podTryCopyValues(block, n_i32.data(), count, POD_INT32) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_i32.data(), count, POD_INT32) != POD_SUCCESS)
     {
         std::cout << "16\n";
         return false;
     }
 
-    block = podGetItem(container, "KeyH");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "KeyH");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "17\n";
         return false;
     }
 
     n_i64.resize(count);
-    if (podTryCopyValues(block, n_i64.data(), count, POD_INT64) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_i64.data(), count, POD_INT64) != POD_SUCCESS)
     {
         std::cout << "18\n";
         return false;
     }
 
-    block = podGetItem(container, "FloatKeyI");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "FloatKeyI");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "19\n";
         return false;
     }
 
     n_f32.resize(count);
-    if (podTryCopyValues(block, n_f32.data(), count, POD_FLOAT32) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_f32.data(), count, POD_FLOAT32) != POD_SUCCESS)
     {
         std::cout << "20\n";
         return false;
     }
 
-    block = podGetItem(container, "DoubleKeyJ");
-    if (podTryCountValues(block, count) != POD_SUCCESS)
+    block = pod_get_item(container, "DoubleKeyJ");
+    if (pod_try_count_values(block, count) != POD_SUCCESS)
     {
         std::cout << "21\n";
         return false;
     }
 
     n_f64.resize(count);
-    if (podTryCopyValues(block, n_f64.data(), count, POD_FLOAT64) != POD_SUCCESS)
+    if (pod_try_copy_values(block, n_f64.data(), count, POD_FLOAT64) != POD_SUCCESS)
     {
         std::cout << "22\n";
         return false;
     }
 
-    podDeleteContainer(container);
+    pod_free(container);
 
     if (memcmp(c8, n_c8.data(), 20 * sizeof(uint8_t)) != 0)
     {
@@ -292,7 +292,7 @@ bool test(PodCompression compression, PodEndian endian, PodChecksum checksum)
     return true;
 }
 
-bool test(PodEndian endian, PodChecksum checksum)
+bool test(pod_endian_t endian, pod_checksum_t checksum)
 {
     if (!test(POD_COMPRESSION_0, endian, checksum))
     {
@@ -357,7 +357,7 @@ bool test(PodEndian endian, PodChecksum checksum)
     return true;
 }
 
-bool test(PodChecksum checksum)
+bool test(pod_checksum_t checksum)
 {
     if (!test(POD_ENDIAN_NATIVE, checksum))
     {

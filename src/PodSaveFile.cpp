@@ -12,7 +12,7 @@
 #include "PodFile.h"
 
 template<bool reverse_bytes>
-PodResult writeBytes(PodContainer* container, File& file, PodCompression compression, PodChecksum checksum, uint32_t check32)
+pod_result_t writeBytes(pod_container_t* container, File& file, pod_compression_t compression, pod_checksum_t checksum, uint32_t check32)
 {
     auto& map = container->map;
 
@@ -113,7 +113,7 @@ PodResult writeBytes(PodContainer* container, File& file, PodCompression compres
     return POD_SUCCESS;
 }
 
-PodResult podSaveFile(PodContainer* container, const char* fileName, PodCompression compression, PodChecksum checksum, uint32_t checksumValue, PodEndian endianness)
+pod_result_t pod_save_file(pod_container_t* container, const char* fileName, pod_compression_t compression, pod_checksum_t checksum, uint32_t checksumValue, pod_endian_t endianness)
 {
     // Open File
 
@@ -198,7 +198,7 @@ PodResult podSaveFile(PodContainer* container, const char* fileName, PodCompress
         (endianness == POD_ENDIAN_LITTLE && is_big_endian()) ||
         (endianness == POD_ENDIAN_BIG && is_little_endian());
 
-    PodResult result;
+    pod_result_t result;
 
     if (requiresByteSwap)
     {

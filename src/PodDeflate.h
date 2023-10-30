@@ -19,7 +19,7 @@ struct compress_stream
     z_stream zs;               // zlib stream handle
     uint8_t buffer[8 * 1024];  // temporary buffer used for reading and writing file data
     File* file;                // pointer to file
-    PodChecksum checksum;       // checksum type
+    pod_checksum_t checksum;       // checksum type
     uint32_t check32;          // 32-bit checksum
 };
 
@@ -33,7 +33,7 @@ enum compress_result
 // Initialize a deflate stream
 // returns COMPRESS_SUCCESS on success
 // and COMPRESS_ERROR on failure
-compress_result deflate_init(compress_stream& cs, File* file, PodCompression compression, PodChecksum checksum, uint32_t check32);
+compress_result deflate_init(compress_stream& cs, File* file, pod_compression_t compression, pod_checksum_t checksum, uint32_t check32);
 
 // Finish deflating and write any extra bytes held by the stream
 // returns COMPRESS_SUCCESS on success
@@ -48,7 +48,7 @@ compress_result deflate_next(compress_stream& cs, uint8_t* in, size_t in_size);
 // Initialize an inflate stream
 // returns COMPRESS_SUCCESS on success
 // and COMPRESS_ERROR on failure
-compress_result inflate_init(compress_stream& cs, File* file, PodChecksum checksum, uint32_t check32);
+compress_result inflate_init(compress_stream& cs, File* file, pod_checksum_t checksum, uint32_t check32);
 
 // Finish an inflate stream
 // returns COMPRESS_SUCCESS on success

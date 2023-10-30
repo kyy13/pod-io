@@ -14,12 +14,12 @@ struct PodData
 {
     std::vector<uint8_t> values;
     size_t count;
-    PodType type;
+    pod_type_t type;
 };
 
 using PodMap = std::unordered_map<std::string, PodData>;
 
-struct PodContainer
+struct pod_container_t
 {
     PodMap map;
 };

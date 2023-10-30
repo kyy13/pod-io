@@ -4,7 +4,7 @@
 #include "PodDeflate.h"
 #include "PodBytes.h"
 
-compress_result deflate_init(compress_stream& is, File* file, PodCompression compression, PodChecksum checksum, uint32_t check32)
+compress_result deflate_init(compress_stream& is, File* file, pod_compression_t compression, pod_checksum_t checksum, uint32_t check32)
 {
     auto& zs = is.zs;
 
@@ -126,7 +126,7 @@ compress_result deflate_next(compress_stream& is, uint8_t* in, size_t in_size)
     return COMPRESS_SUCCESS;
 }
 
-compress_result inflate_init(compress_stream& is, File* file, PodChecksum checksum, uint32_t check32)
+compress_result inflate_init(compress_stream& is, File* file, pod_checksum_t checksum, uint32_t check32)
 {
     is.zs =
         {

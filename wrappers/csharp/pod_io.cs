@@ -1429,102 +1429,102 @@ public class PodContainer : IDisposable
 
     // See pod_io.h for DLL documentation
 
-    [DllImport("libpod-io", EntryPoint = "podCreateContainer", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_alloc", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PodCreateContainer();
 
-    [DllImport("libpod-io", EntryPoint = "podDeleteContainer", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_free", CallingConvention = CallingConvention.Cdecl)]
     protected static extern void        PodDeleteContainer(IntPtr container);
 
-    [DllImport("libpod-io", EntryPoint = "podLoadFile", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_load_file", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodLoadFile(IntPtr container, byte[] fileName, PodChecksum checksum, UInt32 checksumValue);
 
-    [DllImport("libpod-io", EntryPoint = "podSaveFile", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_save_file", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSaveFile(IntPtr container, byte[] fileName, PodCompression compression, PodChecksum checksum, UInt32 checksumValue, PodEndian endianness);
 
-    [DllImport("libpod-io", EntryPoint = "podGetItem", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_get_item", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PodGetItem(IntPtr container, byte[] key);
 
-    [DllImport("libpod-io", EntryPoint = "podTryGetItem", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_get_item", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PodTryGetItem(IntPtr container, byte[] key);
 
-    [DllImport("libpod-io", EntryPoint = "podRemoveItem", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_remove_item", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodRemoveItem(IntPtr container, IntPtr item);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCountValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_count_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCountValues(IntPtr item, out UInt32 valueCount);
 
-    [DllImport("libpod-io", EntryPoint = "podTryGetType", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_get_type", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryGetType(IntPtr item, out PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCountKeyChars", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_count_key_chars", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCountKeyChars(IntPtr item, out UInt32 charCount);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyKey", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_key", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyKey(IntPtr item, byte[] key, UInt32 count);
 
-    [DllImport("libpod-io", EntryPoint = "podGetFirstItem", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_get_first_item", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PodGetFirstItem(IntPtr container);
 
-    [DllImport("libpod-io", EntryPoint = "podGetNextItem", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_get_next_item", CallingConvention = CallingConvention.Cdecl)]
     protected static extern IntPtr      PodGetNextItem(IntPtr container, IntPtr item);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, byte[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, UInt16[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, UInt32[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, UInt64[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, sbyte[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, Int16[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, Int32[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, Int64[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, float[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podSetValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_set_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodSetValues(IntPtr item, double[] srcValueArray, UInt32 valueCount, PodType valueType);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, byte[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, UInt16[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, UInt32[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, UInt64[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, sbyte[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, Int16[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, Int32[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, Int64[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, float[] dstValueArray, UInt32 valueCount, PodType type);
 
-    [DllImport("libpod-io", EntryPoint = "podTryCopyValues", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libpod-io", EntryPoint = "pod_try_copy_values", CallingConvention = CallingConvention.Cdecl)]
     protected static extern PodResult    PodTryCopyValues(IntPtr item, double[] dstValueArray, UInt32 valueCount, PodType type);
 }
